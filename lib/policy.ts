@@ -30,11 +30,13 @@ export function evaluatePolicy(input: {
   const hasProduct = Boolean(value("product"));
   const textCondition = value("condition") ?? "";
   const unused = /\b(unused|unopened|factory sealed|still sealed)\b/i.test(textCondition);
-  const contradictsUnused = /\b(not unused|not unopened|opened|used|worn|tried on)\b/i.test(textCondition.replace(/\bunused\b/gi, "pristine").replace(/\bunopened\b/gi, "sealed"));
+  // Fail closed on ambiguous or explicitly used items. Negation must never imply an unused item.
+  const negativeCondition = /\b(?:not\s+(?:unused|unopened|sealed|new)|already\s+opened|opened|used|worn|tried\s+on|previously\s+used)\b/i;
+  const contradictsUnused = negativeCondition.test(textCondition) || negativeCondition.test(redactedText);
   const exceptionText = /\b(broken|damaged|defective|faulty|malfunction|stopped working|does not work|not working|consumer rights|warranty)\b/i.test(redactedText);
   const hasException = exceptionText || answer("damaged_or_defective") === true;
-  const wantsReturn = Boolean(value("request")) && /\b(refund|return|money back)\b/i.test(value("request")!) && answer("refund_requested") !== false;
-  const hasUnusedEvidence = unused && !contradictsUnused && answer("item_explicitly_unused") !== false;
+  const wantsReturn = Boolean(value("request")) && /\b(refund|return|money back)\b/i.test(value("request")!) && answer("refund_requested") === true;
+  const hasUnusedEvidence = unused && !contradictsUnused && answer("item_explicitly_unused") === true;
   const checks: PolicyCheck[] = [
     { label: "Order reference", status: hasOrder ? "pass" : "unknown", detail: hasOrder ? value("order_id")! : "No verified order identifier" },
     { label: "Product identification", status: hasProduct ? "pass" : "unknown", detail: hasProduct ? value("product")! : "Product needs confirmation" },
