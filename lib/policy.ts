@@ -78,6 +78,9 @@ export function evaluatePolicy(input: {
   const guardClear = injectionFlag === false;
 
   const checks: PolicyCheck[] = [
+    { label: "Message context coverage", status: scope.unclassifiedStatements === 0 ? "pass" : "unknown",
+      detail: scope.unclassifiedStatements === 0 ? "All statements fit recognized request/context patterns; claims are still unverified" :
+        scope.unclassifiedStatements + " statement(s) require human classification before any recommendation" },
     { label: "Case identity and linkage", status: identityClear ? "pass" : "unknown",
       detail: identityClear ? "One linked customer-reported order: " + scope.linkedOrderId : scope.identityBlockers.join(" ") || "Order needs verification" },
     { label: "Order reference", status: hasOrder ? "pass" : "unknown",
@@ -92,7 +95,7 @@ export function evaluatePolicy(input: {
       detail: hasUnusedEvidence ? "Explicit, uncontradicted customer claim" : "Unused condition is missing, ambiguous, or contradictory" },
     { label: "Refund request", status: wantsRefund ? "pass" : "unknown",
       detail: wantsRefund ? "Current, explicit refund request" : "Current intent: " + scope.intent + "; an affirmative refund request has not been established" },
-    { label: "Legal / damage exceptions", status: hasException ? "unknown" : noExceptionEstablished ? "pass" : "unknown",
+    { label: "Legal / damage exceptions", status: hasException ? "unknown" : noExceptionEstablished && scope.unclassifiedStatements === 0 ? "pass" : "unknown",
       detail: hasException ? "Issue/safety concern: " + (scope.issueSignals.join(", ") || "model flagged concern") + ". Human review required."
         : noExceptionEstablished ? "No issue reported in this message" : "Exception status not confidently ruled out" },
     { label: "Prompt-injection screening", status: injectionFlag === true ? "fail" : injectionFlag === null ? "unknown" : "pass",

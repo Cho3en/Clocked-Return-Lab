@@ -23,6 +23,11 @@ const synthetic = {
 };
 const main = await fetch(base);
 assert("home accessible",main.status===200,"HTTP "+main.status);
+const secondPage = await fetch(base);
+const firstPolicy = main.headers.get("content-security-policy") ?? "";
+const secondPolicy = secondPage.headers.get("content-security-policy") ?? "";
+assert("consecutive responses have distinct CSP nonces",Boolean(firstPolicy.match(/nonce-[A-Za-z0-9+/=]+/)) && firstPolicy!==secondPolicy);
+assert("nonce-based strict script policy present",firstPolicy.includes("strict-dynamic") && firstPolicy.includes("script-src") && !firstPolicy.includes("script-src 'self' 'unsafe-inline'"));
 const securityHeaders = {
  csp:main.headers.get("content-security-policy"),
  frame:main.headers.get("x-frame-options"),
@@ -72,13 +77,34 @@ try {
  const page=await browser.newPage({viewport:{width:390,height:820}});
  const errors=[];
  page.on("pageerror",e=>errors.push(e.message));
+ const cspErrors=[];
+ page.on("console",m=>{if(m.type()==="error" && /Content Security Policy/i.test(m.text())) cspErrors.push(m.text());});
  await page.goto(base,{waitUntil:"networkidle"});
  const payload='Order ORD-84219 for the Aurora Table Lamp was delivered on 2026-10-28. It is unused and unopened. I want a refund. <img src=x onerror="window.__redteamExecuted=true"><svg onload="window.__redteamExecuted=true">';
  await page.locator("#return-message").fill(payload);
  await page.getByRole("button",{name:"Run demo analysis"}).click();
- await page.getByText("Eligible under demo rules",{exact:true}).waitFor();
+ await page.getByText("Escalate to a human",{exact:true}).waitFor();
  const execution=await page.evaluate(()=>Boolean(window.__redteamExecuted));
  assert("user message does not execute script",!execution);
+ assert("page hydrates without CSP violations",cspErrors.length===0);
+ // A CDP page.evaluate call is privileged, so it cannot be used to prove
+ // CSP enforcement: some scripted DOM insertions inherit trusted execution.
+ // Instead serve an actual parser-inserted inline script under the app CSP.
+ const probeServer=http.createServer((_req,res)=>{
+   res.writeHead(200,{"content-type":"text/html","content-security-policy":firstPolicy});
+   res.end('<!doctype html><html><body><script>window.__auditInlineRan=true</script><p>Probe</p></body></html>');
+ });
+ await new Promise(resolve=>probeServer.listen(0,"127.0.0.1",resolve));
+ try {
+   const address=probeServer.address();
+   if(!address || typeof address==="string")throw new Error("No probe port");
+   const probePage=await browser.newPage();
+   try {
+     await probePage.goto("http://127.0.0.1:"+address.port,{waitUntil:"load"});
+     const ran=await probePage.evaluate(()=>Boolean(window.__auditInlineRan));
+     assert("server-delivered inline script blocked by nonce CSP",!ran);
+   } finally {await probePage.close();}
+ } finally {await new Promise(resolve=>probeServer.close(resolve));}
  assert("no JavaScript exceptions",errors.length===0);
  await page.getByRole("button",{name:"Clocked live"}).click();
  assert("live token input uses password type",await page.locator("#live-access-token").getAttribute("type")==="password");

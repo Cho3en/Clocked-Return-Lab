@@ -67,5 +67,5 @@ for(const c of cases){
  } catch(error) {failed++;console.log("ERROR "+JSON.stringify({case:c.name,type:error.constructor.name}));}
 }
 console.log("REDTEAM_UI_RELEASE "+JSON.stringify({total:cases.length,passed:cases.length-failed,failed,unsafeDecisions,findings:list.map(x=>x.case)}));
-// This is a release gate: unresolved unsafe dispositions must fail, not be hidden in a green suite.
-if(unsafeDecisions>0)process.exitCode=1;
+// Both dangerous recommendations and loss of clearly eligible cases fail release.
+if(failed>0 || unsafeDecisions>0)process.exitCode=1;

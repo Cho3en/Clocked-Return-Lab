@@ -1,5 +1,7 @@
 # Round 3 — Modern UI, Independent Logic Red Team, Code & Security Audit
 
+**Historical findings from the pre-repair candidate.** The decision-safety and security-header release blockers described here were repaired and independently retested in [ROUND4_ACCEPTANCE.md](ROUND4_ACCEPTANCE.md). This file is preserved for audit history.
+
 Date: 2026-11-08
 Source baseline: 63b67d0 (P0.1–P0.4)
 Scope: local UI redesign followed by independent behavioral and security audits.

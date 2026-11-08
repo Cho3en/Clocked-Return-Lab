@@ -8,9 +8,11 @@ Transforms an incoming customer request into a **recommended** route: Approve / 
 
 *This video was recorded before the P0 case-integrity repairs. The current code has stronger safety gates; a replacement real-API video has not yet been recorded or verified.*
 
-**[Submission summary and technical judging notes](SUBMISSION.md)** · **[Round 3 UI redesign, new red-team findings and release plan](AUDIT_UI_REDTEAM_R3.md)**
+**[Submission summary and technical judging notes](SUBMISSION.md)** · **[Round 4 safety and security acceptance](ROUND4_ACCEPTANCE.md)** · **[Round 3 UI redesign, new red-team findings and release plan](AUDIT_UI_REDTEAM_R3.md)**
 
-**Current release status:** The modern UI is a local candidate. A fresh adversarial suite found unsafe recommendation gaps in the simulated policy. Do not publish updated demo claims or expose the live API until those release gates are resolved. · **[P0 safety milestone and red-team evidence](P0_ACCEPTANCE.md)** · **[Independent audit, fixes, and remaining boundaries](AUDIT.md)**
+**Current release status:** The modern UI and fail-closed decision safeguards passed the synthetic Round 4 release gates. See **[Round 4 acceptance report](ROUND4_ACCEPTANCE.md)**. The application remains an advisory prototype; the previous video is outdated and the live API must not be publicly exposed without durable authentication and spending controls.
+
+Earlier engineering records: **[P0 safety milestone](P0_ACCEPTANCE.md)** · **[Initial audit](AUDIT.md)**.
 
 ![Demo result dashboard](assets/approved.png)
 
@@ -24,7 +26,7 @@ Requires Node.js 20.9+ and npm.
 2. Copy **.env.example** to **.env.local**, and set **CLOCKED_API_KEY**. Create a distinct 32+ character **RETURNLAB_ACCESS_TOKEN** using a local cryptographically random generator. Never commit or share either key.
 3. Run **npm run dev** and open http://localhost:3000.
 4. Choose **Demo fixtures** to test without any key, or **Clocked live**. In live mode, copy only RETURNLAB_ACCESS_TOKEN from your own .env.local into the password field. It is retained in browser memory only, not localStorage. The Clocked API key remains exclusively server-side.
-5. Check with **npm test**, **npm run lint**, **npm run typecheck**, and **npm run build**. With a local server running, use **npm run smoke**, **npm run redteam**, and **npm run redteam:mutation** (for the latter two use `RETURNLAB_URL` to target the running production preview). **npm run record** costs live Clocked calls; do not run with an unrotated or exposed key.
+5. Check with **npm test**, **npm run lint**, **npm run typecheck**, and **npm run build**. With a local production server running, use **npm run smoke**, **npm run ui:audit**, **npm run security:audit**, **npm run redteam**, **npm run redteam:mutation**, **npm run redteam:ui**, and **npm run redteam:heldout** (set `RETURNLAB_URL` to its local address). **npm run record** costs live Clocked calls; do not run with an unrotated or exposed key.
 
 On Windows PowerShell, if npm.ps1 is blocked, use **npm.cmd** instead. If an inherited npm_config_allow_scripts environment variable causes EALLOWSCRIPTS, unset it **for the current PowerShell process only**; do not disable global installation safeguards.
 
@@ -36,7 +38,7 @@ The live flow uses the official JavaScript **clocked-sdk** package (server-side 
 2. Guard: clocked.injection — screens the protected text before Extract or Decide. Dangerous, ambiguous or failed Guard results stop further model calls and route to Review.
 3. Extract: clocked.extract — exact text and Unicode code-point offsets, normalized to JavaScript UTF-16 indices before display. Unaligned or low-confidence evidence cannot approve or decline.
 4. Decide: clocked.decide — typed noul judgments about intent, condition and exceptions. Scores between 0.2 and 0.8 remain Unknown; each P(Yes) refers to that question only.
-5. Deterministic case-scoped policy engine: combines **customer-reported**, source-aligned claims with one-order/one-date checks, current refund intent and exception-first review. No merchant order has been independently verified.
+5. Deterministic case-scoped policy engine: combines **customer-reported**, source-aligned claims with one-order/one-delivery-date checks, current refund intent, exception-first review, and a **fail-closed statement coverage gate**. An unfamiliar claim triggers Review even when Clocked Decide confidently answers “no defect.” No merchant order has been independently verified.
 
 The original proposal's paths at api.clocked.rezolve.ai were **unverified placeholders**, not the integration.
 

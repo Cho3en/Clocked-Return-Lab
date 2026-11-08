@@ -1,4 +1,5 @@
 import type { EvidenceField } from "./types";
+import { checkSafeStatementCoverage } from "./statement-coverage";
 
 /**
  * Deterministic safeguards around AI output. A highlighted field is text evidence,
@@ -15,6 +16,7 @@ export interface CaseScope {
   blockers: string[];
   identityBlockers: string[];
   linkedOrderId: string | null;
+  unclassifiedStatements: number;
   coherent: boolean;
 }
 
@@ -27,9 +29,11 @@ export function classifyCurrentIntent(text: string): CurrentIntent {
   const quoteMatches = [...text.matchAll(new RegExp(quoted.source, quoted.flags))];
   const containsQuotedRequest = quoteMatches.some((m) => /\b(?:refund|return|exchange)\b/i.test(m[0]));
   const outsideQuotes = text.replace(quoted, " ");
+  const reauthorized = /\b(?:i\s+)?changed\s+my\s+mind\s+earlier,\s+but\s+now\s+i\s+(?:definitely\s+)?(?:want|need|request)\s+(?:a\s+)?refund\b/i.test(outsideQuotes);
   const withdrawn = /\b(?:changed\s+my\s+mind|withdraw(?:ing|n)?\s+(?:my\s+)?(?:request|refund)|cancel(?:led|ed)?\s+(?:my\s+)?(?:refund|return)|no\s+longer\s+(?:want|need)|do\s+not\s+want\s+(?:a\s+)?refund|don['’]t\s+want\s+(?:a\s+)?refund|not\s+(?:requesting|asking\s+for)\s+(?:a\s+)?refund|i\s+only\s+(?:need|want)\s+(?:help|support))\b/i.test(text);
   const superseded = /\b(?:cancel\s+(?:(?:that|the|my)\s+)?(?:refund\s+)?request|nevermind|never\s+mind|decided\s+to\s+keep\s+(?:it|the\s+(?:product|item))|on\s+second\s+thought|do\s+not\s+refund\s+me|don['’]t\s+refund\s+me|only\s+quoting|quoting\s+someone|i['’]d\s+prefer\s+store\s+credit|prefer\s+store\s+credit|instead\s*,?\s*(?:please\s+)?exchange|rather\s+than\s+(?:a\s+)?refund)\b/i.test(text);
-  if (containsQuotedRequest || withdrawn || superseded) return "withdrawn";
+  if (containsQuotedRequest || ((withdrawn || superseded) && !reauthorized)) return "withdrawn";
+  if (reauthorized) return "refund";
 
   const denialOfRefund = /\b(?:without\s+(?:asking\s+for|requesting|getting|a|any)\s+(?:a\s+)?refund|no\s+refund\s+(?:needed|requested|wanted)|not\s+(?:asking\s+for|requesting|seeking)\s+(?:a\s+)?refund|(?:do\s+not|don['’]t)\s+(?:need|want)\s+(?:a\s+)?refund)\b/i.test(outsideQuotes);
   const conditional = /\b(?:if\s+it\s+(?:arrives|is|becomes)|if\s+the\s+(?:product|item)|might\s+(?:want|need|request)|would\s+(?:consider|possibly)|in\s+the\s+future|hypothetically|what\s+if\s+i)\b/i.test(outsideQuotes);
@@ -42,6 +46,8 @@ export function classifyCurrentIntent(text: string): CurrentIntent {
     /\b(?:can|could|may)\s+(?:i|we)\s+(?:please\s+)?(?:get|have|request|receive)\s+(?:a\s+)?refund\b/i,
     /\bplease\s+(?:issue|send|process|provide|give\s+me)\s+(?:a\s+)?refund\b/i,
     /\bplease\s+refund\b/i,
+    /\bplease\s+reimburse\s+me\b/i,
+    /\bi\s+(?:definitely\s+)?want\s+(?:a\s+)?refund\b/i,
   ].some((pattern) => pattern.test(outsideQuotes));
   if (denialOfRefund) {
     return returnWord.test(outsideQuotes) ? "return-only" : exchangeWord.test(outsideQuotes) ? "exchange" : "support";
@@ -60,7 +66,8 @@ export function classifyCurrentIntent(text: string): CurrentIntent {
 /** This lexicon is a conservative escalation backstop, not a substitute for merchant review. */
 export function detectIssueSignals(text: string): string[] {
   // Negated simple defect descriptions must not turn a valid unused return into a defect claim.
-  const clean = text.replace(/\b(?:not|never|is(?:n't| not)|was(?:n't| not)|no)\s+(?:damaged|broken|defective|faulty|malfunctioning|overheating|smoking|sparking|leaking)\b/gi, " ");
+  const clean = text.replace(/\b(?:not|never|is(?:n't| not)|was(?:n't| not)|no)\s+(?:damaged|broken|defective|faulty|malfunctioning|overheating|smoking|sparking|leaking)\b/gi, " ")
+    .replace(/\bbut\s+now\s+i\s+(?:definitely\s+)?want\b/gi, " I want");
   const patterns: Array<[string, RegExp]> = [
     ["unsafe product", /\b(?:overheat(?:ing|s|ed)?|smok(?:e|es|ing)|sparks?|sparking|electric(?:al)?\s+shock|caught\s+fire|on\s+fire|burn(?:ing|t|ed)?\s+smell|smells?\s+(?:like\s+)?burn(?:t|ing)|scorched|explod(?:e|ed|ing)|battery\s+(?:swollen|bulging)|fire\s+hazard|safety\s+hazard|hot\s+to\s+the\s+touch|cable\s+melted)\b/i],
     ["damaged or faulty", /\b(?:broken|damaged|defective|faulty|malfunctioning|falling\s+apart|fell\s+apart|stopped\s+working|does\s+not\s+work|doesn['’]t\s+work|not\s+working|cracked|shattered|leaking|leaks?|injured|injury|peeling|peels?|peeled|flaking|flaked|melted|melting|melt|buttons?\s+(?:do\s+not|does\s+not|don't|doesn't)\s+(?:work|respond))\b/i],
@@ -72,6 +79,9 @@ export function detectIssueSignals(text: string): string[] {
     ["unexpected product behavior", /\b(?:crackl(?:e|es|ing)|rattl(?:e|es|ing)|smells?\s+odd|(?:will\s+not|won['’]t|does\s+not|doesn['’]t)\s+(?:turn|switch)\s+on|does\s+not\s+(?:respond|power\s+on)|won['’]t\s+start)\b/i],
     ["prior replacement or shipment", /\b(?:already\s+(?:received|got)\s+(?:a\s+)?replacement|(?:seller|shop|store)\s+promised\s+(?:to\s+)?replace|promised\s+(?:a\s+)?replacement|replacement\s+already\s+(?:received|shipped))\b/i],
     ["address mismatch", /\b(?:(?:delivery|shipping)\s+address\s+(?:was|is)\s+different|wrong\s+(?:delivery|shipping)\s+address|address\s+(?:does\s+not|doesn['’]t)\s+match)\b/i],
+    ["hazard or injury report", /\b(?:exposed\s+(?:wire|copper|cable|wiring)|scratched|scratch(?:es|ed)?|bent\s+(?:frame|part|metal)|chemical\s+smell|(?:skin\s+)?rash|(?:got|was|is)\s+burn(?:ed|t)|dangerous|unsafe\s+to\s+use|stolen|theft|recalled|recall\s+notice|counterfeit|fake\s+item|strong\s+(?:chemical\s+)?odou?r|tampered\s+with)\b/i],
+    ["product or quantity discrepancy", /\b(?:doesn['’]t\s+match|does\s+not\s+match|advertised\s+specifications?|not\s+included|box\s+(?:was|is)\s+empty|(?:only\s+)?one\s+of\s+(?:the\s+)?two\s+(?:units?|items?)\s+arrived|wrong\s+voltage|SKU-[\w-]+\s+instead\s+of\s+SKU-[\w-]+|(?:seller|merchant)\s+sent\s+SKU-[\w-]+\s+instead\s+of|popping\s+sound|died\s+after|never\s+(?:got|received)\s+(?:the\s+)?(?:package|parcel)|return\s+(?:was\s+)?already\s+rejected|received\s+(?:a\s+)?replacement)\b/i],
+    ["billing exception", /\b(?:card\s+(?:was\s+)?charged\s+twice|charged\s+twice|double[\s-]charged|duplicate\s+(?:charge|payment|billing)|partial\s+refund|(?:refund|credit)\s+amount\s+(?:is|was)\s+wrong)\b/i],
     ["other mismatch or safety warning", /\b(?:getting\s+(?:extremely\s+|too\s+|very\s+)?hot|hot\s+to\s+(?:the\s+)?touch|(?:sharp|dangerously\s+sharp)\s+edges?|cut\s+my\s+(?:hand|finger)|dimensions?\s+(?:do(?:es)?\s+not|don[\u0027’]t)\s+match|incorrect\s+(?:variant|colour|color)|(?:ordered|selected|chose)[^.!?\n]{0,90}\bbut\s+(?:received|got)|wrong\s+dimensions?)\b/i],
   ];
   return patterns.filter(([,pattern])=>pattern.test(clean)).map(([label])=>label);
@@ -98,7 +108,13 @@ function explicitProductAmbiguity(text: string): boolean {
  */
 export function inspectCaseScope(text: string, evidence: EvidenceField[] = []): CaseScope {
   const orderRefs = findOrderRefs(text);
-  const deliveryDates = [...new Set([...text.matchAll(/\b\d{4}-\d{2}-\d{2}\b/g)].map((m)=>m[0]))];
+  // Only DELIVERY dates are compared. Purchase/order/invoice dates are metadata,
+  // not proof of a conflicting delivery. Explicit delivery corrections still block.
+  const claimedDeliveries = [
+    ...[...text.matchAll(/\b(?:delivered|delivery(?:\s+date)?|received|arrived)\s+(?:(?:was|is)\s+)?(?:on\s+)?(?:the\s+)?(\d{4}-\d{2}-\d{2})\b/gi)].map(m=>m[1]),
+    ...[...text.matchAll(/\b(?:delivery\s*date|delivered)\s*:\s*(\d{4}-\d{2}-\d{2})\b/gi)].map(m=>m[1]),
+  ];
+  const deliveryDates = [...new Set(claimedDeliveries)];
   const intent = classifyCurrentIntent(text);
   const issueSignals = detectIssueSignals(text);
   const blockers: string[] = [];
@@ -110,6 +126,7 @@ export function inspectCaseScope(text: string, evidence: EvidenceField[] = []): 
     deliveryDates.length > 1 ? "Conflicting dates or corrections need human reconciliation." : "A single, explicit delivery date is required.",
   );
   if (explicitProductAmbiguity(text)) identityBlockers.push("Multiple or ambiguous products require product-level attribution.");
+  if (/\b(?:did\s+not|didn[\u0027’]t)\s+place\s+(?:this|the)\s+order\b/i.test(text)) identityBlockers.push("Customer disputes having placed this order.");
   if (/\b(?:actually\s+belongs?\s+to\s+my|order\s+(?:is|was)\s+not\s+mine|placed\s+by\s+(?:someone\s+else|my|a\s+friend)|not\s+my\s+order)\b/i.test(text)) identityBlockers.push("Ownership or ordering identity is disputed.");
   const orderField = evidence.find((e)=>e.id==="order_id");
   if (orderField && orderRefs.length===1 && normalizeOrderRef(orderField.value)!==orderRefs[0]) {
@@ -127,6 +144,14 @@ export function inspectCaseScope(text: string, evidence: EvidenceField[] = []): 
     intent==="exchange" ? "Exchange requires a different workflow from refund authorization." :
     "A current, affirmative refund request is not established.",
   );
-  if (issueSignals.length) blockers.push("Reported defect, product, delivery, rights or safety issue requires human review: "+issueSignals.join(", ")+".");
-  return {orderRefs,deliveryDates,intent,issueSignals,blockers,identityBlockers,linkedOrderId:identityBlockers.length===0?orderRefs[0]:null,coherent:blockers.length===0};
+  if (issueSignals.length) blockers.push("Reported defect, product, billing, delivery, rights or safety issue requires human review: "+issueSignals.join(", ")+".");
+  // An unrecognized message clause can be a problem our finite exception
+  // lexicon and the provider model both failed to detect. Fail closed.
+  const coverage = checkSafeStatementCoverage(text);
+  if (coverage.unknownCount) blockers.push(
+    "Unclassified customer statements ("+coverage.unknownCount+") need human review; absence of a detected defect is not evidence of no defect.",
+  );
+  return {orderRefs,deliveryDates,intent,issueSignals,blockers,identityBlockers,
+    linkedOrderId:identityBlockers.length===0?orderRefs[0]:null,
+    unclassifiedStatements:coverage.unknownCount,coherent:blockers.length===0};
 }
