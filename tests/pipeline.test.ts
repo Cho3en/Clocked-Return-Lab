@@ -86,6 +86,28 @@ describe("Clocked integration sequencing with mocked service responses", () => {
     const result = await triageWithClocked(mock.client,emailText,date);
     expect(result.lane).toBe("review");
   });
+  it("blocks ambiguous multi-order cases even when all model scores and extracted excerpts appear confident", async () => {
+    const text="Order ORD-24015 for the Atlas Desk Lamp was delivered on 2026-10-27. It is unused and unopened. Another order ORD-88888 exists. I want a refund.";
+    const mock=fakeClocked({protectedText:text});
+    const result=await triageWithClocked(mock.client,text,date);
+    expect(result.lane).toBe("review");
+    expect(result.caseScope?.orderRefs).toHaveLength(2);
+    expect(result.reasons.join(" ")).toMatch(/multiple|distinct|order/i);
+  });
+  it("overrides a false negative Decide result when unsafe product wording is present", async () => {
+    const text="Order ORD-24015 for the Atlas Desk Lamp was delivered on 2026-10-27. It is unused and unopened. I want a refund. The battery is overheating and smoking.";
+    const mock=fakeClocked({protectedText:text});
+    const result=await triageWithClocked(mock.client,text,date);
+    expect(result.lane).toBe("review");
+    expect(result.caseScope?.issueSignals.length).toBeGreaterThan(0);
+  });
+  it("blocks a withdrawn quote even when Decide returns a high positive score", async () => {
+    const text="Order ORD-24015 for the Atlas Desk Lamp was delivered on 2026-10-27. It is unused and unopened. Previously I wrote 'I want a refund', but I changed my mind.";
+    const mock=fakeClocked({protectedText:text});
+    const result=await triageWithClocked(mock.client,text,date);
+    expect(result.lane).toBe("review");
+    expect(result.caseScope?.intent).toBe("withdrawn");
+  });
   it("corrects service Unicode offsets before policy and UI", async () => {
     const mock = fakeClocked({protectedText:"🛒 " + emailText});
     const result = await triageWithClocked(mock.client,emailText,date);

@@ -46,7 +46,7 @@ export async function triageWithClocked(
         product: { description: "Exact name of the returned product", infer: false },
         delivery_date: { description: "Explicit date of delivery in YYYY-MM-DD format; otherwise null", infer: false, format: "date" },
         condition: { description: "Exact phrase stating used/opened/unused condition, including negations", infer: false },
-        request: { description: "Exact phrase affirmatively requesting a refund or return, if any", infer: false },
+        request: { description: "Exact phrase stating the sender’s current request, including whether refund, return-only, exchange or withdrawn, if any", infer: false },
         issue: { description: "Exact phrase about a faulty, wrong, damaged or missing product or legal rights, if any", infer: false },
       },
     }),

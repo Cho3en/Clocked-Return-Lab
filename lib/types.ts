@@ -37,4 +37,5 @@ export interface TriageResult {
   privacyNotice: string;
   policyNotice: string;
   requestId: string;
+  caseScope?: import("./case-context").CaseScope;
 }

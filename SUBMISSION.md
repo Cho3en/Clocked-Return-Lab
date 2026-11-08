@@ -4,7 +4,7 @@
 **Clocked Return Lab — Returns & Refund Autopilot**
 
 ## Overview (for the entry form)
-An evidence-led returns triage application that turns an unstructured customer email into an explainable recommendation: Approve, Human Review, or Decline. It protects personal data before analysis, extracts precise order and delivery evidence, evaluates typed yes/no questions with Clocked's probabilistic judgments, and screens for prompt injection. A separate policy engine enforces a transparent example 30-day window and routes defects or missing information to human review. The demo runs three realistic synthetic requests through the real Clocked API. It never executes a refund, sends an email, or edits an order.
+An evidence-led returns triage application that turns an unstructured customer email into an explainable recommendation: Approve, Human Review, or Decline. It protects personal data before analysis, extracts precise order and delivery evidence, evaluates typed yes/no questions with Clocked's probabilistic judgments, and screens for prompt injection. A conservative single-order policy engine refuses automatic recommendations for conflicting order IDs or delivery dates, withdrawn or quoted intent, alternative return-only/exchange requests, safety complaints, defects and missing information. It applies an illustrative 30-day window only to coherent customer-reported cases. The demo runs three realistic synthetic requests through the real Clocked API. It never executes a refund, sends an email, or edits an order.
 
 ## Audience and problem
 Independent e-commerce teams spend time reading returns emails, locating order data, interpreting eligibility, and dealing with incomplete requests. A naïve AI classifier can hallucinate dates or recommend a refund for a defective product without reviewing applicable consumer protections. This prototype demonstrates evidence-first triage and explicit human escalation.
@@ -34,7 +34,7 @@ Three live test paths: (1) unused, within example return window -> **Approve rec
 - A review/decline/approve recommendation is not an executed financial action.
 - Example 30-day policy is illustrative, not legal advice or a production store policy. Statutory rights, defects, warranties, conflicts and missing data require human review.
 - Source-controlled .env.example contains no credentials; .env.local is excluded from Git.
-- Includes setup instructions, development commits, 52 automated tests, reproducible browser smoke tests and a transparent [audit report](AUDIT.md) documenting both fixes and residual limitations.
+- Includes setup instructions, development commits, 106 automated regression/contract tests, two independent adversarial HTTP suites (32 and 76 cases), browser smoke tests, and transparent [P0 acceptance notes](P0_ACCEPTANCE.md).
 
 ## Categories to select in the entry form
 1. Best Overall App

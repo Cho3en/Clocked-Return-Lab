@@ -11,8 +11,8 @@ export const FIELD_LABELS: Record<string, string> = {
 export const QUESTIONS = {
   refund_requested: {
     type: "noul" as const,
-    instructions: "Does this customer explicitly request a return or a refund? A negated request or a general support inquiry is NO.",
-    criteria: { true: "An affirmative request to return the product or receive a refund.", false: "No affirmative request, or explicitly does not want a refund." },
+    instructions: "Does the sender currently and affirmatively ask for a monetary refund for the item, rather than an exchange, a return without refund, a hypothetical question or an old/quoted/withdrawn request? If unclear, answer NO.",
+    criteria: { true: "Current, explicit refund request from the sender.", false: "Return-only, exchange-only, question, historical quotation, withdrawn or ambiguous request." },
   },
   item_explicitly_unused: {
     type: "noul" as const,
@@ -21,8 +21,8 @@ export const QUESTIONS = {
   },
   damaged_or_defective: {
     type: "noul" as const,
-    instructions: "Is the customer claiming the product was damaged, defective, faulty, incorrect, missing, not as described, or otherwise has a problem requiring rights or warranty review? Negated claims are NO.",
-    criteria: { true: "A product, delivery or statutory-rights problem is reported.", false: "No fault, mismatch or rights problem is reported." },
+    instructions: "Does any part of this email report a product safety concern (smoke, heat, fire, shock, leaking), wrong color/size/variant, defect, damage, missing goods, incorrect product or statutory consumer-rights claim? Negated claims alone are NO. If any genuine concern is reported, answer YES.",
+    criteria: { true: "A safety, product, delivery, description, or statutory-rights problem is reported.", false: "No problem is reported." },
   },
 };
 export const QUESTION_LABELS: Record<string, string> = {

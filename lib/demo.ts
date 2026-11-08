@@ -21,7 +21,7 @@ export function triageDemo(message: string, asOf: string): TriageResult {
     find(text, "product", /\b(?:for the|for a|for my)\s+([A-Za-z][A-Za-z ]{3,45}?)(?=\s+(?:was delivered|stopped working|is damaged|arrived|on \d{4}-)|[.,])/i),
     find(text, "delivery_date", /\b(?:delivered on|received on)\s+(\d{4}-\d{2}-\d{2})/i),
     find(text, "condition", /\b((?:unused|unopened|factory sealed|still sealed)[^.!\n]{0,90})/i),
-    find(text, "request", /\b((?:I would like|I want|Can I get|Could I get)[^.!\n]{0,100}(?:refund|return)[^.!\n]{0,40})/i),
+    find(text, "request", /\b((?:I would like|I want|I need|We want|Can I get|Could I get|Please issue|Please process|Please refund|I am requesting)[^.!\n]{0,140}(?:refund|return)[^.!\n]{0,50})/i),
     find(text, "issue", /\b((?:stopped working|broken|damaged|defective|faulty)[^.!\n]{0,70})/i),
   ];
   const evidence = candidates.filter((v): v is EvidenceField => v !== null);

@@ -11,7 +11,9 @@
     "typecheck": "node ./node_modules/typescript/bin/tsc --noEmit",
     "capture": "node ./scripts/capture-demo.mjs",
     "smoke": "node ./scripts/regression-browser.mjs",
-    "record": "node ./scripts/record-demo.mjs"
+    "record": "node ./scripts/record-demo.mjs",
+    "redteam": "node ./scripts/redteam-p0.mjs",
+    "redteam:mutation": "node ./scripts/redteam-metamorphic.mjs"
   },
   "dependencies": {
     "clocked-sdk": "0.7.0",
