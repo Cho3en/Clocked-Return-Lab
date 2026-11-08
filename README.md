@@ -8,7 +8,9 @@ Transforms an incoming customer request into a **recommended** route: Approve / 
 
 *This video was recorded before the P0 case-integrity repairs. The current code has stronger safety gates; a replacement real-API video has not yet been recorded or verified.*
 
-**[Submission summary and technical judging notes](SUBMISSION.md)** · **[P0 safety milestone and red-team evidence](P0_ACCEPTANCE.md)** · **[Independent audit, fixes, and remaining boundaries](AUDIT.md)**
+**[Submission summary and technical judging notes](SUBMISSION.md)** · **[Round 3 UI redesign, new red-team findings and release plan](AUDIT_UI_REDTEAM_R3.md)**
+
+**Current release status:** The modern UI is a local candidate. A fresh adversarial suite found unsafe recommendation gaps in the simulated policy. Do not publish updated demo claims or expose the live API until those release gates are resolved. · **[P0 safety milestone and red-team evidence](P0_ACCEPTANCE.md)** · **[Independent audit, fixes, and remaining boundaries](AUDIT.md)**
 
 ![Demo result dashboard](assets/approved.png)
 

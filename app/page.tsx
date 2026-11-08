@@ -1,22 +1,29 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, CheckCircle2, CircleHelp, Clock3, FileSearch, LockKeyhole, RotateCcw, ShieldAlert, ShieldCheck, Sparkles, XCircle } from "lucide-react";
+import {
+  Activity, ArrowRight, CheckCircle2, ChevronDown, CircleAlert, CircleHelp,
+  Clock3, FileSearch, Fingerprint, LockKeyhole, RotateCcw, ShieldAlert,
+  ShieldCheck, Sparkles, XCircle, Zap,
+} from "lucide-react";
 import { createSamples } from "../lib/samples";
 import type { EvidenceField, Lane, Mode, TriageResult } from "../lib/types";
 
-const lanes: { id: Lane; title: string; subtitle: string; color: string }[] = [
-  { id: "approve", title: "Approve", subtitle: "Recommended only", color: "green" },
-  { id: "review", title: "Review", subtitle: "Human decision needed", color: "amber" },
-  { id: "reject", title: "Decline", subtitle: "Outside demo policy", color: "rose" },
+const lanes: { id: Lane; title: string; subtitle: string }[] = [
+  { id: "approve", title: "Approve", subtitle: "Advisory only" },
+  { id: "review", title: "Review", subtitle: "Human required" },
+  { id: "reject", title: "Decline", subtitle: "Policy advisory" },
 ];
+
 function asPercentage(value: number | null) {
   return value === null ? "Not supplied" : (value * 100).toFixed(1) + "%";
 }
+
 function dayToday() {
   const now = new Date();
   return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 }
+
 function EvidenceText({ text, evidence }: { text: string; evidence: EvidenceField[] }) {
   const nodes: ReactNode[] = [];
   const ordered = [...evidence].sort((a, b) => a.start - b.start);
@@ -28,35 +35,75 @@ function EvidenceText({ text, evidence }: { text: string; evidence: EvidenceFiel
     cursor = entry.end;
   });
   if (cursor < text.length) nodes.push(<span key="tail">{text.slice(cursor)}</span>);
-  return <p className="whitespace-pre-wrap break-words leading-8 text-[13px] text-slate-300">{nodes}</p>;
+  return <p className="whitespace-pre-wrap break-words text-[13px] leading-7 text-slate-300">{nodes}</p>;
 }
+
 function StatusIcon({ status }: { status: "pass" | "fail" | "unknown" }) {
   return status === "pass"
-    ? <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
+    ? <CheckCircle2 size={17} className="shrink-0 text-emerald-400" aria-label="Passed" />
     : status === "fail"
-      ? <XCircle size={15} className="text-rose-400 shrink-0" />
-      : <CircleHelp size={15} className="text-amber-400 shrink-0" />;
+      ? <XCircle size={17} className="shrink-0 text-rose-400" aria-label="Failed" />
+      : <CircleHelp size={17} className="shrink-0 text-amber-400" aria-label="Needs review" />;
 }
-function LaneBoard({ selected }: { selected: Lane | null }) {
+
+function LaneStrip({ selected }: { selected: Lane | null }) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      {lanes.map((lane, index) => (
-        <div key={lane.id} className={"lane-card lane-" + lane.color + (selected === lane.id ? " lane-active" : "")}>
-          <div className="flex items-center justify-between"><span className="text-[10px] font-semibold tracking-[.19em] uppercase opacity-60">LANE 0{index + 1}</span><span className="status-dot" /></div>
-          <div className="mt-6 text-[23px] font-semibold tracking-tight">{lane.title}</div>
-          <div className="mt-1 text-[12px] opacity-60">{lane.subtitle}</div>
-          <div className="mt-5 flex h-5 items-center text-[11px] font-semibold tracking-wide">{selected === lane.id ? "●  SELECTED ROUTE" : "AWAITING SIGNAL"}</div>
+    <div className="route-strip" role="group" aria-label="Available recommendation routes">
+      {lanes.map((lane) => (
+        <div key={lane.id} className={"route-cell route-" + lane.id + (selected === lane.id ? " route-selected" : "")}>
+          <span className="route-dot" aria-hidden="true" />
+          <span className="min-w-0">
+            <span className="block text-[13px] font-semibold">{lane.title}</span>
+            <span className="mt-0.5 block text-[10px] text-slate-500">{lane.subtitle}</span>
+          </span>
+          {selected === lane.id && <CheckCircle2 size={15} className="ml-auto shrink-0" aria-hidden="true" />}
         </div>
       ))}
     </div>
   );
 }
+
+function DetailSection({ label, title, count, children }: { label: string; title: string; count?: string; children: ReactNode }) {
+  return (
+    <details className="detail-panel">
+      <summary className="detail-toggle">
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="detail-number">{label}</span>
+          <span className="text-[14px] font-semibold tracking-tight text-slate-100">{title}</span>
+        </span>
+        <span className="flex items-center gap-3">
+          {count && <span className="text-[11px] text-slate-500">{count}</span>}
+          <ChevronDown size={16} className="detail-chevron shrink-0 text-slate-400" aria-hidden="true" />
+        </span>
+      </summary>
+      <div className="detail-content">{children}</div>
+    </details>
+  );
+}
+
+const pipeline: { title: string; icon: typeof ShieldCheck }[] = [
+  { title: "Protect", icon: ShieldCheck },
+  { title: "Guard", icon: ShieldAlert },
+  { title: "Extract", icon: FileSearch },
+  { title: "Decide", icon: Sparkles },
+  { title: "Route", icon: Fingerprint },
+];
+
 export default function Home() {
   const [mode, setMode] = useState<Mode>("demo");
   const [email, setEmail] = useState("");
   const [activeSample, setActiveSample] = useState<string | null>(null);
   const [asOf, setAsOf] = useState("");
   const samples = useMemo(() => asOf ? createSamples(asOf) : [], [asOf]);
+  const [result, setResult] = useState<TriageResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [requestEpoch, setRequestEpoch] = useState(0);
+  const [accessToken, setAccessToken] = useState("");
+  const sequence = useRef(0);
+  const pending = useRef<AbortController | null>(null);
+  const outputRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       const date = dayToday();
@@ -67,13 +114,18 @@ export default function Home() {
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
-  const [result, setResult] = useState<TriageResult | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [requestEpoch, setRequestEpoch] = useState(0);
-  const [accessToken, setAccessToken] = useState("");
-  const sequence = useRef(0);
-  const pending = useRef<AbortController | null>(null);
+  useEffect(() => () => { pending.current?.abort(); }, []);
+  useEffect(() => {
+    if (!result || !outputRef.current) return;
+    // A completed result should be visible on a phone without requiring another long scroll.
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+    const frame = window.requestAnimationFrame(() => {
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      outputRef.current?.scrollIntoView({ behavior: reduced ? "instant" : "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [requestEpoch, result]);
+
   function invalidate() {
     sequence.current++;
     pending.current?.abort();
@@ -82,17 +134,21 @@ export default function Home() {
     setResult(null);
     setError("");
   }
-  useEffect(() => () => { pending.current?.abort(); }, []);
 
   const summary = useMemo(() => {
     if (!result) return null;
-    const label = result.lane === "approve" ? "Eligible under demo rules" : result.lane === "reject" ? "Outside the return window" : "Escalate to a human";
+    const label = result.lane === "approve" ? result.mode === "demo" ? "Eligible under demo rules" : "Eligible under example policy" : result.lane === "reject" ? "Outside the return window" : "Escalate to a human";
     const description = result.lane === "approve"
-      ? "Source evidence passes every configured gate. No refund has been issued."
+      ? "The customer-reported case passes the illustrative policy gates. No refund has been issued."
       : result.lane === "reject"
-        ? "The reported delivery date exceeds the example policy window. Exceptions still need review."
-        : "One or more conditions are unknown or require a human decision.";
-    return { label, description };
+        ? "The customer-reported delivery date is outside the example window. No return has been declined in a store."
+        : "This case has uncertainty or an exception and should not be decided automatically.";
+    const nextAction = result.lane === "approve"
+      ? "Verify the order, delivery and applicable policy before taking any action."
+      : result.lane === "reject"
+        ? "Check the merchant policy, statutory rights and order history before responding."
+        : "Resolve the flagged evidence or exception with a person.";
+    return { label, description, nextAction };
   }, [result]);
 
   async function analyze() {
@@ -129,116 +185,271 @@ export default function Home() {
       }
     }
   }
+
   function chooseSample(id: string) {
     const sample = samples.find((s) => s.id === id);
     if (sample) { invalidate(); setEmail(sample.message); setActiveSample(id); }
   }
   function reset() { invalidate(); setEmail(""); setActiveSample(null); }
+
+  const pendingChecks = result?.checks.filter((c) => c.status !== "pass") ?? [];
+  const visibleReason = result?.reasons.find((reason) => /review|missing|uncertain|multiple|conflict|issue|ambig|right|date|order|product|intent/i.test(reason))
+    ?? result?.reasons[0];
+
   return (
-    <main className="min-h-screen bg-[#080e18] text-[#e7edf5]">
-      <div className="absolute inset-x-0 top-0 h-[500px] pointer-events-none top-glow" />
-      <div className="relative mx-auto max-w-[1470px] px-5 pb-24 pt-6 sm:px-9 lg:px-12">
-        <header className="flex flex-wrap items-center justify-between gap-5 border-b border-white/10 pb-6">
-          <div className="flex items-center gap-3.5">
-            <div className="brand-icon"><Clock3 size={22} strokeWidth={2.2} /></div>
-            <div>
-              <div className="text-[14px] font-extrabold tracking-[.14em]">CLOCKED <span className="font-medium text-slate-400">/ RETURN LAB</span></div>
-              <div className="text-[11px] tracking-[.12em] text-slate-500">RETURNS & REFUND AUTOPILOT</div>
+    <main className="app-shell min-h-screen text-slate-100">
+      <div className="ambient ambient-one" aria-hidden="true" />
+      <div className="ambient ambient-two" aria-hidden="true" />
+      <div className="relative mx-auto max-w-[1376px] px-4 pb-16 pt-4 sm:px-7 sm:pt-6 lg:px-10">
+        <header className="site-header">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="brand-icon"><Clock3 size={21} strokeWidth={2.2} aria-hidden="true" /></div>
+            <div className="min-w-0">
+              <div className="truncate text-[13px] font-extrabold tracking-[.13em] text-white sm:text-[14px]">CLOCKED <span className="font-medium text-slate-400">/ RETURN LAB</span></div>
+              <div className="mt-0.5 text-[10px] font-medium tracking-[.13em] text-slate-500">EVIDENCE-LED TRIAGE</div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-400"><span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />No external actions</div>
-            <div className="flex rounded-xl border border-white/10 bg-black/30 p-1" role="group" aria-label="Analysis mode">
-              <button className={"mode-tab " + (mode === "demo" ? "mode-active" : "")} onClick={() => { invalidate(); setMode("demo"); }}>Demo fixtures</button>
-              <button className={"mode-tab " + (mode === "live" ? "mode-active" : "")} onClick={() => { invalidate(); setMode("live"); }}>Clocked live</button>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="safe-chip"><span className="safe-dot" /> No refunds executed</div>
+            <div className="mode-selector" role="group" aria-label="Analysis mode">
+              <button type="button" aria-pressed={mode === "demo"} className={"mode-tab " + (mode === "demo" ? "mode-active" : "")} onClick={() => { invalidate(); setMode("demo"); }}>Demo fixtures</button>
+              <button type="button" aria-pressed={mode === "live"} className={"mode-tab " + (mode === "live" ? "mode-active" : "")} onClick={() => { invalidate(); setMode("live"); }}>Clocked live</button>
             </div>
           </div>
         </header>
 
-        <section className="pb-9 pt-11 lg:pb-12 lg:pt-14">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/15 bg-cyan-300/[.055] px-3 py-1.5 text-[11px] font-semibold tracking-widest text-cyan-200"><Sparkles size={12} /> INTELLIGENCE WITH EVIDENCE</div>
-          <h1 className="max-w-[850px] text-4xl font-semibold tracking-[-.045em] leading-[1.1] sm:text-5xl lg:text-[64px]">Returns, routed with <span className="text-sky-300">reason.</span></h1>
-          <p className="mt-5 max-w-[640px] text-[15px] leading-7 text-slate-400">Transform messy customer emails into an evidence-backed recommendation. Personal data protection, exact extraction, typed AI judgments and explicit policy gates.</p>
-          <div className="mt-7 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-400">
-            <span className="pipeline-pill"><ShieldCheck size={13} /> 01 / PROTECT</span><span className="pipeline-arrow">→</span>
-            <span className="pipeline-pill"><FileSearch size={13} /> 02 / EXTRACT</span><span className="pipeline-arrow">→</span>
-            <span className="pipeline-pill"><Sparkles size={13} /> 03 / DECIDE</span><span className="pipeline-arrow">→</span>
-            <span className="pipeline-pill"><LockKeyhole size={13} /> 04 / POLICY GATES</span>
+        <section className="intro" aria-labelledby="page-title">
+          <div className="eyebrow flex items-center gap-2"><Zap size={14} className="text-cyan-300" aria-hidden="true" /> THE DECISION WORKSPACE</div>
+          <h1 id="page-title" className="intro-title">Returns, routed <span className="accent-text">with reason.</span></h1>
+          <p className="intro-copy">From an unstructured customer message to an explainable, provisional recommendation. Detect conflicts before they become decisions.</p>
+          <div className="pipeline" aria-label="Analysis pipeline">
+            {pipeline.map(({ title, icon: Icon }, i) => (
+              <div key={title} className="pipeline-step">
+                <span className="pipeline-index">{String(i + 1).padStart(2, "0")}</span>
+                <Icon size={14} aria-hidden="true" />
+                <span>{title}</span>
+              </div>
+            ))}
           </div>
         </section>
 
-        <section className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.04fr)]">
-          <div className="surface overflow-hidden">
-            <div className="section-heading"><div><div className="eyebrow">INPUT / 001</div><h2 className="section-title mt-1">Customer request</h2></div><div className="text-[11px] text-slate-500">TEXT MESSAGE</div></div>
-            <div className="p-5 sm:p-6">
-              <div className="mb-3 flex items-center justify-between"><label className="text-[12px] font-semibold text-slate-300" htmlFor="return-message">Incoming message</label><button className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-white" onClick={reset}><RotateCcw size={12} /> Clear</button></div>
-              <textarea id="return-message" value={email} spellCheck={false} onChange={(e) => { invalidate(); setEmail(e.target.value); setActiveSample(null); }} placeholder="Paste a customer's return email here..." className="message-input h-64 w-full resize-y rounded-xl p-4 text-[13px] leading-6" />
-              <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-slate-500"><span>{email.length.toLocaleString()} / 10,000 characters</span><span>Not saved to a database</span></div>
-              <div className="mt-6"><div className="mb-3 text-[11px] font-bold tracking-[.12em] text-slate-500">TRY A SCENARIO</div>
-                <div className="flex flex-wrap gap-2">{samples.map((sample) => <button key={sample.id} title={sample.tag} onClick={() => chooseSample(sample.id)} className={"sample-button " + (activeSample === sample.id ? "sample-active" : "")}>{sample.label}</button>)}</div>
+        <div className="workspace-grid">
+          <section className="surface input-card" aria-labelledby="input-heading">
+            <div className="panel-header">
+              <div>
+                <div className="eyebrow">01 / INPUT</div>
+                <h2 id="input-heading" className="panel-title">Customer request</h2>
               </div>
-              {mode === "live" && <div className="mt-5">
-                <label className="block text-[11px] font-semibold text-slate-300" htmlFor="live-access-token">Private live access token</label>
-                <input id="live-access-token" aria-label="Private live access token" type="password" autoComplete="off" spellCheck={false} value={accessToken} onChange={(e) => { invalidate(); setAccessToken(e.target.value); }} placeholder="Copy RETURNLAB_ACCESS_TOKEN from your local .env.local" className="message-input mt-2 w-full rounded-lg p-3 text-[12px]" />
-                <p className="mt-1.5 text-[11px] text-slate-500">Stored in this tab’s memory only. Never share or commit it. Required to protect live API credits.</p>
-              </div>}
-              <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-t border-white/10 pt-6">
-                <div><label htmlFor="policy-date" className="block text-[11px] font-semibold text-slate-400">{mode === "live" ? "Live date (server-controlled)" : "Evaluation date"}</label><input id="policy-date" type="date" value={asOf} disabled={mode === "live"} onChange={(e) => { invalidate(); setAsOf(e.target.value); }} className="mt-1.5 rounded-lg border border-white/10 bg-[#0d1929] px-3 py-2 text-[12px] text-slate-200 [color-scheme:dark]" /></div>
-                <button onClick={analyze} disabled={busy || email.trim().length < 20 || email.length > 10000 || !asOf || (mode === "live" && accessToken.length < 32)} className="primary-button flex items-center justify-center gap-3 rounded-xl px-5 py-3 text-[13px] font-bold disabled:cursor-not-allowed disabled:opacity-40">{busy ? "Analyzing request..." : mode === "live" ? "Run Clocked analysis" : "Run demo analysis"}<ArrowRight size={16} /></button>
-              </div>
-              {error && <p role="alert" className="mt-4 rounded-lg border border-rose-400/20 bg-rose-500/10 p-3 text-[12px] text-rose-200">{error}</p>}
-              <p className="mt-5 flex items-start gap-2 text-[11px] leading-5 text-slate-500"><ShieldAlert size={15} className="mt-0.5 shrink-0" />{mode === "live" ? "Live mode uses the server's Europe/Zagreb date, private token and metered Clocked calls. Protect performs best-effort masking before Guard, Extract and Decide. Only use authorized data." : "Demo mode uses local regex fixtures, not real Clocked AI or production-grade PII masking. Use synthetic messages only."}</p>
+              <span className="header-meta"><Activity size={14} aria-hidden="true" /> {mode === "demo" ? "Synthetic demo" : "Private live"}</span>
             </div>
-          </div>
+            <div className="panel-body">
+              <div className="flex items-center justify-between gap-3">
+                <label htmlFor="return-message" className="field-label">Incoming message</label>
+                <button type="button" onClick={reset} className="subtle-action"><RotateCcw size={14} aria-hidden="true" /> Clear</button>
+              </div>
+              <textarea id="return-message" value={email} spellCheck={false} onChange={(e) => { invalidate(); setEmail(e.target.value); setActiveSample(null); }} placeholder="Paste a synthetic customer return message..." className="message-input mt-2.5 min-h-[194px] w-full resize-y rounded-xl px-4 py-3 text-[13px] leading-[1.8] sm:min-h-[224px]" />
+              <div className="mt-2 flex flex-wrap justify-between gap-2 text-[11px] text-slate-500">
+                <span>{email.length.toLocaleString()} / 10,000 characters</span>
+                <span>Not stored by this application</span>
+              </div>
 
-          <div className="surface overflow-hidden">
-            <div className="section-heading"><div><div className="eyebrow">OUTPUT / 002</div><h2 className="section-title mt-1">Decision routing</h2></div>{result ? <span className="result-chip">{result.mode === "demo" ? "SIMULATED" : "CLOCKED LIVE"}</span> : <span className="text-[11px] text-slate-500">AWAITING ANALYSIS</span>}</div>
-            <div className="p-5 sm:p-6">
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><span className="text-[11px] font-bold tracking-[.13em] text-slate-500">THREE-LANE ACTION BOARD</span><span className="text-[11px] text-slate-500">No automatic payouts</span></div>
-              <LaneBoard selected={result?.lane ?? null} />
+              <div className="mt-6">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="eyebrow !text-slate-400">TRY A SCENARIO</span>
+                  <span className="text-[11px] text-slate-500">One click to load</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {samples.map((sample) => (
+                    <button key={sample.id} type="button" title={sample.tag} aria-pressed={activeSample === sample.id}
+                      onClick={() => chooseSample(sample.id)}
+                      className={"sample-button " + (activeSample === sample.id ? "sample-active" : "")}>
+                      {sample.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {mode === "live" && (
+                <div className="mt-5">
+                  <label htmlFor="live-access-token" className="field-label">Private live access token</label>
+                  <input id="live-access-token" aria-label="Private live access token" type="password" autoComplete="off" spellCheck={false}
+                    value={accessToken} onChange={(e) => { invalidate(); setAccessToken(e.target.value); }}
+                    placeholder="From your local .env.local" className="message-input mt-2 w-full rounded-xl px-4 py-3 text-[13px]" />
+                  <p className="mt-2 text-[11px] leading-5 text-slate-500">Kept in this tab’s memory, not saved to browser storage. Do not share or commit it.</p>
+                </div>
+              )}
+
+              <div className="mt-6 flex flex-col justify-between gap-3 border-t border-white/[.08] pt-5 sm:flex-row sm:items-end">
+                <div>
+                  <label htmlFor="policy-date" className="field-label">{mode === "live" ? "Date is server-controlled" : "Evaluation date"}</label>
+                  <input id="policy-date" type="date" value={asOf} disabled={mode === "live"} onChange={(e) => { invalidate(); setAsOf(e.target.value); }}
+                    className="date-input mt-2 h-11 rounded-xl px-3 text-[12px]" />
+                </div>
+                <button type="button" onClick={analyze} disabled={busy || email.trim().length < 20 || email.length > 10000 || !asOf || (mode === "live" && accessToken.length < 32)}
+                  className="primary-button group inline-flex min-h-[47px] items-center justify-center gap-2 rounded-xl px-5 text-[13px] font-bold disabled:cursor-not-allowed disabled:opacity-45">
+                  {busy ? <span className="busy-indicator" aria-hidden="true" /> : <Zap size={15} aria-hidden="true" />}
+                  <span>{busy ? "Analyzing request..." : mode === "live" ? "Run Clocked analysis" : "Run demo analysis"}</span>
+                  {!busy && <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />}
+                </button>
+              </div>
+              <div aria-live="polite" aria-atomic="true" role="status" className="mt-3 min-h-[18px] text-[11px] text-slate-400">
+                {busy ? "Analyzing the current message. No refund will be executed." : result ? "Analysis complete. The recommendation is " + lanes.find((l) => l.id === result.lane)?.title + "." : ""}
+              </div>
+              {error && <p role="alert" className="mt-3 rounded-xl border border-rose-400/20 bg-rose-500/10 p-3 text-[12px] text-rose-200">{error}</p>}
+              <p className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-slate-500"><ShieldAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                {mode === "live"
+                  ? "Live requests consume Clocked credits and use the server date. Protect masking is best-effort. Use only authorized data."
+                  : "Simulated mode uses local heuristics, not real Clocked calls. Use synthetic messages only."}
+              </p>
+            </div>
+          </section>
+
+          <section ref={outputRef} id="decision-panel" className="surface result-card scroll-mt-4" aria-labelledby="result-heading">
+            <div className="panel-header">
+              <div>
+                <div className="eyebrow">02 / OUTCOME</div>
+                <h2 id="result-heading" className="panel-title">Decision routing</h2>
+              </div>
+              <span className={"result-chip " + (result ? "chip-ready" : "")}>{result ? result.mode === "demo" ? "SIMULATED" : "CLOCKED LIVE" : "READY"}</span>
+            </div>
+            <div className="panel-body">
               {result && summary ? (
-                <div key={requestEpoch} className="mt-5 rounded-xl border border-sky-400/20 bg-sky-400/[.055] p-5">
-                  <div className="text-[10px] font-bold tracking-[.17em] text-sky-300">RECOMMENDATION / {result.requestId}</div>
-                  <h3 className="mt-2 text-[21px] font-semibold tracking-tight">{summary.label}</h3>
-                  <p className="mt-2 text-[12px] leading-6 text-slate-400">{summary.description}</p>
-                  <div className="mt-4 border-t border-white/10 pt-3 text-[11px] text-slate-500">Evaluated {result.asOf} · {result.elapsedDays === null ? "Delivery age unknown" : result.elapsedDays + " days since delivery"}</div>
+                <div key={requestEpoch} className={"recommendation recommendation-" + result.lane}>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.14em] opacity-85">
+                      {result.lane === "review" ? <CircleAlert size={17} /> : result.lane === "approve" ? <CheckCircle2 size={17} /> : <ShieldAlert size={17} />}
+                      Provisional recommendation
+                    </div>
+                    <span className="text-[10px] font-medium tracking-wide opacity-60">{result.requestId}</span>
+                  </div>
+                  <h3 className="mt-4 text-[clamp(22px,3vw,29px)] font-semibold leading-[1.18] tracking-[-.035em]">{summary.label}</h3>
+                  <p className="mt-2 max-w-[470px] text-[12px] leading-6 opacity-80">{summary.description}</p>
+                  <div className="recommendation-next mt-5">
+                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-[.13em] opacity-70">Next human action</span>
+                    <span className="text-[12px] leading-5">{summary.nextAction}</span>
+                  </div>
                 </div>
               ) : (
-                <div className="mt-5 flex min-h-[165px] flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-black/10 p-6 text-center"><FileSearch size={26} className="text-slate-600" /><div className="mt-3 text-[13px] font-semibold text-slate-300">Evidence before action</div><p className="mt-1 text-[12px] text-slate-500">Submit a request to see a policy-backed route.</p></div>
+                <div className={"waiting-panel " + (busy ? "waiting-busy" : "")}>
+                  <div className="waiting-orb"><FileSearch size={27} strokeWidth={1.8} aria-hidden="true" /></div>
+                  <div className="mt-3 text-[16px] font-semibold tracking-tight text-slate-200">
+                    {busy ? "Checking the evidence" : "Ready when you are"}
+                  </div>
+                  <p className="mt-2 max-w-[280px] text-center text-[12px] leading-5 text-slate-500">
+                    {busy ? "Examining claims, intent, safety concerns and policy gates." : "Run a synthetic request to see a recommendation and what needs human attention."}
+                  </p>
+                </div>
               )}
-              <div className="mt-5 rounded-lg border border-white/[.07] bg-white/[.025] p-4 text-[11px] leading-5 text-slate-500"><strong className="text-slate-300">Important:</strong> Approve and decline are recommendations, not executed actions. Missing evidence and legal or product defects are escalated. This demo does not connect to Shopify, email, or any payment provider.</div>
-            </div>
-          </div>
-        </section>
-
-        {result && <section className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,1fr)]">
-          <div className="surface overflow-hidden">
-            <div className="section-heading"><div><div className="eyebrow">EVIDENCE / 003</div><h2 className="section-title mt-1">Source-linked extraction</h2></div><span className="text-[11px] text-slate-500">{result.evidence.length} verified spans</span></div>
-            <div className="p-5 sm:p-6">
-              <div className="rounded-xl border border-white/[.08] bg-[#0b1726] p-4"><EvidenceText text={result.redactedText} evidence={result.evidence} /></div>
-              <div className="mt-3 text-[11px] text-slate-500">Highlighted text matches exact character positions in the protected input. Unverified offsets are discarded.</div>
-              <div className="mt-5 grid gap-2 sm:grid-cols-2">{result.evidence.map((e) => <div key={e.id} className="rounded-lg border border-white/[.075] bg-white/[.025] p-3"><div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{e.label}</div><div className="mt-1.5 break-words text-[12px] text-slate-200">{e.value}</div><div className="mt-2 text-[10px] text-cyan-300/70">Characters {e.start}–{e.end} {e.confidence !== null ? "· " + asPercentage(e.confidence) + " confidence" : ""}</div></div>)}</div>
-              <p className="mt-5 text-[11px] leading-5 text-slate-500">{result.privacyNotice}</p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-5">
-            <div className="surface overflow-hidden">
-              <div className="section-heading"><div><div className="eyebrow">MODEL / 004</div><h2 className="section-title mt-1">Typed assessments</h2></div></div>
-              <div className="space-y-4 p-5 sm:p-6">{result.assessments.map((a) => <div key={a.id}>
-                <div className="flex items-center justify-between gap-3"><span className="text-[12px] text-slate-300">{a.label}</span><span className="text-[11px] font-semibold text-slate-200">{a.answer === null ? "Unknown" : a.answer ? "Yes" : "No"}</span></div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-cyan-400 transition-all" style={{ width: a.probability === null ? "0%" : (a.probability * 100).toFixed(1) + "%" }} /></div>
-                <div className="mt-1.5 text-right text-[10px] text-slate-500">{result.mode === "demo" ? "No model call · demo heuristic" : "P(Yes): " + asPercentage(a.probability)}</div>
-              </div>)}</div>
-            </div>
-            <div className="surface overflow-hidden">
-              <div className="section-heading"><div><div className="eyebrow">RULE ENGINE / 005</div><h2 className="section-title mt-1">Policy checks</h2></div></div>
-              <div className="p-5 sm:p-6"><div className="space-y-4">{result.checks.map((c) => <div key={c.label} className="flex items-start gap-3"><StatusIcon status={c.status} /><div><div className="text-[12px] font-semibold text-slate-200">{c.label}</div><div className="mt-1 text-[11px] leading-5 text-slate-500">{c.detail}</div></div></div>)}</div>
-                <div className="mt-5 border-t border-white/10 pt-4"><div className="text-[11px] font-bold tracking-wider text-slate-400">WHY THIS ROUTE?</div><ul className="mt-2 space-y-2">{result.reasons.map((reason, i) => <li key={i} className="text-[11px] leading-5 text-slate-400">• {reason}</li>)}</ul></div>
+              <div className="mt-4">
+                <LaneStrip selected={result?.lane ?? null} />
+              </div>
+              {result && (
+                <div className="case-summary mt-4">
+                  <div className="case-summary-cell">
+                    <span className="mini-label">Claimed order</span>
+                    <strong className="mt-1 block truncate text-[13px] font-semibold text-slate-200">{result.caseScope?.linkedOrderId ?? "Unresolved"}</strong>
+                  </div>
+                  <div className="case-summary-cell">
+                    <span className="mini-label">Reported delivery age</span>
+                    <strong className="mt-1 block text-[13px] font-semibold text-slate-200">{result.elapsedDays === null ? "Unknown" : result.elapsedDays + " days"}</strong>
+                  </div>
+                  <div className="case-summary-cell">
+                    <span className="mini-label">Checks needing attention</span>
+                    <strong className={"mt-1 block text-[13px] font-semibold " + (pendingChecks.length ? "text-amber-300" : "text-emerald-300")}>{pendingChecks.length}</strong>
+                  </div>
+                </div>
+              )}
+              {result && visibleReason && result.lane === "review" && (
+                <div className="attention-line mt-4"><CircleAlert size={16} className="shrink-0 text-amber-300" aria-hidden="true" /><p className="text-[12px] leading-5">{visibleReason}</p></div>
+              )}
+              <div className="mt-4 flex items-start gap-2 border-t border-white/[.07] pt-4 text-[11px] leading-5 text-slate-500">
+                <LockKeyhole size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                <span>Advisory routing only. Customer claims are not verified against store records. No payments, emails or order changes are made.</span>
               </div>
             </div>
-          </div>
-        </section>}
-        <footer className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-[11px] leading-5 text-slate-500"><span>RETURN LAB · EVIDENCE-LED REFUND TRIAGE</span><span>30-day example policy · No payments or outbound email · Privacy-first workflow</span></footer>
+          </section>
+        </div>
+
+        {result && (
+          <section className="mt-5" aria-label="Case evidence and decision details">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+              <div>
+                <div className="eyebrow">03 / INSPECT</div>
+                <h2 className="mt-1 text-[18px] font-semibold tracking-tight text-slate-200">Why this route?</h2>
+              </div>
+              <span className="text-[11px] text-slate-500">Expand only what you need</span>
+            </div>
+            <div className="details-grid">
+              <DetailSection label="01" title="Source-linked extraction" count={result.evidence.length + " exact spans"}>
+                <div className="source-text"><EvidenceText text={result.redactedText} evidence={result.evidence} /></div>
+                <div className="mt-3 text-[11px] leading-5 text-slate-500">Highlights match character offsets in protected text. They confirm what the customer wrote, not whether a claim is true.</div>
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {result.evidence.map((entry) => (
+                    <div key={entry.id} className="evidence-item">
+                      <div className="mini-label">{entry.label}</div>
+                      <div className="mt-1.5 break-words text-[12px] text-slate-200">{entry.value}</div>
+                      <div className="mt-2 text-[10px] text-slate-500">Characters {entry.start}–{entry.end}{entry.confidence === null ? "" : " · P(verified extraction): " + asPercentage(entry.confidence)}</div>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-4 text-[11px] leading-5 text-slate-500">{result.privacyNotice}</p>
+              </DetailSection>
+
+              <DetailSection label="02" title="Case linkage & intent" count={result.caseScope?.coherent ? "Coherent claims" : "Needs review"}>
+                {result.caseScope ? (
+                  <div className="space-y-3">
+                    <div className="case-data-row"><span>Referenced orders</span><strong>{result.caseScope.orderRefs.join(", ") || "None identified"}</strong></div>
+                    <div className="case-data-row"><span>Delivery dates in message</span><strong>{result.caseScope.deliveryDates.join(", ") || "Not identified"}</strong></div>
+                    <div className="case-data-row"><span>Current intent</span><strong className="capitalize">{result.caseScope.intent.replace("-", " ")}</strong></div>
+                    {result.caseScope.issueSignals.length > 0 && <div className="case-data-row"><span>Issue signals</span><strong>{result.caseScope.issueSignals.join(", ")}</strong></div>}
+                    {result.caseScope.blockers.length > 0 && <ul className="space-y-2 border-t border-white/[.08] pt-3">{result.caseScope.blockers.map((b, i) => <li key={i} className="flex gap-2 text-[12px] leading-5 text-amber-200/90"><CircleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> {b}</li>)}</ul>}
+                    {!result.caseScope.blockers.length && <div className="text-[12px] leading-6 text-slate-400">No conflicting claims found by the current checks. External merchant verification is still required.</div>}
+                  </div>
+                ) : <p className="text-[12px] text-slate-400">No structured case-scope metadata supplied.</p>}
+              </DetailSection>
+
+              <DetailSection label="03" title="Typed assessments" count={result.mode === "demo" ? "Heuristics" : "Clocked Decide"}>
+                <div className="space-y-5">
+                  {result.assessments.length === 0 && <p className="text-[12px] text-slate-400">No model assessments. Guard may have blocked subsequent calls.</p>}
+                  {result.assessments.map((a) => (
+                    <div key={a.id}>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[12px] text-slate-300">{a.label}</span>
+                        <span className="text-[12px] font-semibold text-slate-200">{a.answer === null ? "Unknown" : a.answer ? "Yes" : "No"}</span>
+                      </div>
+                      {a.probability !== null && <div className="probability-track mt-2"><div className="probability-fill" style={{ width: Math.min(100, Math.max(0, a.probability * 100)) + "%" }} /></div>}
+                      <div className="mt-1.5 text-right text-[10px] text-slate-500">{result.mode === "demo" ? "Synthetic heuristic; no model call" : "P(Yes): " + asPercentage(a.probability)}</div>
+                    </div>
+                  ))}
+                </div>
+              </DetailSection>
+
+              <DetailSection label="04" title="Policy & safety gates" count={pendingChecks.length ? pendingChecks.length + " need attention" : "All checks passed"}>
+                <div className="space-y-4">
+                  {result.checks.map((check) => (
+                    <div key={check.label} className="flex items-start gap-3">
+                      <StatusIcon status={check.status} />
+                      <div className="min-w-0">
+                        <div className="text-[12px] font-semibold text-slate-200">{check.label}</div>
+                        <div className="mt-0.5 text-[11px] leading-5 text-slate-500">{check.detail}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 border-t border-white/[.08] pt-4">
+                  <div className="mini-label">Decision rationale</div>
+                  <ul className="mt-3 space-y-2">{result.reasons.map((reason, i) => <li key={i} className="flex gap-2 text-[11px] leading-5 text-slate-400"><span className="text-cyan-400">•</span>{reason}</li>)}</ul>
+                </div>
+                <p className="mt-4 text-[11px] leading-5 text-slate-500">{result.policyNotice}</p>
+              </DetailSection>
+            </div>
+          </section>
+        )}
+
+        <footer className="site-footer">
+          <span>CLOCKED / RETURN LAB</span>
+          <span>Illustrative 30-day policy · No executed refunds · Synthetic fixtures</span>
+        </footer>
       </div>
     </main>
   );

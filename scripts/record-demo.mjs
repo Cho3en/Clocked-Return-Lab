@@ -75,7 +75,7 @@ try {
   await announce("01 / ELIGIBLE RETURN", "Evidence-backed approval", "A synthetic customer requests an unused return, 12 days after delivery. This is a live Clocked API call.");
   await pause(1200);
   await page.getByRole("button", { name: "Run Clocked analysis" }).click();
-  await page.getByText("Eligible under demo rules", { exact: true }).waitFor({ timeout: 120000 });
+  await page.getByText("Eligible under example policy", { exact: true }).waitFor({ timeout: 120000 });
   await pause(2400);
   await showEvidence();
   await announce("SOURCE EVIDENCE", "Exact spans + model probabilities", "The API returns protected text, source offsets, typed Yes probabilities and an injection risk score.");

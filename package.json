@@ -13,7 +13,10 @@
     "smoke": "node ./scripts/regression-browser.mjs",
     "record": "node ./scripts/record-demo.mjs",
     "redteam": "node ./scripts/redteam-p0.mjs",
-    "redteam:mutation": "node ./scripts/redteam-metamorphic.mjs"
+    "redteam:mutation": "node ./scripts/redteam-metamorphic.mjs",
+    "ui:audit": "node ./scripts/ui-audit.mjs",
+    "security:audit": "node ./scripts/security-audit-ui-release.mjs",
+    "redteam:ui": "node ./scripts/redteam-ui-release.mjs"
   },
   "dependencies": {
     "clocked-sdk": "0.7.0",
