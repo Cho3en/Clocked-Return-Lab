@@ -2,38 +2,64 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { triageDemo } from "../../../lib/demo";
 import { triageLive } from "../../../lib/clocked";
+import { businessDate } from "../../../lib/policy";
+import { acquireLivePermit, BodyLimitError, isAuthorized, readJsonWithLimit } from "../../../lib/security";
 
-// Next.js uses Node.js runtime by default; cacheComponents disallows route runtime exports.
-const requestSchema = z.object({
+const schema = z.object({
   message: z.string().trim().min(20).max(10_000),
   mode: z.enum(["demo", "live"]),
   asOf: z.iso.date(),
 }).strict();
+const HEADERS = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
+const json = (body: unknown, status = 200, other: Record<string, string> = {}) =>
+  NextResponse.json(body, { status, headers: { ...HEADERS, ...other } });
 
 export async function POST(request: Request) {
-  const bytes = request.headers.get("content-length");
-  if (bytes && Number(bytes) > 15_000) {
-    return NextResponse.json({ error: "Request is too large." }, { status: 413 });
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().startsWith("application/json")) {
+    return json({ error: "Expected application/json." }, 415);
   }
   let payload: unknown;
   try {
-    payload = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
+    payload = await readJsonWithLimit(request);
+  } catch (error) {
+    return error instanceof BodyLimitError
+      ? json({ error: "Request is too large (15 KB maximum)." }, 413)
+      : json({ error: "Invalid JSON or encoding." }, 400);
   }
-  const parsed = requestSchema.safeParse(payload);
+  const parsed = schema.safeParse(payload);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Enter a message (20–10,000 characters), mode and valid date." }, { status: 400 });
+    return json({ error: "Enter a message (20–10,000 characters), mode and valid date." }, 400);
+  }
+  const { message, mode, asOf } = parsed.data;
+  if (mode === "demo") {
+    try { return json(triageDemo(message, asOf)); }
+    catch { return json({ error: "The demo request could not be evaluated." }, 500); }
+  }
+  const configuredToken = process.env.RETURNLAB_ACCESS_TOKEN;
+  if (!configuredToken || configuredToken.length < 32) {
+    return json({ error: "Private live access is not configured on the server." }, 503);
+  }
+  if (!isAuthorized(request.headers.get("x-returnlab-token"), configuredToken)) {
+    return json({ error: "Private live access token is missing or invalid." }, 401);
+  }
+  const permit = acquireLivePermit();
+  if (!permit.allowed) {
+    return json({
+      error: permit.reason === "daily"
+        ? "Daily live-call budget reached. Use demo mode."
+        : permit.reason === "concurrency"
+          ? "Live analysis is busy. Retry after the current analysis finishes."
+          : "Live call limit reached. Try again after 15 minutes.",
+    }, 429, { "Retry-After": permit.reason === "daily" ? "3600" : "900" });
   }
   try {
-    const { message, mode, asOf } = parsed.data;
-    const result = mode === "demo" ? triageDemo(message, asOf) : await triageLive(message, asOf);
-    return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
-  } catch (error) {
-    // Do not return raw upstream errors, request contents, or credentials to callers.
-    const status = error instanceof Error && error.message === "CLOCKED_NOT_CONFIGURED" ? 503 : 502;
-    return NextResponse.json({
-      error: status === 503 ? "Live Clocked mode is not configured. Add CLOCKED_API_KEY to .env.local and restart." : "Clocked request failed or returned an unexpected response. Use demo mode or check your API configuration.",
-    }, { status, headers: { "Cache-Control": "no-store" } });
+    // Never accept a browser-selected date as authoritative for live decisions.
+    const result = await triageLive(message, businessDate());
+    return json(result);
+  } catch {
+    return json({ error: "Clocked failed or returned an invalid response. No recommendation was made." }, 502);
+  } finally {
+    permit.release();
   }
 }

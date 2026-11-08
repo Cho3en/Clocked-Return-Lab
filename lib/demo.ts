@@ -1,4 +1,4 @@
-import { evaluatePolicy } from "./policy";
+import { evaluatePolicy, hasRightsOrIssue, isAffirmativeReturnRequest, isUnusedClaim } from "./policy";
 import { FIELD_LABELS, QUESTION_LABELS } from "./evidence";
 import type { Assessment, EvidenceField, TriageResult } from "./types";
 
@@ -26,9 +26,9 @@ export function triageDemo(message: string, asOf: string): TriageResult {
   ];
   const evidence = candidates.filter((v): v is EvidenceField => v !== null);
   const flags: Record<string, boolean> = {
-    refund_requested: /\b(refund|return|money back)\b/i.test(text),
-    item_explicitly_unused: /\b(unused|unopened|factory sealed)\b/i.test(text),
-    damaged_or_defective: /\b(broken|damaged|defective|faulty|stopped working|malfunction)\b/i.test(text),
+    refund_requested: isAffirmativeReturnRequest(text),
+    item_explicitly_unused: isUnusedClaim(text),
+    damaged_or_defective: hasRightsOrIssue(text),
   };
   const assessments: Assessment[] = Object.entries(QUESTION_LABELS).map(([id, label]) => ({
     id, label, answer: flags[id], probability: null,

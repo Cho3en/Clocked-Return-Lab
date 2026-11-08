@@ -9,7 +9,9 @@
     "lint": "node ./node_modules/eslint/bin/eslint.js .",
     "test": "node ./node_modules/vitest/vitest.mjs run",
     "typecheck": "node ./node_modules/typescript/bin/tsc --noEmit",
-    "capture": "node ./scripts/capture-demo.mjs"
+    "capture": "node ./scripts/capture-demo.mjs",
+    "smoke": "node ./scripts/regression-browser.mjs",
+    "record": "node ./scripts/record-demo.mjs"
   },
   "dependencies": {
     "clocked-sdk": "0.7.0",

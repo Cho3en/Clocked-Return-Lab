@@ -1,5 +1,5 @@
 import { chromium } from "playwright-core";
-import { existsSync, mkdirSync, renameSync } from "node:fs";
+import { existsSync, mkdirSync, renameSync, readFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
@@ -66,6 +66,12 @@ try {
   await announce("CLOCKED BUILD CHALLENGE · 2026", "Returns. Routed with reason.", "Real Clocked Protect → Extract → Decide → Guard. Policy-backed recommendations, not automatic refunds.");
   await pause(4200);
   await page.getByRole("button", { name: "Clocked live" }).click();
+  // The private token never appears in CLI output or the repository. The input is type=password.
+  const secretFile = join(root, ".env.local");
+  const localConfig = existsSync(secretFile) ? readFileSync(secretFile, "utf8") : "";
+  const accessToken = process.env.RETURNLAB_ACCESS_TOKEN || localConfig.match(/^RETURNLAB_ACCESS_TOKEN=(\S+)/m)?.[1];
+  if (!accessToken || accessToken.length < 32) throw new Error("Private live access is not configured.");
+  await page.locator("#live-access-token").fill(accessToken);
   await announce("01 / ELIGIBLE RETURN", "Evidence-backed approval", "A synthetic customer requests an unused return, 12 days after delivery. This is a live Clocked API call.");
   await pause(1200);
   await page.getByRole("button", { name: "Run Clocked analysis" }).click();

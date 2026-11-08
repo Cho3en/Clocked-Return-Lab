@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowRight, CheckCircle2, CircleHelp, Clock3, FileSearch, LockKeyhole, RotateCcw, ShieldAlert, ShieldCheck, Sparkles, XCircle } from "lucide-react";
 import { createSamples } from "../lib/samples";
 import type { EvidenceField, Lane, Mode, TriageResult } from "../lib/types";
@@ -71,6 +71,18 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [requestEpoch, setRequestEpoch] = useState(0);
+  const [accessToken, setAccessToken] = useState("");
+  const sequence = useRef(0);
+  const pending = useRef<AbortController | null>(null);
+  function invalidate() {
+    sequence.current++;
+    pending.current?.abort();
+    pending.current = null;
+    setBusy(false);
+    setResult(null);
+    setError("");
+  }
+  useEffect(() => () => { pending.current?.abort(); }, []);
 
   const summary = useMemo(() => {
     if (!result) return null;
@@ -84,17 +96,23 @@ export default function Home() {
   }, [result]);
 
   async function analyze() {
+    pending.current?.abort();
+    const controller = new AbortController();
+    const requestNumber = ++sequence.current;
+    pending.current = controller;
     setBusy(true);
     setResult(null);
     setError("");
     try {
       const response = await fetch("/api/triage", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(mode === "live" ? { "x-returnlab-token": accessToken } : {}) },
         cache: "no-store",
+        signal: controller.signal,
         body: JSON.stringify({ message: email, mode, asOf }),
       });
       const data: unknown = await response.json();
+      if (controller.signal.aborted || sequence.current !== requestNumber) return;
       if (!response.ok) {
         const err = data as { error?: string };
         throw new Error(err.error ?? "Unable to analyze this request.");
@@ -102,16 +120,20 @@ export default function Home() {
       setResult(data as TriageResult);
       setRequestEpoch((n) => n + 1);
     } catch (e) {
+      if (controller.signal.aborted || sequence.current !== requestNumber) return;
       setError(e instanceof Error ? e.message : "An unexpected error occurred.");
     } finally {
-      setBusy(false);
+      if (sequence.current === requestNumber) {
+        pending.current = null;
+        setBusy(false);
+      }
     }
   }
   function chooseSample(id: string) {
     const sample = samples.find((s) => s.id === id);
-    if (sample) { setEmail(sample.message); setActiveSample(id); setError(""); setResult(null); }
+    if (sample) { invalidate(); setEmail(sample.message); setActiveSample(id); }
   }
-  function reset() { setEmail(""); setActiveSample(null); setResult(null); setError(""); }
+  function reset() { invalidate(); setEmail(""); setActiveSample(null); }
   return (
     <main className="min-h-screen bg-[#080e18] text-[#e7edf5]">
       <div className="absolute inset-x-0 top-0 h-[500px] pointer-events-none top-glow" />
@@ -127,8 +149,8 @@ export default function Home() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-400"><span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />No external actions</div>
             <div className="flex rounded-xl border border-white/10 bg-black/30 p-1" role="group" aria-label="Analysis mode">
-              <button className={"mode-tab " + (mode === "demo" ? "mode-active" : "")} onClick={() => { setMode("demo"); setResult(null); }}>Demo fixtures</button>
-              <button className={"mode-tab " + (mode === "live" ? "mode-active" : "")} onClick={() => { setMode("live"); setResult(null); }}>Clocked live</button>
+              <button className={"mode-tab " + (mode === "demo" ? "mode-active" : "")} onClick={() => { invalidate(); setMode("demo"); }}>Demo fixtures</button>
+              <button className={"mode-tab " + (mode === "live" ? "mode-active" : "")} onClick={() => { invalidate(); setMode("live"); }}>Clocked live</button>
             </div>
           </div>
         </header>
@@ -150,17 +172,22 @@ export default function Home() {
             <div className="section-heading"><div><div className="eyebrow">INPUT / 001</div><h2 className="section-title mt-1">Customer request</h2></div><div className="text-[11px] text-slate-500">TEXT MESSAGE</div></div>
             <div className="p-5 sm:p-6">
               <div className="mb-3 flex items-center justify-between"><label className="text-[12px] font-semibold text-slate-300" htmlFor="return-message">Incoming message</label><button className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-white" onClick={reset}><RotateCcw size={12} /> Clear</button></div>
-              <textarea id="return-message" value={email} spellCheck={false} onChange={(e) => { setEmail(e.target.value); setActiveSample(null); setResult(null); }} placeholder="Paste a customer's return email here..." className="message-input h-64 w-full resize-y rounded-xl p-4 text-[13px] leading-6" />
+              <textarea id="return-message" value={email} spellCheck={false} onChange={(e) => { invalidate(); setEmail(e.target.value); setActiveSample(null); }} placeholder="Paste a customer's return email here..." className="message-input h-64 w-full resize-y rounded-xl p-4 text-[13px] leading-6" />
               <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-slate-500"><span>{email.length.toLocaleString()} / 10,000 characters</span><span>Not saved to a database</span></div>
               <div className="mt-6"><div className="mb-3 text-[11px] font-bold tracking-[.12em] text-slate-500">TRY A SCENARIO</div>
                 <div className="flex flex-wrap gap-2">{samples.map((sample) => <button key={sample.id} title={sample.tag} onClick={() => chooseSample(sample.id)} className={"sample-button " + (activeSample === sample.id ? "sample-active" : "")}>{sample.label}</button>)}</div>
               </div>
+              {mode === "live" && <div className="mt-5">
+                <label className="block text-[11px] font-semibold text-slate-300" htmlFor="live-access-token">Private live access token</label>
+                <input id="live-access-token" aria-label="Private live access token" type="password" autoComplete="off" spellCheck={false} value={accessToken} onChange={(e) => { invalidate(); setAccessToken(e.target.value); }} placeholder="Copy RETURNLAB_ACCESS_TOKEN from your local .env.local" className="message-input mt-2 w-full rounded-lg p-3 text-[12px]" />
+                <p className="mt-1.5 text-[11px] text-slate-500">Stored in this tab’s memory only. Never share or commit it. Required to protect live API credits.</p>
+              </div>}
               <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-t border-white/10 pt-6">
-                <div><label htmlFor="policy-date" className="block text-[11px] font-semibold text-slate-400">Evaluation date</label><input id="policy-date" type="date" value={asOf} onChange={(e) => { setAsOf(e.target.value); setResult(null); }} className="mt-1.5 rounded-lg border border-white/10 bg-[#0d1929] px-3 py-2 text-[12px] text-slate-200 [color-scheme:dark]" /></div>
-                <button onClick={analyze} disabled={busy || email.trim().length < 20 || email.length > 10000 || !asOf} className="primary-button flex items-center justify-center gap-3 rounded-xl px-5 py-3 text-[13px] font-bold disabled:cursor-not-allowed disabled:opacity-40">{busy ? "Analyzing request..." : mode === "live" ? "Run Clocked analysis" : "Run demo analysis"}<ArrowRight size={16} /></button>
+                <div><label htmlFor="policy-date" className="block text-[11px] font-semibold text-slate-400">{mode === "live" ? "Live date (server-controlled)" : "Evaluation date"}</label><input id="policy-date" type="date" value={asOf} disabled={mode === "live"} onChange={(e) => { invalidate(); setAsOf(e.target.value); }} className="mt-1.5 rounded-lg border border-white/10 bg-[#0d1929] px-3 py-2 text-[12px] text-slate-200 [color-scheme:dark]" /></div>
+                <button onClick={analyze} disabled={busy || email.trim().length < 20 || email.length > 10000 || !asOf || (mode === "live" && accessToken.length < 32)} className="primary-button flex items-center justify-center gap-3 rounded-xl px-5 py-3 text-[13px] font-bold disabled:cursor-not-allowed disabled:opacity-40">{busy ? "Analyzing request..." : mode === "live" ? "Run Clocked analysis" : "Run demo analysis"}<ArrowRight size={16} /></button>
               </div>
               {error && <p role="alert" className="mt-4 rounded-lg border border-rose-400/20 bg-rose-500/10 p-3 text-[12px] text-rose-200">{error}</p>}
-              <p className="mt-5 flex items-start gap-2 text-[11px] leading-5 text-slate-500"><ShieldAlert size={15} className="mt-0.5 shrink-0" />{mode === "live" ? "Live mode sends text to Clocked Protect for anonymization, then sends redacted text to the other Clocked services. Do not use real customer data without appropriate permissions." : "Demo mode uses local regex fixtures, not real Clocked AI or production-grade PII masking. Use synthetic messages only."}</p>
+              <p className="mt-5 flex items-start gap-2 text-[11px] leading-5 text-slate-500"><ShieldAlert size={15} className="mt-0.5 shrink-0" />{mode === "live" ? "Live mode uses the server's Europe/Zagreb date, private token and metered Clocked calls. Protect performs best-effort masking before Guard, Extract and Decide. Only use authorized data." : "Demo mode uses local regex fixtures, not real Clocked AI or production-grade PII masking. Use synthetic messages only."}</p>
             </div>
           </div>
 

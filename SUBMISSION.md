@@ -11,13 +11,13 @@ Independent e-commerce teams spend time reading returns emails, locating order d
 
 ## Meaningful Clocked integration
 
-1. **Protect — PII** accepts the original message and returns masked text. All subsequent calls operate on that protected copy.
-2. **Extract** retrieves the order identifier, product, delivery date, condition, requested action and issue with source spans. Invalid or nonmatching offsets are discarded rather than shown as evidence.
-3. **Decide** uses three typed noul judgments: explicit return intent, unused condition and damage/defect. The dashboard shows the returned P(Yes) for each question, not a fabricated refund-approval percentage.
-4. **Guard — injection** evaluates the protected text as untrusted external content. The returned injection probability is checked against Clocked's returned threshold; suspicious or unknown results block automatic eligibility and escalate.
+1. **Protect — PII** accepts the original message and returns masked text. An extra local scrub catches obvious residual structured identifiers. This is best-effort protection, not guaranteed anonymization.
+2. **Guard — injection** screens protected, untrusted text before any extraction or decisions. A suspicious or unavailable result stops additional Clocked analysis and requires a human.
+3. **Extract** retrieves customer-stated order details, delivery, condition, request and issue with source spans. Unicode code-point offsets are converted to JS UTF-16 positions. Low-confidence or mismatched evidence is not trusted for eligibility.
+4. **Decide** uses three typed noul judgments about refund intent, unused condition and damage/rights exceptions. Scores with insufficient confidence trigger human review, and the UI displays the returned P(Yes) rather than inventing refund-approval probabilities.
 5. **Deterministic policy engine** decides a recommendation from source-grounded values, explicit day arithmetic and exception handling. Model probabilities are never treated as policy facts.
 
-**Why the calls matter:** PII shapes the safe text passed to other services; extraction determines whether policy gates can be evaluated; Decide validates explicit claims; Guard can prevent routing; and deterministic policy checks decide the final lane. The app fails closed to Review when necessary inputs or checks are uncertain.
+**Why the calls matter:** PII shapes the input, Guard blocks unsafe downstream processing, Extract determines whether sufficiently supported policy gates can be evaluated, Decide supports claim assessments, and deterministic policy checks decide the advisory route. The app fails closed to Review when necessary inputs or checks are uncertain.
 
 ## Demonstration
 - Video: https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm
@@ -34,7 +34,7 @@ Three live test paths: (1) unused, within example return window -> **Approve rec
 - A review/decline/approve recommendation is not an executed financial action.
 - Example 30-day policy is illustrative, not legal advice or a production store policy. Statutory rights, defects, warranties, conflicts and missing data require human review.
 - Source-controlled .env.example contains no credentials; .env.local is excluded from Git.
-- Includes setup instructions, development commits and automated tests.
+- Includes setup instructions, development commits, 52 automated tests, reproducible browser smoke tests and a transparent [audit report](AUDIT.md) documenting both fixes and residual limitations.
 
 ## Categories to select in the entry form
 1. Best Overall App
