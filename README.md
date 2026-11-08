@@ -4,6 +4,10 @@ An evidence-led return triage dashboard created for the **Clocked Build Challeng
 
 Transforms an incoming customer request into a **recommended** route: Approve / Human Review / Decline. This is a decision-support prototype — it cannot issue refunds, send emails, or change orders.
 
+**[Watch the real Clocked API demonstration (50 seconds)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
+
+**[Submission summary and technical judging notes](SUBMISSION.md)**
+
 ![Demo result dashboard](assets/approved.png)
 
 The three screenshots in **assets/** document the different lanes. Start the app with **npm run dev**, then run **npm run capture** (default http://localhost:3000) to repeat browser-backed checks. Set **RETURNLAB_URL** to override the base URL.

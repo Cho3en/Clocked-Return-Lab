@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Local browser-recorded video is published as a release asset, not Git history.
+/assets/*.webm
+
 # vercel
 .vercel
 
