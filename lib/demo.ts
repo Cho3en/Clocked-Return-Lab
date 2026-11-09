@@ -18,8 +18,8 @@ export function triageDemo(message: string, asOf: string): TriageResult {
   const text = maskForDemo(message);
   const candidates = [
     find(text, "order_id", /(?:\b(ORD-[A-Z0-9-]{4,35})\b|(?:^|[^\w])(#\d{3,18})\b)/i),
-    find(text, "product", /\b(?:for the|for a|for my)\s+([A-Za-z][A-Za-z ]{3,60}?)(?=\s+(?:was delivered|was purchased|stopped working|is damaged|arrived|on \d{4}-)|[.,])/i)
-      ?? find(text, "product", /\bproduct:\s*([A-Za-z][A-Za-z ]{3,60})(?=\n|[.!]|$)/i),
+    find(text, "product", /\b(?:for the|for a|for my)\s+((?:[^\r\n.!?]|\d\.\d){3,100}?)(?=\s+(?:was delivered|was purchased|stopped working|is damaged|arrived|on \d{4}-)|[.,])/iu)
+      ?? find(text, "product", /\bproduct:\s*((?:[^\r\n.!?]|\d\.\d){3,100})(?=\n|[.!]|$)/iu),
     find(text, "delivery_date", /\b(?:delivered on|received on|delivery date(?: was| is)?|delivered:)\s*(\d{4}-\d{2}-\d{2})/i),
     find(text, "condition", /\b((?:unused|unopened|factory sealed|still sealed)[^.!\n]{0,90})/i),
     find(text, "request", /\b((?:I would like|I want|I need|We want|Can I get|Could I get|Please issue|Please process|Please refund|Please reimburse|I am requesting)[^.!\n]{0,140}(?:refund|return|reimburse(?:ment|d)?)[^.!\n]{0,50})/i)
