@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  Activity, ArrowRight, CheckCircle2, ChevronDown, CircleAlert, CircleHelp,
-  Clock3, FileSearch, Fingerprint, LockKeyhole, RotateCcw, ShieldAlert,
-  ShieldCheck, Sparkles, XCircle, Zap,
+  ArrowRight, BarChart3, CheckCircle2, ChevronDown, CircleAlert, CircleHelp,
+  FileSearch, FileText, Fingerprint, House, Inbox, Layers, LockKeyhole, Package,
+  PieChart, Plus, RotateCcw, Search, Settings, ShieldAlert, ShieldCheck,
+  Sparkles, TrendingUp, Users, XCircle, Zap,
 } from "lucide-react";
 import { createSamples } from "../lib/samples";
 import type { EvidenceField, Lane, Mode, TriageResult } from "../lib/types";
@@ -35,45 +36,28 @@ function EvidenceText({ text, evidence }: { text: string; evidence: EvidenceFiel
     cursor = entry.end;
   });
   if (cursor < text.length) nodes.push(<span key="tail">{text.slice(cursor)}</span>);
-  return <p className="whitespace-pre-wrap break-words text-[13px] leading-7 text-slate-300">{nodes}</p>;
+  return <p style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 13, lineHeight: 1.75, color: "var(--ink)" }}>{nodes}</p>;
 }
 
 function StatusIcon({ status }: { status: "pass" | "fail" | "unknown" }) {
   return status === "pass"
-    ? <CheckCircle2 size={17} className="shrink-0 text-emerald-400" aria-label="Passed" />
+    ? <CheckCircle2 size={17} style={{ color: "var(--green)", flexShrink: 0 }} aria-label="Passed" />
     : status === "fail"
-      ? <XCircle size={17} className="shrink-0 text-rose-400" aria-label="Failed" />
-      : <CircleHelp size={17} className="shrink-0 text-amber-400" aria-label="Needs review" />;
-}
-
-function LaneStrip({ selected }: { selected: Lane | null }) {
-  return (
-    <div className="route-strip" role="group" aria-label="Available recommendation routes">
-      {lanes.map((lane) => (
-        <div key={lane.id} className={"route-cell route-" + lane.id + (selected === lane.id ? " route-selected" : "")}>
-          <span className="route-dot" aria-hidden="true" />
-          <span className="min-w-0">
-            <span className="block text-[13px] font-semibold">{lane.title}</span>
-            <span className="mt-0.5 block text-[10px] text-slate-500">{lane.subtitle}</span>
-          </span>
-          {selected === lane.id && <CheckCircle2 size={15} className="ml-auto shrink-0" aria-hidden="true" />}
-        </div>
-      ))}
-    </div>
-  );
+      ? <XCircle size={17} style={{ color: "var(--red)", flexShrink: 0 }} aria-label="Failed" />
+      : <CircleHelp size={17} style={{ color: "var(--amber)", flexShrink: 0 }} aria-label="Needs review" />;
 }
 
 function DetailSection({ label, title, count, children }: { label: string; title: string; count?: string; children: ReactNode }) {
   return (
     <details className="detail-panel">
       <summary className="detail-toggle">
-        <span className="flex min-w-0 items-center gap-3">
-          <span className="detail-number">{label}</span>
-          <span className="text-[14px] font-semibold tracking-tight text-slate-100">{title}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
+          <span className="detail-num">{label}</span>
+          <span style={{ fontSize: 13.5, fontWeight: 800, letterSpacing: "-0.01em", color: "var(--ink)" }}>{title}</span>
         </span>
-        <span className="flex items-center gap-3">
-          {count && <span className="text-[11px] text-slate-500">{count}</span>}
-          <ChevronDown size={16} className="detail-chevron shrink-0 text-slate-400" aria-hidden="true" />
+        <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {count && <span className="detail-count">{count}</span>}
+          <ChevronDown size={16} className="detail-chevron" aria-hidden="true" />
         </span>
       </summary>
       <div className="detail-content">{children}</div>
@@ -81,18 +65,17 @@ function DetailSection({ label, title, count, children }: { label: string; title
   );
 }
 
-const pipeline: { title: string; icon: typeof ShieldCheck }[] = [
-  { title: "Protect", icon: ShieldCheck },
-  { title: "Guard", icon: ShieldAlert },
-  { title: "Extract", icon: FileSearch },
-  { title: "Decide", icon: Sparkles },
-  { title: "Route", icon: Fingerprint },
+const pipelineStages = [
+  { id: "request", name: "Request", sub: "Received" },
+  { id: "protect", name: "Protect", sub: "Risk & abuse check" },
+  { id: "guard", name: "Guard", sub: "Policy & eligibility" },
+  { id: "extract", name: "Extract", sub: "Evidence & details" },
+  { id: "decide", name: "Decide", sub: "Recommendation" },
 ];
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>("demo");
   const [email, setEmail] = useState("");
-  // Do not accept edits before the client has hydrated and initialized its sample.
   const [inputReady, setInputReady] = useState(false);
   const [activeSample, setActiveSample] = useState<string | null>(null);
   const [asOf, setAsOf] = useState("");
@@ -102,6 +85,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [requestEpoch, setRequestEpoch] = useState(0);
   const [accessToken, setAccessToken] = useState("");
+  const [search, setSearch] = useState("");
   const sequence = useRef(0);
   const pending = useRef<AbortController | null>(null);
   const outputRef = useRef<HTMLElement | null>(null);
@@ -120,7 +104,6 @@ export default function Home() {
   useEffect(() => () => { pending.current?.abort(); }, []);
   useEffect(() => {
     if (!result || !outputRef.current) return;
-    // A completed result should be visible on a phone without requiring another long scroll.
     if (!window.matchMedia("(max-width: 1023px)").matches) return;
     const frame = window.requestAnimationFrame(() => {
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -199,261 +182,444 @@ export default function Home() {
   const visibleReason = result?.reasons.find((reason) => /review|missing|uncertain|multiple|conflict|issue|ambig|right|date|order|product|intent/i.test(reason))
     ?? result?.reasons[0];
 
+  function stageState(idx: number): string {
+    if (!result) return busy && idx === 1 ? "active" : "";
+    const decideIdx = 4;
+    if (idx < decideIdx) return "done";
+    return idx === decideIdx ? "done decide-done" : "";
+  }
+
+  const detailLane = result ? lanes.find((l) => l.id === result.lane) : null;
+  const metrics = [
+    { icon: <Package size={16} aria-hidden="true" />, label: "Cases evaluated", value: result ? "1" : "—", note: result ? "This session · no history stored" : "No history stored — run a case below", tint: "m-peach" },
+    { icon: <Users size={16} aria-hidden="true" />, label: "Human review", value: result && result.lane === "review" ? "1" : result ? "0" : "—", note: "From the current evaluation only", tint: "m-lav" },
+    { icon: <CheckCircle2 size={16} aria-hidden="true" />, label: "Approve (recommended)", value: result && result.lane === "approve" ? "1" : result ? "0" : "—", note: "Recommendation, not a refund", tint: "m-peach2" },
+    { icon: <XCircle size={16} aria-hidden="true" />, label: "Decline (recommended)", value: result && result.lane === "reject" ? "1" : result ? "0" : "—", note: "Under the example policy", tint: "m-lav2" },
+  ];
+
   return (
-    <main className="app-shell min-h-screen text-slate-100">
-      <div className="ambient ambient-one" aria-hidden="true" />
-      <div className="ambient ambient-two" aria-hidden="true" />
-      <div className="relative mx-auto max-w-[1376px] px-4 pb-16 pt-4 sm:px-7 sm:pt-6 lg:px-10">
-        <header className="site-header">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="brand-icon"><Clock3 size={21} strokeWidth={2.2} aria-hidden="true" /></div>
-            <div className="min-w-0">
-              <div className="truncate text-[13px] font-extrabold tracking-[.13em] text-white sm:text-[14px]">CLOCKED <span className="font-medium text-slate-400">/ RETURN LAB</span></div>
-              <div className="mt-0.5 text-[10px] font-medium tracking-[.13em] text-slate-500">CLEARER RETURN REVIEWS</div>
-            </div>
+    <div className="shell">
+      <aside className="sidebar" aria-label="Primary">
+        <div className="brand">
+          <div className="brand-mark"><Package size={20} aria-hidden="true" /></div>
+          <div>
+            <div className="brand-name">Clocked Return Lab</div>
+            <div className="brand-sub">Returns &amp; Refunds Decision Intelligence</div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="safe-chip"><span className="safe-dot" /> No refunds executed</div>
-            <div className="mode-selector" role="group" aria-label="Analysis mode">
-              <button type="button" aria-pressed={mode === "demo"} className={"mode-tab " + (mode === "demo" ? "mode-active" : "")} onClick={() => { invalidate(); setMode("demo"); }}>Demo fixtures</button>
-              <button type="button" aria-pressed={mode === "live"} className={"mode-tab " + (mode === "live" ? "mode-active" : "")} onClick={() => { invalidate(); setMode("live"); }}>Clocked live</button>
+        </div>
+        <nav className="side-nav">
+          <button type="button" className="side-link active"><House size={17} aria-hidden="true" /> Overview</button>
+          <button type="button" className="side-link"><Layers size={17} aria-hidden="true" /> Cases {result && <span className="side-badge">1</span>}</button>
+          <button type="button" className="side-link"><Plus size={17} aria-hidden="true" /> New Case</button>
+          <button type="button" className="side-link"><BarChart3 size={17} aria-hidden="true" /> Analytics</button>
+          <button type="button" className="side-link"><ShieldCheck size={17} aria-hidden="true" /> Evidence</button>
+          <button type="button" className="side-link"><Settings size={17} aria-hidden="true" /> Settings</button>
+        </nav>
+        <div className="side-foot">
+          <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+          <div>
+            <strong>Powered by</strong>
+            <b>Clocked</b>
+            <span>Protect · Guard · Extract · Decide</span>
+          </div>
+        </div>
+      </aside>
+
+      <div className="main">
+        <header className="topbar">
+          <div>
+            <h1 className="topbar-title">Overview</h1>
+            <p className="topbar-sub">Returns, evidence and decision recommendations</p>
+          </div>
+          <div className="top-actions">
+            <div className="search-box">
+              <Search size={15} aria-hidden="true" />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search cases, orders, customers…"
+                className="search-input"
+                aria-label="Search cases, orders, customers"
+              />
+            </div>
+            <span className="status-chip"><span className="status-dot" aria-hidden="true" /> No refunds executed</span>
+            <div className="mode-toggle" role="group" aria-label="Analysis mode">
+              <button type="button" aria-pressed={mode === "demo"} className={"mode-btn " + (mode === "demo" ? "active" : "")} onClick={() => { invalidate(); setMode("demo"); }}>Demo fixtures</button>
+              <button type="button" aria-pressed={mode === "live"} className={"mode-btn " + (mode === "live" ? "active" : "")} onClick={() => { invalidate(); setMode("live"); }}>Clocked live</button>
             </div>
           </div>
         </header>
 
-        <section className="intro" aria-labelledby="page-title">
-          <div className="eyebrow flex items-center gap-2"><Zap size={14} className="text-cyan-300" aria-hidden="true" /> RETURN REQUEST REVIEW</div>
-          <h1 id="page-title" className="intro-title">Understand each return <span className="accent-text">before deciding.</span></h1>
-          <p className="intro-copy">Paste a customer message to see what it says, what is missing and what needs a closer look. The result is a suggestion, not a final refund decision.</p>
-          <div className="pipeline" aria-label="Analysis pipeline">
-            {pipeline.map(({ title, icon: Icon }, i) => (
-              <div key={title} className="pipeline-step">
-                <span className="pipeline-index">{String(i + 1).padStart(2, "0")}</span>
-                <Icon size={14} aria-hidden="true" />
-                <span>{title}</span>
+        <main className="content">
+          <section className="metrics" aria-label="Session metrics">
+            {metrics.map((m) => (
+              <div key={m.label} className={"metric " + m.tint}>
+                <div className="metric-head">
+                  <span className="metric-icon">{m.icon}</span>
+                  <span className="metric-label">{m.label}</span>
+                </div>
+                <div className="metric-value num">{m.value}</div>
+                <div className="metric-note">{m.note}</div>
               </div>
             ))}
-          </div>
-        </section>
+          </section>
 
-        <div className="workspace-grid">
-          <section className="surface input-card" aria-labelledby="input-heading">
-            <div className="panel-header">
-              <div>
-                <div className="eyebrow">01 / INPUT</div>
-                <h2 id="input-heading" className="panel-title">Customer request</h2>
-              </div>
-              <span className="header-meta"><Activity size={14} aria-hidden="true" /> {mode === "demo" ? "Synthetic demo" : "Private live"}</span>
-            </div>
-            <div className="panel-body">
-              <div className="flex items-center justify-between gap-3">
-                <label htmlFor="return-message" className="field-label">Incoming message</label>
-                <button type="button" onClick={reset} disabled={!inputReady} className="subtle-action"><RotateCcw size={14} aria-hidden="true" /> Clear</button>
-              </div>
-              <textarea id="return-message" value={email} disabled={!inputReady} spellCheck={false} onChange={(e) => { invalidate(); setEmail(e.target.value); setActiveSample(null); }} placeholder="Paste a made-up return email to try the demo..." className="message-input mt-2.5 min-h-[194px] w-full resize-y rounded-xl px-4 py-3 text-[13px] leading-[1.8] sm:min-h-[224px]" />
-              <div className="mt-2 flex flex-wrap justify-between gap-2 text-[11px] text-slate-500">
-                <span>{email.length.toLocaleString()} / 10,000 characters</span>
-                <span>Not stored by this application</span>
-              </div>
-
-              <div className="mt-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="eyebrow !text-slate-400">TRY AN EXAMPLE</span>
-                  <span className="text-[11px] text-slate-500">Choose a sample</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {samples.map((sample) => (
-                    <button key={sample.id} type="button" title={sample.tag} aria-pressed={activeSample === sample.id}
-                      onClick={() => chooseSample(sample.id)} disabled={!inputReady}
-                      className={"sample-button " + (activeSample === sample.id ? "sample-active" : "")}>
-                      {sample.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {mode === "live" && (
-                <div className="mt-5">
-                  <label htmlFor="live-access-token" className="field-label">Private live access token</label>
-                  <input id="live-access-token" aria-label="Private live access token" type="password" autoComplete="off" spellCheck={false}
-                    value={accessToken} disabled={!inputReady} onChange={(e) => { invalidate(); setAccessToken(e.target.value); }}
-                    placeholder="From your local .env.local" className="message-input mt-2 w-full rounded-xl px-4 py-3 text-[13px]" />
-                  <p className="mt-2 text-[11px] leading-5 text-slate-500">Kept in this tab’s memory, not saved to browser storage. Do not share or commit it.</p>
-                </div>
-              )}
-
-              <div className="mt-6 flex flex-col justify-between gap-3 border-t border-white/[.08] pt-5 sm:flex-row sm:items-end">
+          <section className="analytics" aria-label="Analytics">
+            <div className="panel">
+              <div className="panel-head">
                 <div>
-                  <label htmlFor="policy-date" className="field-label">{mode === "live" ? "Date is server-controlled" : "Evaluation date"}</label>
-                  <input id="policy-date" type="date" value={asOf} disabled={!inputReady || mode === "live"} onChange={(e) => { invalidate(); setAsOf(e.target.value); }}
-                    className="date-input mt-2 h-11 rounded-xl px-3 text-[12px]" />
+                  <div className="panel-title"><TrendingUp size={17} aria-hidden="true" /> Case Volume</div>
+                  <div className="panel-sub">Returns processed per day</div>
                 </div>
-                <button type="button" onClick={analyze} disabled={!inputReady || busy || email.trim().length < 20 || email.length > 10000 || !asOf || (mode === "live" && accessToken.length < 32)}
-                  className="primary-button group inline-flex min-h-[47px] items-center justify-center gap-2 rounded-xl px-5 text-[13px] font-bold disabled:cursor-not-allowed disabled:opacity-45">
-                  {busy ? <span className="busy-indicator" aria-hidden="true" /> : <Zap size={15} aria-hidden="true" />}
-                  <span>{busy ? "Analyzing request..." : mode === "live" ? "Run Clocked analysis" : "Run demo analysis"}</span>
-                  {!busy && <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />}
-                </button>
               </div>
-              <div aria-live="polite" aria-atomic="true" role="status" className="mt-3 min-h-[18px] text-[11px] text-slate-400">
-                {busy ? "Checking this message. No refund will be issued." : result ? "Analysis complete. The recommendation is " + lanes.find((l) => l.id === result.lane)?.title + "." : ""}
+              <div className="empty-state" role="status">
+                <b>No case history to chart</b>
+                <span style={{ marginTop: 4, maxWidth: 340 }}>
+                  This build stores no case history. Volume charts appear here once real processing history exists — run a case below to see its evaluation.
+                </span>
               </div>
-              {error && <p role="alert" className="mt-3 rounded-xl border border-rose-400/20 bg-rose-500/10 p-3 text-[12px] text-rose-200">{error}</p>}
-              <p className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-slate-500"><ShieldAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-                {mode === "live"
-                  ? "Live requests may cost Clocked credits. Dates come from the server, and personal-data masking is not perfect. Use only data you have permission to send."
-                  : "This demo uses local rules, not Clocked API calls. Please use made-up customer details."}
-              </p>
+            </div>
+            <div className="panel">
+              <div className="panel-head">
+                <div>
+                  <div className="panel-title"><PieChart size={17} aria-hidden="true" /> Decision Distribution</div>
+                  <div className="panel-sub">Recommendation breakdown</div>
+                </div>
+              </div>
+              <div className="empty-state" role="status">
+                <b>Distribution shows your current case</b>
+                <span style={{ marginTop: 4, maxWidth: 340 }}>
+                  Aggregate breakdowns require stored history. The lane strip under the recommendation shows where the current case sits.
+                </span>
+                <span className="chart-legend" aria-hidden="true">
+                  <span><span className="legend-dot" style={{ background: "var(--terra)" }} />Approve</span>
+                  <span><span className="legend-dot" style={{ background: "var(--lavender)" }} />Human review</span>
+                  <span><span className="legend-dot" style={{ background: "var(--rust)" }} />Decline</span>
+                </span>
+              </div>
             </div>
           </section>
 
-          <section ref={outputRef} id="decision-panel" className="surface result-card scroll-mt-4" aria-labelledby="result-heading">
-            <div className="panel-header">
-              <div>
-                <div className="eyebrow">02 / OUTCOME</div>
-                <h2 id="result-heading" className="panel-title">Decision routing</h2>
-              </div>
-              <span className={"result-chip " + (result ? "chip-ready" : "")}>{result ? result.mode === "demo" ? "SIMULATED" : "CLOCKED LIVE" : "READY"}</span>
-            </div>
-            <div className="panel-body">
-              {result && summary ? (
-                <div key={requestEpoch} className={"recommendation recommendation-" + result.lane}>
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.14em] opacity-85">
-                      {result.lane === "review" ? <CircleAlert size={17} /> : result.lane === "approve" ? <CheckCircle2 size={17} /> : <ShieldAlert size={17} />}
-                      Suggested next step
-                    </div>
-                    <span className="text-[10px] font-medium tracking-wide opacity-60">{result.requestId}</span>
-                  </div>
-                  <h3 className="mt-4 text-[clamp(22px,3vw,29px)] font-semibold leading-[1.18] tracking-[-.035em]">{summary.label}</h3>
-                  <p className="mt-2 max-w-[470px] text-[12px] leading-6 opacity-80">{summary.description}</p>
-                  <div className="recommendation-next mt-5">
-                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-[.13em] opacity-70">Next human action</span>
-                    <span className="text-[12px] leading-5">{summary.nextAction}</span>
-                  </div>
+          <div className="workspace">
+            <section className="card" aria-labelledby="input-heading">
+              <div className="card-head">
+                <div>
+                  <div className="card-eyebrow">01 / Input</div>
+                  <h2 id="input-heading" className="card-title">Customer request</h2>
                 </div>
-              ) : (
-                <div className={"waiting-panel " + (busy ? "waiting-busy" : "")}>
-                  <div className="waiting-orb"><FileSearch size={27} strokeWidth={1.8} aria-hidden="true" /></div>
-                  <div className="mt-3 text-[16px] font-semibold tracking-tight text-slate-200">
-                    {busy ? "Checking the evidence" : "Ready when you are"}
-                  </div>
-                  <p className="mt-2 max-w-[280px] text-center text-[12px] leading-5 text-slate-500">
-                    {busy ? "Checking the request, dates, possible problems and missing details." : "Try one of the sample requests to see the suggested next step and any issues that need review."}
-                  </p>
-                </div>
-              )}
-              <div className="mt-4">
-                <LaneStrip selected={result?.lane ?? null} />
+                <span className="header-meta">{mode === "demo" ? "Synthetic demo" : "Private live"}</span>
               </div>
-              {result && (
-                <div className="case-summary mt-4">
-                  <div className="case-summary-cell">
-                    <span className="mini-label">Claimed order</span>
-                    <strong className="mt-1 block truncate text-[13px] font-semibold text-slate-200">{result.caseScope?.linkedOrderId ?? "Unresolved"}</strong>
-                  </div>
-                  <div className="case-summary-cell">
-                    <span className="mini-label">Reported delivery age</span>
-                    <strong className="mt-1 block text-[13px] font-semibold text-slate-200">{result.elapsedDays === null ? "Unknown" : result.elapsedDays + " days"}</strong>
-                  </div>
-                  <div className="case-summary-cell">
-                    <span className="mini-label">Checks needing attention</span>
-                    <strong className={"mt-1 block text-[13px] font-semibold " + (pendingChecks.length ? "text-amber-300" : "text-emerald-300")}>{pendingChecks.length}</strong>
-                  </div>
+              <div className="card-body">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                  <label htmlFor="return-message" className="field-label">Incoming message</label>
+                  <button type="button" onClick={reset} disabled={!inputReady} className="subtle-action"><RotateCcw size={14} aria-hidden="true" /> Clear</button>
                 </div>
-              )}
-              {result && visibleReason && result.lane === "review" && (
-                <div className="attention-line mt-4"><CircleAlert size={16} className="shrink-0 text-amber-300" aria-hidden="true" /><p className="text-[12px] leading-5">{visibleReason}</p></div>
-              )}
-              <div className="mt-4 flex items-start gap-2 border-t border-white/[.07] pt-4 text-[11px] leading-5 text-slate-500">
-                <LockKeyhole size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-                <span>These are suggestions based on the message, not verified store records. No payment, email or order is changed.</span>
-              </div>
-            </div>
-          </section>
-        </div>
+                <textarea
+                  id="return-message"
+                  value={email}
+                  disabled={!inputReady}
+                  spellCheck={false}
+                  onChange={(e) => { invalidate(); setEmail(e.target.value); setActiveSample(null); }}
+                  placeholder="Paste a made-up return email to try the demo..."
+                  className="message-input"
+                  style={{ marginTop: 10, minHeight: 170, resize: "vertical", padding: "12px 14px", fontSize: 13, lineHeight: 1.75 }}
+                />
+                <div className="char-row">
+                  <span>{email.length.toLocaleString()} / 10,000 characters</span>
+                  <span>Not stored by this application</span>
+                </div>
 
-        {result && (
-          <section className="mt-5" aria-label="Case evidence and decision details">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
-              <div>
-                <div className="eyebrow">03 / INSPECT</div>
-                <h2 className="mt-1 text-[18px] font-semibold tracking-tight text-slate-200">Why this route?</h2>
-              </div>
-              <span className="text-[11px] text-slate-500">Open the details you want to see</span>
-            </div>
-            <div className="details-grid">
-              <DetailSection label="01" title="Source-linked extraction" count={result.evidence.length + " exact spans"}>
-                <div className="source-text"><EvidenceText text={result.redactedText} evidence={result.evidence} /></div>
-                <div className="mt-3 text-[11px] leading-5 text-slate-500">Highlighted text shows where each detail came from. It does not prove that the customer&apos;s claim is correct.</div>
-                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {result.evidence.map((entry) => (
-                    <div key={entry.id} className="evidence-item">
-                      <div className="mini-label">{entry.label}</div>
-                      <div className="mt-1.5 break-words text-[12px] text-slate-200">{entry.value}</div>
-                      <div className="mt-2 text-[10px] text-slate-500">Characters {entry.start} to {entry.end}{entry.confidence === null ? "" : " · P(verified extraction): " + asPercentage(entry.confidence)}</div>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-4 text-[11px] leading-5 text-slate-500">{result.privacyNotice}</p>
-              </DetailSection>
-
-              <DetailSection label="02" title="Case linkage & intent" count={result.caseScope?.coherent ? "Coherent claims" : "Needs review"}>
-                {result.caseScope ? (
-                  <div className="space-y-3">
-                    <div className="case-data-row"><span>Referenced orders</span><strong>{result.caseScope.orderRefs.join(", ") || "None identified"}</strong></div>
-                    <div className="case-data-row"><span>Delivery dates in message</span><strong>{result.caseScope.deliveryDates.join(", ") || "Not identified"}</strong></div>
-                    <div className="case-data-row"><span>Current intent</span><strong className="capitalize">{result.caseScope.intent.replace("-", " ")}</strong></div>
-                    {result.caseScope.issueSignals.length > 0 && <div className="case-data-row"><span>Issue signals</span><strong>{result.caseScope.issueSignals.join(", ")}</strong></div>}
-                    {result.caseScope.blockers.length > 0 && <ul className="space-y-2 border-t border-white/[.08] pt-3">{result.caseScope.blockers.map((b, i) => <li key={i} className="flex gap-2 text-[12px] leading-5 text-amber-200/90"><CircleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> {b}</li>)}</ul>}
-                    {!result.caseScope.blockers.length && <div className="text-[12px] leading-6 text-slate-400">These checks found no conflicting claims. You would still need to verify the order with the store.</div>}
+                <div style={{ marginTop: 18 }}>
+                  <span className="mini-label">Try an example</span>
+                  <div className="sample-grid">
+                    {samples.map((sample) => (
+                      <button key={sample.id} type="button" title={sample.tag} aria-pressed={activeSample === sample.id}
+                        onClick={() => chooseSample(sample.id)} disabled={!inputReady}
+                        className={"sample-btn " + (activeSample === sample.id ? "active" : "")}>
+                        {sample.label}<span className="tag">{sample.tag.replace("Expected: ", "")}</span>
+                      </button>
+                    ))}
                   </div>
-                ) : <p className="text-[12px] text-slate-400">No structured case-scope metadata supplied.</p>}
-              </DetailSection>
+                </div>
 
-              <DetailSection label="03" title="Typed assessments" count={result.mode === "demo" ? "Heuristics" : "Clocked Decide"}>
-                <div className="space-y-5">
-                  {result.assessments.length === 0 && <p className="text-[12px] text-slate-400">No model assessments. Guard may have blocked subsequent calls.</p>}
-                  {result.assessments.map((a) => (
-                    <div key={a.id}>
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-[12px] text-slate-300">{a.label}</span>
-                        <span className="text-[12px] font-semibold text-slate-200">{a.answer === null ? "Unknown" : a.answer ? "Yes" : "No"}</span>
+                {mode === "live" && (
+                  <div style={{ marginTop: 16 }}>
+                    <label htmlFor="live-access-token" className="field-label">Private live access token</label>
+                    <input id="live-access-token" type="password" autoComplete="off" spellCheck={false}
+                      value={accessToken} disabled={!inputReady} onChange={(e) => { invalidate(); setAccessToken(e.target.value); }}
+                      placeholder="From your local .env.local"
+                      className="token-input"
+                      style={{ marginTop: 8, width: "100%", padding: "11px 13px", fontSize: 13 }} />
+                    <p style={{ marginTop: 7, fontSize: 11, lineHeight: 1.55, color: "var(--ink-3)" }}>Kept in this tab&apos;s memory, not saved to browser storage. Do not share or commit it.</p>
+                  </div>
+                )}
+
+                <div className="run-row">
+                  <div>
+                    <label htmlFor="policy-date" className="field-label">{mode === "live" ? "Date is server-controlled" : "Evaluation date"}</label>
+                    <input id="policy-date" type="date" value={asOf} disabled={!inputReady || mode === "live"}
+                      onChange={(e) => { invalidate(); setAsOf(e.target.value); }}
+                      className="date-input"
+                      style={{ marginTop: 8, height: 42, padding: "0 11px", fontSize: 12 }} />
+                  </div>
+                  <button type="button" onClick={analyze}
+                    disabled={!inputReady || busy || email.trim().length < 20 || email.length > 10000 || !asOf || (mode === "live" && accessToken.length < 32)}
+                    className="primary-btn">
+                    {busy ? <span className="busy-spinner" aria-hidden="true" /> : <Zap size={15} aria-hidden="true" />}
+                    <span>{busy ? "Analyzing request…" : mode === "live" ? "Run Clocked analysis" : "Run demo analysis"}</span>
+                    {!busy && <ArrowRight size={16} aria-hidden="true" />}
+                  </button>
+                </div>
+                <div aria-live="polite" aria-atomic="true" role="status" className="run-note">
+                  {busy ? "Checking this message. No refund will be issued." : result ? "Analysis complete. The recommendation is " + (detailLane?.title ?? "") + "." : ""}
+                </div>
+                {error && <p role="alert" className="error-box">{error}</p>}
+                <p className="caveat"><ShieldAlert size={15} style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
+                  {mode === "live"
+                    ? "Live requests may cost Clocked credits. Dates come from the server, and personal-data masking is not perfect. Use only data you have permission to send."
+                    : "This demo uses local rules, not Clocked API calls. Please use made-up customer details."}
+                </p>
+              </div>
+            </section>
+
+            <section ref={outputRef} className="card scroll-mt-4" aria-labelledby="result-heading" id="decision-panel">
+              <div className="card-head">
+                <div>
+                  <div className="card-eyebrow">02 / Outcome</div>
+                  <h2 id="result-heading" className="card-title">Decision routing</h2>
+                </div>
+                <span className="header-meta">{result ? result.mode === "demo" ? "SIMULATED" : "CLOCKED LIVE" : "READY"}</span>
+              </div>
+              <div className="card-body">
+                <div className="pipeline" aria-label="Analysis pipeline">
+                  {pipelineStages.map((stage, i) => {
+                    const st = stageState(i);
+                    const isDecide = stage.id === "decide";
+                    return (
+                      <div key={stage.id} className={"pp-stage " + st}>
+                        <span className="pp-marker" aria-hidden="true">
+                          {st.includes("done") ? <CheckCircle2 size={16} /> : st === "active" ? <Sparkles size={16} /> : <span style={{ fontSize: 11, fontWeight: 800 }}>{i + 1}</span>}
+                        </span>
+                        <span className="pp-name">{stage.name}</span>
+                        <span className="pp-sub">{stage.sub}</span>
+                        {isDecide && result && <span className="sr-only">Completed</span>}
                       </div>
-                      {a.probability !== null && <div className="probability-track mt-2"><div className="probability-fill" style={{ width: Math.min(100, Math.max(0, a.probability * 100)) + "%" }} /></div>}
-                      <div className="mt-1.5 text-right text-[10px] text-slate-500">{result.mode === "demo" ? "Demo estimate; no model call" : "P(Yes): " + asPercentage(a.probability)}</div>
+                    );
+                  })}
+                </div>
+
+                {result && summary ? (
+                  <div key={requestEpoch} className={"reco reco-" + result.lane} style={{ marginTop: 16 }}>
+                    <div className="reco-top">
+                      <span className="reco-kicker">
+                        {result.lane === "review" ? <CircleAlert size={16} /> : result.lane === "approve" ? <CheckCircle2 size={16} /> : <ShieldAlert size={16} />}
+                        Recommendation
+                      </span>
+                      <span className="reco-id">{result.requestId}</span>
+                    </div>
+                    <h3 className="reco-word">{result.lane === "approve" ? "APPROVE" : result.lane === "review" ? "HUMAN REVIEW" : "DECLINE"}</h3>
+                    <p style={{ marginTop: 4, fontSize: 12.5, fontWeight: 700, color: "var(--ink)" }}>{summary.label}</p>
+                    <p className="reco-desc">{summary.description}</p>
+                    <div className="reco-next">
+                      <span className="reco-next-label">Next human action</span>
+                      <span className="reco-next-text">{summary.nextAction}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={"waiting " + (busy ? "waiting-busy" : "")} style={{ marginTop: 16 }}>
+                    <div className="waiting-orb"><FileSearch size={24} strokeWidth={1.8} aria-hidden="true" /></div>
+                    <div className="waiting-title">{busy ? "Checking the evidence" : "Ready when you are"}</div>
+                    <p className="waiting-copy">{busy ? "Checking the request, dates, possible problems and missing details." : "Try one of the sample requests to see the suggested next step and any issues that need review."}</p>
+                  </div>
+                )}
+
+                <div className="lane-strip" role="group" aria-label="Available recommendation routes">
+                  {lanes.map((lane) => (
+                    <div key={lane.id} className={"lane-cell " + (result?.lane === lane.id ? "sel-" + lane.id : "")}>
+                      <span className="lane-dot" aria-hidden="true" />
+                      <span>
+                        <span className="lane-title">{lane.title}</span>
+                        <span className="lane-sub">{lane.subtitle}</span>
+                      </span>
+                      {result?.lane === lane.id && <CheckCircle2 size={15} style={{ marginLeft: "auto" }} aria-hidden="true" />}
                     </div>
                   ))}
                 </div>
-              </DetailSection>
 
-              <DetailSection label="04" title="Policy & safety gates" count={pendingChecks.length ? pendingChecks.length + " need attention" : "All checks passed"}>
-                <div className="space-y-4">
-                  {result.checks.map((check) => (
-                    <div key={check.label} className="flex items-start gap-3">
-                      <StatusIcon status={check.status} />
-                      <div className="min-w-0">
-                        <div className="text-[12px] font-semibold text-slate-200">{check.label}</div>
-                        <div className="mt-0.5 text-[11px] leading-5 text-slate-500">{check.detail}</div>
+                {result && (
+                  <div className="case-summary">
+                    <div className="case-cell">
+                      <span className="mini-label">Claimed order</span>
+                      <strong style={{ display: "block", marginTop: 5, fontSize: 13, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{result.caseScope?.linkedOrderId ?? "Unresolved"}</strong>
+                    </div>
+                    <div className="case-cell">
+                      <span className="mini-label">Delivery age</span>
+                      <strong style={{ display: "block", marginTop: 5, fontSize: 13, color: "var(--ink)" }}>{result.elapsedDays === null ? "Unknown" : result.elapsedDays + " days"}</strong>
+                    </div>
+                    <div className="case-cell">
+                      <span className="mini-label">Needs attention</span>
+                      <strong style={{ display: "block", marginTop: 5, fontSize: 13, color: pendingChecks.length ? "var(--amber)" : "var(--green)" }}>{pendingChecks.length}</strong>
+                    </div>
+                  </div>
+                )}
+
+                {result && visibleReason && result.lane === "review" && (
+                  <div className="attention-line"><CircleAlert size={16} style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" /><span>{visibleReason}</span></div>
+                )}
+
+                <div style={{ marginTop: 16, display: "flex", alignItems: "flex-start", gap: 8, borderTop: "1px solid var(--border)", paddingTop: 14, fontSize: 11.5, lineHeight: 1.6, color: "var(--ink-2)" }}>
+                  <LockKeyhole size={14} style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+                  <span>These are suggestions based on the message, not verified store records. No payment, email or order is changed.</span>
+                </div>
+              </div>
+            </section>
+
+            <aside className="card inspector" aria-label="Case inspector">
+              <div className="insp-section">
+                <div className="insp-title">Case Details</div>
+                {result ? (
+                  <>
+                    <div className="kv"><span><FileText size={14} aria-hidden="true" /> Request ID</span><strong className="num">{result.requestId}</strong></div>
+                    <div className="kv"><span><Package size={14} aria-hidden="true" /> Claimed order</span><strong>{result.caseScope?.linkedOrderId ?? "Unresolved"}</strong></div>
+                    <div className="kv"><span><Users size={14} aria-hidden="true" /> Evaluation date</span><strong>{result.asOf}</strong></div>
+                    <div className="kv"><span><CircleHelp size={14} aria-hidden="true" /> Delivery age</span><strong>{result.elapsedDays === null ? "Unknown" : result.elapsedDays + " days"}</strong></div>
+                    <div className="kv"><span><Fingerprint size={14} aria-hidden="true" /> Coherent claims</span><strong>{result.caseScope?.coherent ? "Yes" : result.caseScope ? "Needs review" : "Unknown"}</strong></div>
+                  </>
+                ) : (
+                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>No case selected. Run an analysis to populate the inspector with verified details from the message.</p>
+                )}
+              </div>
+              <div className="insp-section">
+                <div className="insp-title">Decision Summary</div>
+                {result && summary && detailLane ? (
+                  <>
+                    <div className={"decision-pill dp-" + result.lane}>
+                      {result.lane === "approve" ? <CheckCircle2 size={18} /> : result.lane === "review" ? <CircleAlert size={18} /> : <XCircle size={18} />}
+                      <span>{detailLane.title} recommended</span>
+                    </div>
+                    <p style={{ marginTop: 10, fontSize: 12, lineHeight: 1.6, color: "var(--ink-2)" }}>{summary.label}</p>
+                  </>
+                ) : (
+                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>Awaiting analysis. The recommendation and rationale will appear here.</p>
+                )}
+              </div>
+              <div className="insp-section">
+                <div className="insp-title">Key Factors</div>
+                {result ? (
+                  <ul className="factor-list">
+                    {result.checks.slice(0, 4).map((check) => (
+                      <li key={check.label}>
+                        <span style={{ color: check.status === "pass" ? "var(--green)" : check.status === "fail" ? "var(--red)" : "var(--amber)", flexShrink: 0, marginTop: 1 }}>
+                          {check.status === "pass" ? <CheckCircle2 size={14} /> : check.status === "fail" ? <XCircle size={14} /> : <CircleHelp size={14} />}
+                        </span>
+                        <span>{check.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>Key evidence factors will be listed here after analysis.</p>
+                )}
+              </div>
+              <div className="insp-section insp-actions">
+                <a className="terra-btn" href="#decision-panel" style={{ textDecoration: "none" }}><Inbox size={15} aria-hidden="true" /> Inspect Evidence</a>
+                <button type="button" className="ghost-btn" onClick={reset}><RotateCcw size={15} aria-hidden="true" /> Clear request</button>
+              </div>
+            </aside>
+          </div>
+
+          {result && (
+            <section className="inspect" aria-label="Case evidence and decision details">
+              <div className="inspect-head">
+                <div>
+                  <div className="card-eyebrow">03 / Inspect</div>
+                  <h2 style={{ marginTop: 3, fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em" }}>Why this route?</h2>
+                </div>
+                <span className="header-meta">Open the details you want to see</span>
+              </div>
+              <div className="details-grid">
+                <DetailSection label="01" title="Source-linked extraction" count={result.evidence.length + " exact spans"}>
+                  <div className="source-text"><EvidenceText text={result.redactedText} evidence={result.evidence} /></div>
+                  <p style={{ marginTop: 11, fontSize: 11.5, lineHeight: 1.6, color: "var(--ink-3)" }}>Highlighted text shows where each detail came from. It does not prove that the customer&apos;s claim is correct.</p>
+                  <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 9 }}>
+                    {result.evidence.map((entry) => (
+                      <div key={entry.id} className="evidence-item">
+                        <div className="mini-label">{entry.label}</div>
+                        <div style={{ marginTop: 6, wordBreak: "break-word", fontSize: 12.5, fontWeight: 700, color: "var(--ink)" }}>{entry.value}</div>
+                        <div style={{ marginTop: 6, fontSize: 10.5, color: "var(--ink-3)" }}>Chars {entry.start}–{entry.end}{entry.confidence === null ? "" : " · P(verified): " + asPercentage(entry.confidence)}</div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-5 border-t border-white/[.08] pt-4">
-                  <div className="mini-label">Decision rationale</div>
-                  <ul className="mt-3 space-y-2">{result.reasons.map((reason, i) => <li key={i} className="flex gap-2 text-[11px] leading-5 text-slate-400"><span className="text-cyan-400">•</span>{reason}</li>)}</ul>
-                </div>
-                <p className="mt-4 text-[11px] leading-5 text-slate-500">{result.policyNotice}</p>
-              </DetailSection>
-            </div>
-          </section>
-        )}
+                    ))}
+                  </div>
+                  <p style={{ marginTop: 14, fontSize: 11.5, lineHeight: 1.6, color: "var(--ink-3)" }}>{result.privacyNotice}</p>
+                </DetailSection>
 
-        <footer className="site-footer">
-          <span>CLOCKED / RETURN LAB</span>
-          <span>Example 30-day policy · No executed refunds · Synthetic fixtures</span>
-        </footer>
+                <DetailSection label="02" title="Case linkage & intent" count={result.caseScope?.coherent ? "Coherent claims" : "Needs review"}>
+                  {result.caseScope ? (
+                    <div style={{ display: "grid", gap: 10 }}>
+                      <div className="data-row"><span>Referenced orders</span><strong>{result.caseScope.orderRefs.join(", ") || "None identified"}</strong></div>
+                      <div className="data-row"><span>Delivery dates</span><strong>{result.caseScope.deliveryDates.join(", ") || "Not identified"}</strong></div>
+                      <div className="data-row"><span>Current intent</span><strong style={{ textTransform: "capitalize" }}>{result.caseScope.intent.replace("-", " ")}</strong></div>
+                      {result.caseScope.issueSignals.length > 0 && <div className="data-row"><span>Issue signals</span><strong>{result.caseScope.issueSignals.join(", ")}</strong></div>}
+                      {result.caseScope.blockers.length > 0 && (
+                        <ul style={{ margin: "4px 0 0", padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
+                          {result.caseScope.blockers.map((b, i) => (
+                            <li key={i} style={{ display: "flex", gap: 8, fontSize: 12, lineHeight: 1.55, color: "var(--amber)" }}>
+                              <CircleAlert size={14} style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" /><span>{b}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {!result.caseScope.blockers.length && <p style={{ fontSize: 12, lineHeight: 1.65, color: "var(--ink-2)" }}>These checks found no conflicting claims. You would still need to verify the order with the store.</p>}
+                    </div>
+                  ) : <p style={{ fontSize: 12, color: "var(--ink-2)" }}>No structured case-scope metadata supplied.</p>}
+                </DetailSection>
+
+                <DetailSection label="03" title="Typed assessments" count={result.mode === "demo" ? "Heuristics" : "Clocked Decide"}>
+                  <div style={{ display: "grid", gap: 18 }}>
+                    {result.assessments.length === 0 && <p style={{ fontSize: 12, color: "var(--ink-2)" }}>No model assessments. Guard may have blocked subsequent calls.</p>}
+                    {result.assessments.map((a) => (
+                      <div key={a.id}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                          <span style={{ fontSize: 12.5, color: "var(--ink)" }}>{a.label}</span>
+                          <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--ink)" }}>{a.answer === null ? "Unknown" : a.answer ? "Yes" : "No"}</span>
+                        </div>
+                        {a.probability !== null && <div className="prob-track" style={{ marginTop: 8 }}><div className="prob-fill" style={{ width: Math.min(100, Math.max(0, a.probability * 100)) + "%" }} /></div>}
+                        <div style={{ marginTop: 5, textAlign: "right", fontSize: 10.5, color: "var(--ink-3)" }}>{result.mode === "demo" ? "Demo estimate; no model call" : "P(Yes): " + asPercentage(a.probability)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </DetailSection>
+
+                <DetailSection label="04" title="Policy & safety gates" count={pendingChecks.length ? pendingChecks.length + " need attention" : "All checks passed"}>
+                  <div style={{ display: "grid", gap: 14 }}>
+                    {result.checks.map((check) => (
+                      <div key={check.label} className="check-row">
+                        <StatusIcon status={check.status} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--ink)" }}>{check.label}</div>
+                          <div style={{ marginTop: 2, fontSize: 11.5, lineHeight: 1.55, color: "var(--ink-2)" }}>{check.detail}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 16, borderTop: "1px solid var(--border)", paddingTop: 14 }}>
+                    <div className="mini-label">Decision rationale</div>
+                    <ul className="reasons-list" style={{ marginTop: 10 }}>
+                      {result.reasons.map((reason, i) => <li key={i}>{reason}</li>)}
+                    </ul>
+                  </div>
+                  <p style={{ marginTop: 14, fontSize: 11.5, lineHeight: 1.6, color: "var(--ink-3)" }}>{result.policyNotice}</p>
+                </DetailSection>
+              </div>
+            </section>
+          )}
+
+          <footer className="footer">
+            <span>Clocked Return Lab — Returns &amp; Refunds Decision Intelligence</span>
+            <span>Example 30-day policy · No executed refunds · Synthetic fixtures</span>
+          </footer>
+        </main>
       </div>
-    </main>
+    </div>
   );
 }
