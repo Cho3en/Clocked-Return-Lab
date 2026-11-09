@@ -21,7 +21,8 @@ try {
     // Capture the real application styling without bypassing its strict CSP.
     await page.getByRole("button",{name:"Run demo analysis"}).waitFor();
     await page.evaluate(() => window.scrollTo(0, 0));
-      await page.screenshot({path:target+"\\"+name+"-idle.png",fullPage:true});
+    await page.screenshot({path:target+"\\"+name+"-idle-top.png"});
+    await page.screenshot({path:target+"\\"+name+"-idle.png",fullPage:true});
     for(const [sample,decision,label] of [
       ["Clear return","APPROVE","approve"],
       ["Defective item","HUMAN REVIEW","review"],
@@ -30,8 +31,24 @@ try {
       await page.getByRole("button",{name:sample,exact:true}).click();
       await page.getByRole("button",{name:"Run demo analysis"}).click();
       await page.locator(".reco-word").getByText(decision,{exact:true}).waitFor();
+      // Let the short, nonessential stage-color transition settle before taking visual evidence.
+      await page.waitForTimeout(400);
       await page.evaluate(() => window.scrollTo(0, 0));
+      await page.screenshot({path:target+"\\"+name+"-"+label+"-top.png"});
       await page.screenshot({path:target+"\\"+name+"-"+label+".png",fullPage:true});
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await page.screenshot({path:target+"\\"+name+"-"+label+"-footer.png"});
+      if(name === "desktop") {
+        const geometry = await page.evaluate(() => {
+          const aside = document.querySelector(".sidebar")?.getBoundingClientRect();
+          const footer = document.querySelector(".footer")?.getBoundingClientRect();
+          return {asideTop:aside?.top, asideBottom:aside?.bottom, footerTop:footer?.top, footerBottom:footer?.bottom, viewportHeight:innerHeight};
+        });
+        if(Math.abs(geometry.asideTop ?? 999) > 2 || Math.abs((geometry.asideBottom ?? 0) - geometry.viewportHeight) > 2) {
+          throw new Error("Desktop sidebar does not fill viewport at footer: " + JSON.stringify(geometry));
+        }
+        console.log("FOOTER_GEOMETRY "+JSON.stringify(geometry));
+      }
       console.log("CAPTURED "+name+" "+label);
     }
     if(errors.length) throw new Error(name+" JavaScript errors: "+JSON.stringify(errors));

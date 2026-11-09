@@ -51,10 +51,11 @@ button, input, textarea { font: inherit; }
 .num { font-variant-numeric: tabular-nums; }
 
 /* ── Shell: sidebar + main ───────────────────────────────────── */
-.shell { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: 100vh; }
+.shell { display: block; min-height: 100vh; }
 
 .sidebar {
-  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  position: fixed; z-index: 30; inset: 0 auto 0 0;
+  width: var(--sidebar-w); height: 100dvh; overflow-y: auto;
   display: flex; flex-direction: column; gap: 8px;
   padding: 22px 16px 18px;
   color: #ffe9dd;
@@ -93,7 +94,7 @@ button, input, textarea { font: inherit; }
 .side-foot b { display: block; margin-top: 1px; font-size: 13px; color: #fff5ee; }
 .side-foot span { display: block; margin-top: 2px; font-size: 9.5px; color: rgba(255, 218, 196, .66); }
 
-.main { min-width: 0; display: flex; flex-direction: column; }
+.main { min-width: 0; min-height: 100vh; margin-left: var(--sidebar-w); display: flex; flex-direction: column; }
 .topbar {
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
@@ -127,7 +128,16 @@ button, input, textarea { font: inherit; }
 }
 .mode-btn.active { background: var(--surface); color: var(--rust); box-shadow: var(--shadow-sm); }
 
-.content { padding: 22px 28px 40px; max-width: 1376px; width: 100%; margin: 0 auto; }
+.content {
+  display: flex; flex-direction: column;
+  padding: 22px 28px 40px; max-width: 1376px; width: 100%; margin: 0 auto;
+}
+/* Lead with the real decision workflow, not empty historical charts. */
+.metrics { order: 1; }
+.workspace { order: 2; }
+.inspect { order: 3; }
+.analytics { order: 4; }
+.footer { order: 5; }
 
 /* ── Metric cards ────────────────────────────────────────────── */
 .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
@@ -144,10 +154,12 @@ button, input, textarea { font: inherit; }
 .m-peach .metric-icon { background: rgba(227, 83, 54, .1); color: var(--terra-dark); }
 .m-lav { background: linear-gradient(135deg, var(--lavender-soft), #f7f3f8); }
 .m-lav .metric-icon { background: rgba(153, 136, 161, .16); color: #5f4f6d; }
-.m-peach2 { background: linear-gradient(135deg, #fff3e4, #fffaf3); }
-.m-peach2 .metric-icon { background: rgba(227, 83, 54, .1); color: var(--terra-dark); }
-.m-lav2 { background: linear-gradient(135deg, var(--lavender-soft), #f8f5f9); }
-.m-lav2 .metric-icon { background: rgba(153, 136, 161, .16); color: #5f4f6d; }
+.m-sage { background: linear-gradient(135deg, #e7f2e9, #f6faf6); border-color: #d1e2d5; }
+.m-sage .metric-icon { background: #d1e6d7; color: #276740; }
+.m-sage .metric-value { color: #286f48; }
+.m-rose { background: linear-gradient(135deg, #f9e7e2, #fff4f1); border-color: #ead0c9; }
+.m-rose .metric-icon { background: #f2d6d0; color: #a33c35; }
+.m-rose .metric-value { color: #9c3d32; }
 
 /* ── Chart panels ────────────────────────────────────────────── */
 .analytics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
@@ -229,26 +241,31 @@ button, input, textarea { font: inherit; }
 .error-box { margin-top: 12px; border: 1px solid #f0c9c3; background: var(--red-bg); color: var(--red); border-radius: 11px; padding: 11px 13px; font-size: 12px; line-height: 1.55; }
 .caveat { margin-top: 12px; display: flex; gap: 8px; font-size: 11.5px; line-height: 1.6; color: var(--ink-2); }
 
-/* Pipeline */
-.pipeline { display: flex; align-items: flex-start; margin: 16px 0 4px; }
-.pp-stage { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; min-width: 0; }
+/* Compact, truthful processing stepper. Never share idle-stage class names with the waiting result card. */
+.pipeline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; gap: 4px; margin: 14px 0 8px; }
+.pipeline-demo { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pp-stage { display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; min-width: 0; padding: 2px 4px 6px; }
 .pp-stage:not(:last-child)::after {
-  content: ""; position: absolute; top: 17px; left: calc(50% + 20px); right: calc(-50% + 20px); height: 2px;
+  content: ""; position: absolute; top: 18px; left: calc(50% + 20px); right: calc(-50% + 20px); height: 2px;
   background: var(--border-strong); border-radius: 2px;
 }
-.pp-stage.done:not(:last-child)::after { background: var(--lavender); }
+.pp-stage.done:not(:last-child)::after { background: #bbaac3; }
 .pp-marker {
-  width: 34px; height: 34px; border-radius: 99px; display: grid; place-items: center;
-  border: 2px solid var(--border-strong); background: #fff; color: var(--ink-3); z-index: 1;
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  border: 1.5px solid var(--border-strong); background: var(--surface); color: var(--ink-3); z-index: 1;
   transition: border-color .25s ease, background-color .25s ease, color .25s ease;
 }
 .pp-stage.done .pp-marker { border-color: var(--lavender); background: var(--lavender); color: #fff; }
-.pp-stage.decide-done .pp-marker { border-color: var(--terra); background: var(--terra); color: #fff; }
+.pp-stage.outcome-done .pp-marker { border-color: var(--terra); background: var(--terra); color: #fff; }
+.pp-stage.ready .pp-marker { border-color: var(--terra); background: #fff2ea; color: var(--terra-dark); }
+.pp-stage.pending .pp-marker { background: #fbf9f8; color: #a89790; }
 .pp-stage.active .pp-marker { border-color: var(--terra); color: var(--terra); animation: pp-pulse 1.6s ease-in-out infinite; }
 .pp-stage.attention .pp-marker { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); }
-.pp-stage.skipped .pp-marker { border-style: dashed; opacity: .7; }
-.pp-name { margin-top: 8px; font-size: 12px; font-weight: 800; color: var(--ink); }
-.pp-sub { margin-top: 1px; font-size: 10px; color: var(--ink-3); line-height: 1.4; padding: 0 4px; }
+.pp-stage.skipped .pp-marker { border-style: dashed; color: var(--ink-3); background: var(--canvas); }
+.pp-name { margin-top: 9px; font-size: 11.5px; font-weight: 800; color: var(--ink); }
+.pp-sub { margin-top: 2px; font-size: 10px; color: var(--ink-2); line-height: 1.35; padding: 0 2px; }
+.pp-status { margin-top: 4px; font-size: 9.5px; line-height: 1.35; color: var(--ink-3); }
+.pipeline-live .pp-name { font-size: 11px; }
 @keyframes pp-pulse { 50% { box-shadow: 0 0 0 6px rgba(227, 83, 54, .12); } }
 
 /* Recommendation */
@@ -348,7 +365,7 @@ button, input, textarea { font: inherit; }
 }
 .terra-btn:hover { filter: brightness(1.06); }
 
-.footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--ink-3); font-size: 10.5px; line-height: 1.6; }
+.footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; margin-top: 26px; padding: 18px 2px 0; border-top: 1px solid var(--border); color: var(--ink-2); font-size: 11px; line-height: 1.55; }
 @keyframes appear { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
@@ -361,9 +378,10 @@ button, input, textarea { font: inherit; }
   .inspector { position: static; grid-column: 1 / -1; }
 }
 @media (max-width: 1023px) {
-  .shell { grid-template-columns: 1fr; }
+  .shell { display: flex; flex-direction: column; }
+  .main { margin-left: 0; }
   .sidebar {
-    position: static; height: auto; flex-direction: column;
+    position: relative; z-index: auto; inset: auto; width: 100%; height: auto; flex-direction: column;
     padding: 14px 16px 12px;
     background: linear-gradient(160deg, var(--rust), var(--rust-deep));
   }
@@ -397,8 +415,7 @@ button, input, textarea { font: inherit; }
 html { scroll-padding-top: 106px; }
 #overview, #analytics, #case-workspace, #evidence-details, #return-message { scroll-margin-top: 106px; }
 .pipeline-note { margin: 3px 0 8px; font-size: 11px; line-height: 1.5; color: var(--ink-2); }
-.pp-status { margin-top: 3px; font-size: 9px; line-height: 1.3; color: var(--ink-3); }
-.pp-stage.demo .pp-marker { border-style: dashed; border-color: var(--border-strong); color: var(--ink-3); background: var(--canvas); }
+/* Stepper presentation is controlled by the compact pipeline rules above. */
 .pp-stage.attention .pp-marker { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); }
 .pp-stage.skipped .pp-marker { border-style: dashed; background: var(--canvas); }
 .session-bars { min-height: 190px; display: flex; flex-direction: column; gap: 14px; justify-content: center; padding: 20px 10px 4px; }

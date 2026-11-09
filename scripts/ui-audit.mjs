@@ -101,14 +101,27 @@ try {
   }
   assert(await review.locator('input[aria-label="Search cases, orders, customers"]').count() === 0,
     "unsupported global history search removed");
+  const metricBackgrounds = await review.locator(".metric").evaluateAll((cards) =>
+    cards.map((card) => getComputedStyle(card).backgroundImage));
+  assert(new Set(metricBackgrounds).size === 4,
+    "four dashboard metrics use distinct backgrounds", metricBackgrounds);
+  const idleStageGeometry = await review.locator(".pipeline").evaluate((el) => ({
+    height: Math.round(el.getBoundingClientRect().height),
+    count: el.querySelectorAll(".pp-stage").length,
+    stretched: !!el.querySelector(".pp-stage.waiting"),
+  }));
+  assert(idleStageGeometry.height < 170 && !idleStageGeometry.stretched,
+    "pipeline is compact and has no global waiting CSS collision", idleStageGeometry);
   await review.getByRole("link", { name: "Inspect Evidence" }).click();
   assert(new URL(review.url()).hash === "#evidence-details", "Inspect Evidence reaches evidence details");
   await review.getByRole("button", { name: "Run demo analysis" }).click();
   await review.locator(".reco-word").getByText("APPROVE", { exact: true }).waitFor();
-  assert(await review.locator(".pp-stage.demo").count() === 4,
-    "demo mode does not claim Clocked provider execution");
-  assert(await review.locator(".pp-stage.done").count() === 1,
-    "only Request marked complete in demo");
+  assert(await review.locator(".pipeline-demo .pp-stage").count() === 3,
+    "demo mode displays only its three actual local stages");
+  assert(await review.locator(".pipeline-demo .pp-stage.done").count() === 3,
+    "demo pipeline shows locally completed request, checks and recommendation");
+  assert(await review.locator(".pp-stage.demo").count() === 0,
+    "demo makes no false Clocked stage claims");
   assert((await review.locator(".metric-value").first().innerText()) === "1",
     "session count reflects successful evaluation");
   await review.getByRole("button", { name: "Defective item", exact: true }).click();
@@ -118,6 +131,21 @@ try {
     "session metric accumulates actual evaluations");
   assert((await review.locator(".session-bar-row").count()) === 3,
     "session distribution renders observed outcomes");
+  const desktopOrder = await review.evaluate(() => ({
+    workspace: document.querySelector(".workspace")?.getBoundingClientRect().top,
+    analytics: document.querySelector(".analytics")?.getBoundingClientRect().top,
+  }));
+  assert(desktopOrder.workspace < desktopOrder.analytics,
+    "desktop prioritizes decision workflow before optional analytics", desktopOrder);
+  await review.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const sidebarAtFooter = await review.evaluate(() => {
+    const rect = document.querySelector(".sidebar")?.getBoundingClientRect();
+    const footer = document.querySelector(".footer")?.getBoundingClientRect();
+    return { top: rect?.top, bottom: rect?.bottom, viewport: innerHeight, footerBottom: footer?.bottom };
+  });
+  assert(Math.abs(sidebarAtFooter.top ?? 999) <= 2 &&
+    Math.abs((sidebarAtFooter.bottom ?? 0) - sidebarAtFooter.viewport) <= 2,
+    "desktop sidebar fills viewport through page footer", sidebarAtFooter);
   await review.close();
 
   const mobilePriority = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });

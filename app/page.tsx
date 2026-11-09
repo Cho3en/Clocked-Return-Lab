@@ -66,11 +66,17 @@ function DetailSection({ label, title, count, children }: { label: string; title
 }
 
 const pipelineStages = [
-  { id: "request", name: "Request", sub: "Received" },
+  { id: "request", name: "Request", sub: "Customer message" },
   { id: "protect", name: "Protect", sub: "Privacy masking" },
-  { id: "guard", name: "Guard", sub: "Injection screening" },
-  { id: "extract", name: "Extract", sub: "Evidence extraction" },
-  { id: "decide", name: "Decide", sub: "Typed assessments" },
+  { id: "guard", name: "Guard", sub: "Safety screening" },
+  { id: "extract", name: "Extract", sub: "Evidence fields" },
+  { id: "decide", name: "Decide", sub: "Typed assessment" },
+];
+
+const demoPipelineStages = [
+  { id: "request", name: "Request", sub: "Customer message" },
+  { id: "local", name: "Evaluate", sub: "Local policy checks" },
+  { id: "recommend", name: "Recommend", sub: "Advisory outcome" },
 ];
 
 export default function Home() {
@@ -188,17 +194,19 @@ export default function Home() {
   const visibleReason = result?.reasons.find((reason) => /review|missing|uncertain|multiple|conflict|issue|ambig|right|date|order|product|intent/i.test(reason))
     ?? result?.reasons[0];
 
-  function stageState(idx: number): "done" | "active" | "waiting" | "demo" | "attention" | "skipped" {
-    // A received request is known; there is no stage-by-stage progress telemetry while fetching.
-    if (idx === 0) return busy || result ? "done" : "waiting";
-    if (!result) return "waiting";
-    // Demo mode uses local heuristics, not Clocked services.
-    if (result.mode === "demo") return "demo";
-    // A successful live response means Protect produced usable redacted text.
-    if (idx === 1) return "done";
+  function stageState(id: string): "done" | "active" | "ready" | "pending" | "attention" | "skipped" {
+    if (id === "request") return busy || result ? "done" : "ready";
+    if ((result?.mode ?? mode) === "demo") {
+      if (result) return "done";
+      return busy && id === "local" ? "active" : "pending";
+    }
+    // Clocked does not report intermediate stage progress. Never animate invented stages.
+    if (!result) return "pending";
+    // A successful live response means Protect produced a usable redacted message.
+    if (id === "protect") return "done";
     const guard = result.checks.find((check) => check.label === "Prompt-injection screening");
-    if (idx === 2) return guard?.status === "pass" ? "done" : "attention";
-    // The actual server returns early on Guard failures/uncertainty, before Extract or Decide.
+    if (id === "guard") return guard?.status === "pass" ? "done" : "attention";
+    // The server returns early on a Guard block, before Extract and Decide.
     return guard?.status === "pass" ? "done" : "skipped";
   }
 
@@ -208,8 +216,8 @@ export default function Home() {
   const metrics = [
     { icon: <Package size={16} aria-hidden="true" />, label: "Cases evaluated", value: String(sessionTotal), note: "This tab only · not stored", tint: "m-peach" },
     { icon: <Users size={16} aria-hidden="true" />, label: "Human review", value: String(sessionCounts.review), note: "Recommendations in this tab", tint: "m-lav" },
-    { icon: <CheckCircle2 size={16} aria-hidden="true" />, label: "Approve (recommended)", value: String(sessionCounts.approve), note: "No refunds executed", tint: "m-peach2" },
-    { icon: <XCircle size={16} aria-hidden="true" />, label: "Decline (recommended)", value: String(sessionCounts.reject), note: "Example policy · advisory", tint: "m-lav2" },
+    { icon: <CheckCircle2 size={16} aria-hidden="true" />, label: "Approve (recommended)", value: String(sessionCounts.approve), note: "No refunds executed", tint: "m-sage" },
+    { icon: <XCircle size={16} aria-hidden="true" />, label: "Decline (recommended)", value: String(sessionCounts.reject), note: "Example policy · advisory", tint: "m-rose" },
   ];
 
   return (
@@ -411,22 +419,25 @@ export default function Home() {
                 <span className="header-meta">{result ? result.mode === "demo" ? "SIMULATED" : "CLOCKED LIVE" : "READY"}</span>
               </div>
               <div className="card-body">
-                <p className="pipeline-note">{result?.mode === "demo" || (!result && mode === "demo")
-                  ? "Demo uses local heuristics; Clocked services are not called."
-                  : "Live-stage status reflects available response evidence, not simulated progress."}</p>
-                <div className="pipeline" aria-label="Analysis pipeline">
-                  {pipelineStages.map((stage, i) => {
-                    const st = stageState(i);
-                    const label = st === "done" ? "Completed" : st === "demo" ? "Not called in demo" :
-                      st === "skipped" ? "Not run" : st === "attention" ? "Blocked or uncertain" :
-                      st === "active" ? "State not yet known" : "Awaiting analysis";
+                <p className="pipeline-note">{(result?.mode ?? mode) === "demo"
+                  ? "Demo preview · Local policy checks only. No Clocked API calls."
+                  : busy ? "Analyzing with Clocked. Individual provider status is not reported while processing."
+                    : "Live analysis · Provider status is shown when results arrive."}</p>
+                <div className={"pipeline " + ((result?.mode ?? mode) === "demo" ? "pipeline-demo" : "pipeline-live")} aria-label="Analysis pipeline">
+                  {((result?.mode ?? mode) === "demo" ? demoPipelineStages : pipelineStages).map((stage, i) => {
+                    const st = stageState(stage.id);
+                    const label = st === "done" ? "Complete" :
+                      st === "skipped" ? "Not run" : st === "attention" ? "Needs review" :
+                      st === "active" ? "Processing" : st === "ready" ? "Ready" : "Not started";
+                    const highlight = st === "done" && (stage.id === "recommend" || stage.id === "decide");
                     return (
-                      <div key={stage.id} className={"pp-stage " + st} aria-label={stage.name + ": " + label}>
+                      <div key={stage.id} className={"pp-stage " + st + (highlight ? " outcome-done" : "")}
+                        aria-label={stage.name + ": " + label}>
                         <span className="pp-marker" aria-hidden="true">
                           {st === "done" ? <CheckCircle2 size={16} /> :
                             st === "attention" ? <CircleAlert size={16} /> :
                             st === "active" ? <Sparkles size={16} /> :
-                            <span style={{ fontSize: 11, fontWeight: 800 }}>{i + 1}</span>}
+                            <span style={{ fontSize: 11, fontWeight: 700 }}>{i + 1}</span>}
                         </span>
                         <span className="pp-name">{stage.name}</span>
                         <span className="pp-sub">{stage.sub}</span>
