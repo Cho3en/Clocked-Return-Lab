@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Clocked Return Lab | Returns & Refund Autopilot",
-  description: "Evidence-led advisory refund triage using Clocked Protect, Guard, Extract, Decide and policy checks. No refunds executed.",
+  description: "Review customer return requests with evidence from the original message. Built with Clocked Protect, Guard, Extract and Decide. No refunds are issued.",
   robots: { index: false, follow: false },
 };
 

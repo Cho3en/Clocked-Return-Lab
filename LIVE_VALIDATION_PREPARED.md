@@ -1,10 +1,10 @@
-# Clocked live validation — safe preflight and reproducible run
+# Clocked live validation  -  safe preflight and reproducible run
 
 Date: November 9, 2026
 
 ## Current status
 
-**PREPARED — ZERO REAL PROVIDER CALLS MADE.**
+**PREPARED  -  ZERO REAL PROVIDER CALLS MADE.**
 
 This branch adds scripts/validate-clocked-budgeted.mjs, a separate validation of the actual triageWithClocked pipeline. Default execution uses synthetic offline mocks and makes no network calls. This branch does not modify PR #1 or the public demo.
 
@@ -12,7 +12,7 @@ Live mode is blocked until both the previously exposed Clocked key is rotated an
 
 The primary local .env.local was last modified before the known exposure checkpoint. Key rotation and a provider-side cap could not be independently verified, so no real calls were made.
 
-## Offline rehearsal — no credentials and no cost
+## Offline rehearsal  -  no credentials and no cost
 
 From the repository root with Node.js dependencies installed:
 
@@ -40,7 +40,7 @@ The script also verifies the local key file was modified after its prior exposur
 | Cases | Two fixed, synthetic cases |
 | Maximum SDK endpoint operations | Eight total |
 | SDK attempts per endpoint | One, no retries |
-| Provider calls concurrently | None — serialized for post-call cost checks |
+| Provider calls concurrently | None  -  serialized for post-call cost checks |
 | Timeout | 30 seconds per attempt |
 | Client-side post-response cost threshold | USD 0.05 |
 | Provider-side hard spending limit | Must exist and be confirmed before live mode |

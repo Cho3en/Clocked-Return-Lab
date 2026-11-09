@@ -1,11 +1,11 @@
-# P0 Engineering Milestone — Case Integrity and Safe Abstention
+# P0 Engineering Milestone  -  Case Integrity and Safe Abstention
 
 Date: November 8, 2026
-Scope: P0.1–P0.4 for the Clocked Returns & Refund Autopilot.
+Scope: P0.1-P0.4 for the Clocked Returns & Refund Autopilot.
 Baseline before this work: commit 725491f.
 Status: Source fixes and synthetic adversarial validation passed; real Clocked SDK retesting is pending credential rotation. Existing public demo remains pre-P0 footage until a verified replacement is recorded.
 
-## P0.1 — Case identity and evidence binding
+## P0.1  -  Case identity and evidence binding
 
 Created lib/case-context.ts, introducing a single-case data structure with:
 - Deduplicated order references, including repeated identifiers;
@@ -16,19 +16,19 @@ Created lib/case-context.ts, introducing a single-case data structure with:
 
 The policy engine checks that the extracted order and delivery date match the single text-level case. It refuses either Approve or Decline when there are multiple distinct order references, conflicting dates, ambiguous products or identity mismatches. These are *conservative linkage checks*, not reconciliation against a merchant's database. Source-aligned fields and high model probabilities are not independent proof.
 
-## P0.2 — Current intent, not mere keyword presence
+## P0.2  -  Current intent, not mere keyword presence
 
 Separates: refund, return-only, exchange, support, withdrawn/historical, speculative, ambiguous and none. An approval/decline for the refund workflow requires current affirmative refund intent, extracted request evidence, an affirmative Clocked Decide judgment (or deterministic synthetic demo judgment), and all case/policy safety gates.
 
 Quoted refund language, customer denial, cancellation, exchange/store-credit preference or ambiguous alternative destinations trigger human review. A pure return-only request is not treated as authorization for a refund.
 
-## P0.3 — Exception-first safety routing
+## P0.3  -  Exception-first safety routing
 
 Explicit product / order / delivery problem escalation checks handle: defective and damaged goods; overheating, smoke, sparks, melting and electrical injury; wrong variants, color or dimensions; missing hardware or delivery; prior replacement or returned shipment; ownership and shipping-address discrepancies; consumer rights and warranty. If any exception or model concern is present, or Clocked Guard cannot confidently clear a message, final routing is Human Review.
 
 A lexicon cannot identify every possible product fault. These checks improve safety for the tested scenarios but are not a complete substitute for legal review, merchant policy or human judgment.
 
-## P0.4 — Permanent regressions and independent red teams
+## P0.4  -  Permanent regressions and independent red teams
 
 - tests/p0-regression.test.ts: core red-team decision matrix with normal, old, multi-order, multi-date, quoted, withdrawn, safety and condition cases. Independent failures were added as permanent regression cases.
 - tests/pipeline.test.ts: mocked Clocked integration checks now include multi-order attribution, false-negative model issues and withdrawn quotations.

@@ -1,62 +1,69 @@
-# Judges: Start here — Clocked Return Lab
+# Clocked Return Lab: Quick guide for judges
 
-**Clocked Build Challenge 2026 | Public, reproducible decision-support prototype**
+**Clocked Build Challenge 2026**
 
-Clocked Return Lab turns unstructured customer refund emails into **Approve / Human Review / Decline recommendations**, each with supporting source text and a clear next step. It cannot issue refunds, send emails or edit orders.
+Clocked Return Lab helps a support agent review a customer's refund request. It pulls out the details that matter, shows the relevant text and recommends Approve, Human Review or Decline.
 
-## Demo videos
+The recommendations are provisional. The app cannot move money, contact customers or edit orders.
 
-**[Current UI — synthetic three-case walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm)**
+## Start with the demo
 
-The demo-v4 video was recorded from merged main commit 0c16879 after the closed synthetic product-identity gate and input-initialization fix. It shows only three built-in simulated cases, with zero Clocked provider calls, and does NOT establish real provider accuracy or prove all 918 tests visually. Historical demo-v3 was recorded before this gate.
+**[Watch the current three-case walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm)**
 
-**[Historical real Clocked API demonstration](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
+This is a **simulated recording** from merged commit 0c16879. It shows three built-in examples and makes no Clocked API calls. The video demonstrates the interface, not all of the safety tests or live provider accuracy.
 
-This earlier video exercised actual provider calls but predates the latest parser, case-integrity safeguards and UI revisions. It is not evidence that the current code was retested with the live provider.
+**[Watch the older real Clocked API demonstration](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
 
-## Four meaningful Clocked integrations
+The older video includes real provider calls, but was recorded before the latest product-name checks and interface changes. We do not claim those earlier responses validate the current code.
 
-Implementation: [lib/pipeline.ts](lib/pipeline.ts), [lib/evidence.ts](lib/evidence.ts), [lib/policy.ts](lib/policy.ts).
+## What Clocked contributes
 
-| Endpoint | How its output changes behavior |
+The relevant code is in [lib/pipeline.ts](lib/pipeline.ts), [lib/evidence.ts](lib/evidence.ts) and [lib/policy.ts](lib/policy.ts).
+
+| Step | What happens |
 | --- | --- |
-| **Protect (pii)** | Returns anonymized text. A failed or invalid result stops analysis; an additional local scrub catches common leftover identifiers. |
-| **Guard (injection)** | Evaluates prompt-injection risk. Suspicious, ambiguous or failed outcomes prevent Extract and Decide calls and route to Human Review. |
-| **Extract** | Returns exact field values, confidence and Unicode code-point offsets. Unaligned or low-confidence evidence cannot support Approve/Decline. |
-| **Decide** | Returns typed probabilities about refund intent, unused condition and defects. Unknown probability remains Unknown. Independent local gates require recognized synthetic fixture identity plus coherent order, condition, date and intent before either Approve or Decline. An unregistered or suspicious product description routes Human Review even when Decide returns a confident false negative. |
+| Protect | Masks personal information before the remaining analysis. The app applies an additional local scrub, although masking is not perfect. |
+| Guard | Checks for prompt injection. If it flags a concern or fails, the request stops and goes to a person. |
+| Extract | Finds the order reference, product, delivery date, condition and request, along with source spans and confidence values. Weak or mismatched evidence is not used for automatic recommendations. |
+| Decide | Evaluates a small set of typed questions about intent, unused condition and defects. The result informs the local checks; it does not decide refund eligibility by itself. |
+| Local policy | Looks for a consistent order, a usable date, active refund intent, missing details and possible exceptions before choosing a recommendation. |
 
-**Latest P0 identity-boundary revision:** The independent audit found that hazards hidden inside arbitrary product names (for example, 'Aurora Desk Lamp toxic with warm light') could still receive Approve or Decline. The fix in this source revision validates the ENTIRE product text against a closed synthetic fixture registry, refusing both automated advisory outcomes for unknown names or variants, even if Decide reports no problem. This is NOT merchant database verification. All outcomes remain advisory, and the current revision has not been tested against the paid Clocked provider.
+## A safety problem we found and fixed
 
-A deterministic policy then evaluates current intent, delivery age, single-order consistency, exceptions and unclassified statements. Claims are customer-reported, not merchant-verified.
+During independent testing, the system sometimes swallowed complaints into a product name. A line like "Aurora Desk Lamp toxic with warm light" could wrongly receive an Approve or Decline recommendation.
 
-## Run the current UI with zero credentials
+The current version checks the **entire product name** against a closed set of synthetic product fixtures. Any unfamiliar name or added wording goes to Human Review. We also check the original message, so an extracted short product name cannot hide a longer customer complaint.
+
+This is deliberately cautious. It is not merchant catalog verification or proof of purchase.
+
+## Run the demo yourself
 
 1. Install Node.js 22.
-2. Run: npm ci
-3. Run: npm run dev
-4. Visit: http://localhost:3000
-5. Keep **Demo fixtures** selected. Try Clear return, Defective item and Outside window, clicking **Run demo analysis** for each.
-6. Expand Source-linked extraction, Case linkage & intent, Typed assessments, and Policy & safety gates.
+2. Run **npm ci**, followed by **npm run dev**.
+3. Open http://localhost:3000.
+4. Stay in **Demo fixtures** mode.
+5. Try **Clear return**, **Defective item** and **Outside window**.
+6. Expand the evidence, case details, assessments and policy checks to see why each recommendation was made.
 
-The demo mode performs no Clocked calls. The separate live mode requires secure credentials and provider billing safeguards. See [LIVE_VALIDATION_PREPARED.md](LIVE_VALIDATION_PREPARED.md).
+You do not need an API key for the demo. It uses synthetic customer messages and local heuristics.
 
-## Test and reproducibility evidence
+## Tests and supporting evidence
 
-- **918 local automated tests** passed (641 previous + 272 synthetic catalog-boundary tests + 5 promoted independent DeepSeek audit test blocks). Of the 194 local identity-boundary cases, 76 cover unknown product descriptions across both formats and 60 cover hazards across dates and formats; the remaining cases verify benign names and optimistic mocked-policy behavior. Another 42 cases exercise the complete mocked Protect/Guard/Extract/Decide integration; 36 additional cases cover warning symbols and punctuation in raw Product: fields. The promoted DeepSeek audit checks 558 individual identity/expiry/benign/mock/edge scenarios inside its five test blocks, plus Unicode assertions. These are synthetic or mocked, not paid provider calls.
-- **182 synthetic HTTP red-team and mutation cases** passed.
-- **20 local security/browser assertions** passed, alongside mobile UI and browser smoke tests.
-- [.github/workflows/ci.yml](.github/workflows/ci.yml) provides CI for tests, TypeScript, lint and production build without provider API calls.
-- Independent findings and repairs: [VIBE report](VIBE_REMEDIATION_REPORT.md), [repair matrix](VIBE_REMEDIATION_MATRIX.md), original audit branch audit/vibe-independent.
+- **918 automated tests passed**, including five independent reviewer test blocks with 558 scenario evaluations.
+- **354 synthetic HTTP adversarial checks passed** in separate local runs.
+- **20 browser and security assertions passed**, along with responsive layout and browser smoke checks.
+- GitHub Actions passed tests, TypeScript, lint and the production build on the final main branch.
 
-Test success is not evidence of universal security, model accuracy, verified customer facts or legal eligibility.
+The GitHub workflow does not automatically run every HTTP and browser check listed above. Those suites were verified separately.
 
-## Product boundaries
+The detailed audit records remain in [VIBE_REMEDIATION_REPORT.md](VIBE_REMEDIATION_REPORT.md), [VIBE_REMEDIATION_MATRIX.md](VIBE_REMEDIATION_MATRIX.md) and [P0_ACCEPTANCE.md](P0_ACCEPTANCE.md).
 
-- All routes are advisory. **No money moves.**
-- Customer-supplied order IDs and dates are not verified against Shopify, a merchant ERP or carrier.
-- The sample 30-day cutoff is illustrative, not statutory law. Rights and defect exceptions require human review.
-- PII masking is imperfect. Test with synthetic or authorized data only.
-- In-memory live request quotas are not a distributed spending cap. Do not expose the paid endpoint publicly without durable auth, billing controls and monitoring.
-- This is a new hackathon prototype, not a production merchant integration.
+## What this project does not do
 
-[Project README](README.md) · [Submission narrative](SUBMISSION.md) · [Approved screenshot](assets/approved.png) · [Human Review](assets/review.png) · [Decline](assets/declined.png) · [Official rules](https://clocked.rezolve.ai/build-challenge/rules)
+It does not verify orders or delivery dates with Shopify, another store system or a carrier. Its products are controlled demo fixtures, and its 30-day return window is an example rather than a merchant's actual policy. A person must review safety concerns, defects, warranty questions and potential statutory rights.
+
+The final version has not been retested with paid live Clocked calls. Protect masking is not a guarantee of anonymity, and the current request limits are per server process rather than a provider-enforced spending cap.
+
+This is a hackathon prototype designed to show a careful first review. It is not a production refund service.
+
+[README](README.md) | [Submission summary](SUBMISSION.md) | [Sample Approve](assets/approved.png) | [Human Review](assets/review.png) | [Sample Decline](assets/declined.png) | [Official rules](https://clocked.rezolve.ai/build-challenge/rules)

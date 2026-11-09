@@ -1,4 +1,4 @@
-# VIBE remediation — independent handoff and release-candidate verification
+# VIBE remediation  -  independent handoff and release-candidate verification
 
 **Date:** November 9, 2026
 **Base:** main commit e2e4e2d
@@ -31,17 +31,17 @@ The original audit branch remains immutable. The imported test suite uses target
 - TypeScript, ESLint, and optimized Next.js production build: **PASS**, verified November 9, 2026.
 - HTTP adversarial red-team suites: 32 case core, 76 case mutation, 32 case UI release, 42 case held-out. All use synthetic demo requests and no Clocked credits.
 - New independent held-out tests: 94 scenario/contract tests for benign and unsafe messages across deterministic and mocked-live policy paths; deliberately optimistic model answers test fail-closed routing.
-- UI audit: six viewport widths (320–1440px), keyboard details, auto-scroll, mobile and console errors.
+- UI audit: six viewport widths (320-1440px), keyboard details, auto-scroll, mobile and console errors.
 - Security audit: authentication refusal, 15KB streamed request cap, CSP nonce behavior, HTML script blocking, basic browser checks.
 - No paid Clocked calls were made. Mocked results are **not** evidence of actual Clocked model accuracy.
 
-## Review A — correctness and architecture
+## Review A  -  correctness and architecture
 
 **Positive:** direct evidence mapping remains source-aligned and the policy requires a single customer-reported order and delivery date; unknown request statements and ambiguous/unsafe claims escalate to Human Review. Mistral's initial Unicode liberalization introduced an unsafe product-name boundary, independently found and repaired before submission.
 
 **Limitations:** the pattern grammar is English-oriented and finite. A product string that resembles a complaint may be a legitimate catalog name; conservative Human Review is intentional. An unusual fault might still evade all classifiers. A customer-supplied delivery date or order reference is not verified against an external merchant system. The illustrative 30-day rule does not supersede legal rights or merchant policies.
 
-## Review B — security and reliability
+## Review B  -  security and reliability
 
 **Positive controls tested:** server-side provider key, private access token required for live calls, constant-time hashed token comparison, request size gate, strict CSP nonce, anti-framing, referrer and permissions restrictions, controlled Guard-first pipeline, and browser sanitization.
 

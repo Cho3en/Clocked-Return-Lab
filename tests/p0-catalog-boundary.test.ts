@@ -52,7 +52,7 @@ function assertIdentityReview(result: ReturnType<typeof triageDemo>) {
     || (result.caseScope?.unclassifiedStatements ?? 0) > 0).toBe(true);
 }
 
-// Matrix A — 38 novel adversarial descriptions, in both supported formats.
+// Matrix A  -  38 novel adversarial descriptions, in both supported formats.
 // These are customer allegations, not verified catalog product titles.
 const FRESH_38 = [
   "toxic", "flammable", "acidic", "corrosive", "radioactive", "explosive",
@@ -71,7 +71,7 @@ const FRESH_38 = [
   "injures users with bamboo lamp shade",
 ] as const;
 
-// Matrix B — the 15 independent hazards, both in-window and expired,
+// Matrix B  -  the 15 independent hazards, both in-window and expired,
 // with both supported product formats. Previously 30 Approves/30 Declines.
 const EXPIRED_15 = [
   "toxic", "flammable", "radioactive", "acidic", "corrosive",
@@ -101,7 +101,7 @@ describe("P0 structural trust-boundary matrix B: 60 hazard/expiry combinations",
     }
 });
 
-describe("P0 synthetic registry — do not mistake known labels for a merchant order lookup", () => {
+describe("P0 synthetic registry  -  do not mistake known labels for a merchant order lookup", () => {
   const BENIGN = [
     "Atlas Desk Lamp", "Nimbus Headphones", "Cedar Wall Clock",
     "Aurora Desk Lamp", "Aurora Table Lamp", "Aurora Lamp", "Widget",
@@ -215,7 +215,7 @@ function mockedClockedPipeline(text: string, extractedProduct: string, date: str
   return { services: services as unknown as ClockedServices, calls };
 }
 
-describe("P0 complete mocked SDK pipeline — no paid Clocked requests", () => {
+describe("P0 complete mocked SDK pipeline  -  no paid Clocked requests", () => {
   for (const suffix of [
     "toxic", "flammable", "battery rupture",
     "radioactive with extra bright LED", "sizzles with warm light",

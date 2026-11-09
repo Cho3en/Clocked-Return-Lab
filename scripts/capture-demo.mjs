@@ -30,7 +30,7 @@ try {
     await page.getByRole("button", { name: "Run demo analysis" }).click();
     await page.getByText(entry.result, { exact: true }).waitFor({ timeout: 10_000 });
     await page.screenshot({ path: join(assets, entry.path), fullPage: true });
-    console.log(entry.name + ": " + entry.result + " — " + entry.path);
+    console.log(entry.name + ": " + entry.result + " | " + entry.path);
   }
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
   mobile.on("pageerror", (err) => errors.push(err.message));
