@@ -4,13 +4,15 @@ An evidence-led return triage dashboard created for the **Clocked Build Challeng
 
 Transforms an incoming customer request into a **recommended** route: Approve / Human Review / Decline. This is a decision-support prototype — it cannot issue refunds, send emails, or change orders.
 
-**[Watch the existing Clocked API demonstration (50 seconds)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
+**[Watch the current UI — three-case simulated walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v2/clocked-return-lab-current-demo.webm)**
 
-*This video was recorded before the P0 case-integrity repairs. The current code has stronger safety gates; a replacement real-API video has not yet been recorded or verified.*
+**[Watch the historical real Clocked API demonstration (50 seconds)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
 
-**[Submission summary and technical judging notes](SUBMISSION.md)** · **[Round 4 safety and security acceptance](ROUND4_ACCEPTANCE.md)** · **[Round 3 UI redesign, new red-team findings and release plan](AUDIT_UI_REDTEAM_R3.md)**
+*The current video uses deterministic synthetic fixtures with zero paid API calls. The older video exercised actual Clocked provider calls before the latest case-integrity and UI improvements. Do not confuse either video's evidence with the other.*
 
-**Current release status:** The modern UI and fail-closed decision safeguards passed the synthetic Round 4 release gates. See **[Round 4 acceptance report](ROUND4_ACCEPTANCE.md)**. The application remains an advisory prototype; the previous video is outdated and the live API must not be publicly exposed without durable authentication and spending controls.
+**[Judges: start here](JUDGES_START_HERE.md)** · **[Entry form copy](ENTRY_FORM_COPY.md)** · **[Submission summary](SUBMISSION.md)** · **[VIBE remediation report](VIBE_REMEDIATION_REPORT.md)** · **[Round 4 acceptance](ROUND4_ACCEPTANCE.md)**
+
+**Current release status:** The reviewed VIBE safety/Unicode remediation is merged, with 462 automated tests and independent synthetic browser/HTTP release gates passed locally. Current screenshots and a separate simulated three-case video are available. The original live-provider video is historical; the live paid endpoint must not be exposed publicly without rotated credentials, durable authentication and provider-enforced spending controls.
 
 Earlier engineering records: **[P0 safety milestone](P0_ACCEPTANCE.md)** · **[Initial audit](AUDIT.md)**.
 
@@ -58,11 +60,17 @@ Challenge: https://clocked.rezolve.ai/challenge
 - Incoming JSON streams are limited to 15KB **before parsing**, including chunked requests. HTTP errors are sanitized and live authentication fails closed.
 - Live API requires a separate 32+ character access token, maximum 8 live requests per 15 minutes, 30 per UTC day and two active requests per process. These are **in-memory, per-instance safeguards** and not distributed enforcement. Do not deploy publicly without durable shared quotas, a proper user auth system, monitoring and abuse controls.
 
-## Reproducible live demonstration
+## Reproducible current simulated demonstration
 
-The video is generated with `npm run record` after starting a local server. It invokes real Clocked calls on three synthetic examples (eligible, defective, outside window), while reading the private access token from the ignored `.env.local` file. Never publish the configuration file or include live keys in recordings. The script records a local WebM video; the public release asset is at the link above.
+From the running local app, run **npm run record:demo** to record the three example routes without any provider credentials or billable Clocked calls. The script refuses a recording containing anything other than exactly three demo-mode API requests. It creates an ignored local WebM in assets/; the judge-facing copy is published as the **demo-v2** GitHub Release asset. Use **npm run capture** to refresh current screenshots.
+
+## Historical real-provider demonstration
+
+The older live-API video is generated with `npm run record` after starting a local server. It invokes real Clocked calls on three synthetic examples (eligible, defective, outside window), while reading the private access token from the ignored `.env.local` file. Never publish the configuration file or include live keys in recordings. The script records a local WebM video; the public release asset is at the link above.
 
 ## Hackathon submission
+
+**[Submission-ready copy](ENTRY_FORM_COPY.md)** lists the official form fields and URLs; **[one-page judging guide](JUDGES_START_HERE.md)** prioritizes reproducibility. The project is not officially submitted merely because GitHub is public: the signed-in Clocked entry form must be saved and verified.
 
 Announced deadline: **November 10, 2026 at 11:59 p.m. Eastern, corresponding to November 11 at 05:59 in Zagreb.** Submit a public repository, live demo link or short video, project details and eligible entrant information. Verify the official rules at https://clocked.rezolve.ai/build-challenge/rules before submitting.
 

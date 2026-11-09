@@ -28,7 +28,6 @@ const CASES = Object.freeze([
 ]);
 const LIMIT = Object.freeze({cases:2,endpointCalls:8,costUsd:0.05,attempts:1});
 const exposureTime = Date.parse("2026-11-09T12:50:00Z");
-const originalFetch = globalThis.fetch;
 
 function parseEnv() {
   const text=readFileSync(resolve(".env.local"),"utf8");
