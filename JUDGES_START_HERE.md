@@ -8,9 +8,9 @@ The recommendations are provisional. The app cannot move money, contact customer
 
 ## Start with the demo
 
-**[Watch the current three-case walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm)**
+**[Watch the current three-case walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v5/clocked-return-lab-current-demo.webm)**
 
-This is a **simulated recording** from merged commit 0c16879. It shows three built-in examples and makes no Clocked API calls. The video demonstrates the interface, not all of the safety tests or live provider accuracy.
+This is a **simulated recording** from merged commit de454ca. It shows three built-in examples and makes no Clocked API calls. The video demonstrates the interface, not all of the safety tests or live provider accuracy.
 
 **[Watch the older real Clocked API demonstration](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
 

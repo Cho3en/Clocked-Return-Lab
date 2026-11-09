@@ -36,14 +36,14 @@ This works for a controlled demonstration. A real store would need a trusted cat
 
 ## Demo and project links
 
-- **Current simulated demo:** https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm
+- **Current simulated demo:** https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v5/clocked-return-lab-current-demo.webm
 - **Earlier demonstration with real Clocked calls:** https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm
 - **Source code:** https://github.com/Cho3en/clocked-returns-refund-autopilot
 - **Quick guide for judges:** https://github.com/Cho3en/clocked-returns-refund-autopilot/blob/main/JUDGES_START_HERE.md
 
 The current recording shows three made-up requests. A clean, unused return receives a provisional Approve recommendation. A reported defect goes to Human Review. An unused item outside the example 30-day window receives a provisional Decline recommendation.
 
-That video was recorded from commit 0c16879, after the product-identity and form-initialization changes. It uses no real Clocked calls. The earlier live recording shows an older version and cannot validate the current safeguards.
+That video was recorded from commit de454ca, after the product-identity and form-initialization changes. It uses no real Clocked calls. The earlier live recording shows an older version and cannot validate the current safeguards.
 
 ## Verification
 
