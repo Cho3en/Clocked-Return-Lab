@@ -1,9 +1,9 @@
-# Round 3 — Modern UI, Independent Logic Red Team, Code & Security Audit
+# Round 3  -  Modern UI, Independent Logic Red Team, Code & Security Audit
 
 **Historical findings from the pre-repair candidate.** The decision-safety and security-header release blockers described here were repaired and independently retested in [ROUND4_ACCEPTANCE.md](ROUND4_ACCEPTANCE.md). This file is preserved for audit history.
 
 Date: 2026-11-08
-Source baseline: 63b67d0 (P0.1–P0.4)
+Source baseline: 63b67d0 (P0.1-P0.4)
 Scope: local UI redesign followed by independent behavioral and security audits.
 Release decision: DO NOT MERGE TO PUBLIC MAIN OR REPLACE VIDEO while safety and security gates fail.
 All tests used synthetic inputs; no real Clocked API calls, refunds, private values or real customer information.
@@ -19,7 +19,7 @@ All tests used synthetic inputs; no real Clocked API calls, refunds, private val
 - Visually inspected desktop and 390px phone screenshots. No horizontal overflow was found at 320, 360, 390, 768, 1024 and 1440px.
 - Final UI audit completed after the styling changes: control target height at least 44px at all six widths, native details toggle via keyboard Enter, result auto-scroll, no overflow or page errors. UI_AUDIT_RESULT: 0 issues.
 
-## B. Independent logic audit — new 32-case corpus
+## B. Independent logic audit  -  new 32-case corpus
 
 Command: npm run redteam:ui
 The cases are distinct from earlier P0 corpora: 25 product/exception messages, 5 usability formats, 2 unambiguous controls.
@@ -48,7 +48,7 @@ The new redteam:ui script intentionally exits nonzero while any unsafe approvals
 
 The green historical suites do NOT override the 22 unsafe new decisions.
 
-## D. Independent security pass 1 — dynamic HTTP/browser
+## D. Independent security pass 1  -  dynamic HTTP/browser
 
 Command: npm run security:audit
 15 of 15 functional checks passed:
@@ -71,7 +71,7 @@ However, HTML responses lack:
 
 The security:audit command now returns a nonzero exit code for these header omissions. These results do not constitute an external penetration test.
 
-## E. Independent security pass 2 — source and dependencies
+## E. Independent security pass 2  -  source and dependencies
 
 - A local source scan of app and lib found no dynamic eval, Function constructor, dangerouslySetInnerHTML, browser localStorage/sessionStorage, document.cookie or browser-side API-key variable.
 - Server-only Clocked key and private access token references were found in lib/clocked.ts and app/api/triage/route.ts.
@@ -91,20 +91,20 @@ Boundaries: customer data remains typed in the local input textarea; original me
 
 ## G. Improvement plan
 
-P0 — Decision safety before public release
+P0  -  Decision safety before public release
 1. Replace the fail-open keyword absence inference with an explicit exception and negative-case classification layer. Detect complaints, safety hazards, delivery issues, billing disputes and product mismatches; unknown or mixed claims must default to Review.
 2. Model order/product/date context structurally; distinguish delivery date from order and payment dates; link all evidence to the same requested action. Support corrections without blindly selecting a first match.
 3. Improve intent handling (current vs historical, withdrawn vs renewed, exchanges, store credit and support). Require explicit evidence before either Approve or Decline.
 4. Permanently add new adversarial and property-based fixtures. Gate release on zero unsafe decisions across ALL independent corpora and a minimum reasonable acceptance rate for clear positive cases.
 5. After the old key is revoked and replaced, run a small, capped synthetic live Clocked test to verify both false-negative and ambiguous model outcomes.
 
-P1 — Security and privacy before any public live API
+P1  -  Security and privacy before any public live API
 6. Configure CSP, frame protections, referrer and permissions policies, and global nosniff, then rerun browser and HTTP tests.
 7. Introduce authenticated sessions and durable shared quotas with atomic per-user budgets, spend monitoring, demo throttles, body read timeouts and privacy-safe tracing.
 8. Extend local PII protection and tests; explicitly disclose that the original request is sent to Clocked Protect and masking is best effort.
 9. Update and re-audit the eight moderate development advisory dependencies.
 
-P2 — Operator value / usability
+P2  -  Operator value / usability
 10. Provide safe case-summary copy/export and a small read-only human review queue. Never auto-execute refunds.
 11. Add a synthetic merchant order ledger with independent order/product/delivery records to demonstrate meaningful verification.
 12. Test with keyboard-only and actual screen-reader workflows; refine contrast, mobile density, motion and missing-information explanations.

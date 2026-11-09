@@ -10,9 +10,9 @@ import { createSamples } from "../lib/samples";
 import type { EvidenceField, Lane, Mode, TriageResult } from "../lib/types";
 
 const lanes: { id: Lane; title: string; subtitle: string }[] = [
-  { id: "approve", title: "Approve", subtitle: "Advisory only" },
-  { id: "review", title: "Review", subtitle: "Human required" },
-  { id: "reject", title: "Decline", subtitle: "Policy advisory" },
+  { id: "approve", title: "Approve", subtitle: "Suggestion only" },
+  { id: "review", title: "Review", subtitle: "Needs a person" },
+  { id: "reject", title: "Decline", subtitle: "Example policy" },
 ];
 
 function asPercentage(value: number | null) {
@@ -142,15 +142,15 @@ export default function Home() {
     if (!result) return null;
     const label = result.lane === "approve" ? result.mode === "demo" ? "Eligible under demo rules" : "Eligible under example policy" : result.lane === "reject" ? "Outside the return window" : "Escalate to a human";
     const description = result.lane === "approve"
-      ? "The customer-reported case passes the illustrative policy gates. No refund has been issued."
+      ? "Based on the customer's message, this fits the example return rules. No refund has been issued."
       : result.lane === "reject"
-        ? "The customer-reported delivery date is outside the example window. No return has been declined in a store."
-        : "This case has uncertainty or an exception and should not be decided automatically.";
+        ? "The reported delivery date is outside the sample return window. Nothing has been declined in an actual store."
+        : "Some details are missing, conflicting or need a person to review them.";
     const nextAction = result.lane === "approve"
-      ? "Verify the order, delivery and applicable policy before taking any action."
+      ? "Check the actual order, delivery and store rules before taking action."
       : result.lane === "reject"
-        ? "Check the merchant policy, statutory rights and order history before responding."
-        : "Resolve the flagged evidence or exception with a person.";
+        ? "Check the store rules, order history and customer rights before replying."
+        : "Have a support agent check the issues listed below.";
     return { label, description, nextAction };
   }, [result]);
 
@@ -209,7 +209,7 @@ export default function Home() {
             <div className="brand-icon"><Clock3 size={21} strokeWidth={2.2} aria-hidden="true" /></div>
             <div className="min-w-0">
               <div className="truncate text-[13px] font-extrabold tracking-[.13em] text-white sm:text-[14px]">CLOCKED <span className="font-medium text-slate-400">/ RETURN LAB</span></div>
-              <div className="mt-0.5 text-[10px] font-medium tracking-[.13em] text-slate-500">EVIDENCE-LED TRIAGE</div>
+              <div className="mt-0.5 text-[10px] font-medium tracking-[.13em] text-slate-500">CLEARER RETURN REVIEWS</div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -222,9 +222,9 @@ export default function Home() {
         </header>
 
         <section className="intro" aria-labelledby="page-title">
-          <div className="eyebrow flex items-center gap-2"><Zap size={14} className="text-cyan-300" aria-hidden="true" /> THE DECISION WORKSPACE</div>
-          <h1 id="page-title" className="intro-title">Returns, routed <span className="accent-text">with reason.</span></h1>
-          <p className="intro-copy">From an unstructured customer message to an explainable, provisional recommendation. Detect conflicts before they become decisions.</p>
+          <div className="eyebrow flex items-center gap-2"><Zap size={14} className="text-cyan-300" aria-hidden="true" /> RETURN REQUEST REVIEW</div>
+          <h1 id="page-title" className="intro-title">Understand each return <span className="accent-text">before deciding.</span></h1>
+          <p className="intro-copy">Paste a customer message to see what it says, what is missing and what needs a closer look. The result is a suggestion, not a final refund decision.</p>
           <div className="pipeline" aria-label="Analysis pipeline">
             {pipeline.map(({ title, icon: Icon }, i) => (
               <div key={title} className="pipeline-step">
@@ -250,7 +250,7 @@ export default function Home() {
                 <label htmlFor="return-message" className="field-label">Incoming message</label>
                 <button type="button" onClick={reset} disabled={!inputReady} className="subtle-action"><RotateCcw size={14} aria-hidden="true" /> Clear</button>
               </div>
-              <textarea id="return-message" value={email} disabled={!inputReady} spellCheck={false} onChange={(e) => { invalidate(); setEmail(e.target.value); setActiveSample(null); }} placeholder="Paste a synthetic customer return message..." className="message-input mt-2.5 min-h-[194px] w-full resize-y rounded-xl px-4 py-3 text-[13px] leading-[1.8] sm:min-h-[224px]" />
+              <textarea id="return-message" value={email} disabled={!inputReady} spellCheck={false} onChange={(e) => { invalidate(); setEmail(e.target.value); setActiveSample(null); }} placeholder="Paste a made-up return email to try the demo..." className="message-input mt-2.5 min-h-[194px] w-full resize-y rounded-xl px-4 py-3 text-[13px] leading-[1.8] sm:min-h-[224px]" />
               <div className="mt-2 flex flex-wrap justify-between gap-2 text-[11px] text-slate-500">
                 <span>{email.length.toLocaleString()} / 10,000 characters</span>
                 <span>Not stored by this application</span>
@@ -258,8 +258,8 @@ export default function Home() {
 
               <div className="mt-6">
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="eyebrow !text-slate-400">TRY A SCENARIO</span>
-                  <span className="text-[11px] text-slate-500">One click to load</span>
+                  <span className="eyebrow !text-slate-400">TRY AN EXAMPLE</span>
+                  <span className="text-[11px] text-slate-500">Choose a sample</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {samples.map((sample) => (
@@ -296,13 +296,13 @@ export default function Home() {
                 </button>
               </div>
               <div aria-live="polite" aria-atomic="true" role="status" className="mt-3 min-h-[18px] text-[11px] text-slate-400">
-                {busy ? "Analyzing the current message. No refund will be executed." : result ? "Analysis complete. The recommendation is " + lanes.find((l) => l.id === result.lane)?.title + "." : ""}
+                {busy ? "Checking this message. No refund will be issued." : result ? "Analysis complete. The recommendation is " + lanes.find((l) => l.id === result.lane)?.title + "." : ""}
               </div>
               {error && <p role="alert" className="mt-3 rounded-xl border border-rose-400/20 bg-rose-500/10 p-3 text-[12px] text-rose-200">{error}</p>}
               <p className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-slate-500"><ShieldAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
                 {mode === "live"
-                  ? "Live requests consume Clocked credits and use the server date. Protect masking is best-effort. Use only authorized data."
-                  : "Simulated mode uses local heuristics, not real Clocked calls. Use synthetic messages only."}
+                  ? "Live requests may cost Clocked credits. Dates come from the server, and personal-data masking is not perfect. Use only data you have permission to send."
+                  : "This demo uses local rules, not Clocked API calls. Please use made-up customer details."}
               </p>
             </div>
           </section>
@@ -321,7 +321,7 @@ export default function Home() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.14em] opacity-85">
                       {result.lane === "review" ? <CircleAlert size={17} /> : result.lane === "approve" ? <CheckCircle2 size={17} /> : <ShieldAlert size={17} />}
-                      Provisional recommendation
+                      Suggested next step
                     </div>
                     <span className="text-[10px] font-medium tracking-wide opacity-60">{result.requestId}</span>
                   </div>
@@ -339,7 +339,7 @@ export default function Home() {
                     {busy ? "Checking the evidence" : "Ready when you are"}
                   </div>
                   <p className="mt-2 max-w-[280px] text-center text-[12px] leading-5 text-slate-500">
-                    {busy ? "Examining claims, intent, safety concerns and policy gates." : "Run a synthetic request to see a recommendation and what needs human attention."}
+                    {busy ? "Checking the request, dates, possible problems and missing details." : "Try one of the sample requests to see the suggested next step and any issues that need review."}
                   </p>
                 </div>
               )}
@@ -367,7 +367,7 @@ export default function Home() {
               )}
               <div className="mt-4 flex items-start gap-2 border-t border-white/[.07] pt-4 text-[11px] leading-5 text-slate-500">
                 <LockKeyhole size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-                <span>Advisory routing only. Customer claims are not verified against store records. No payments, emails or order changes are made.</span>
+                <span>These are suggestions based on the message, not verified store records. No payment, email or order is changed.</span>
               </div>
             </div>
           </section>
@@ -380,18 +380,18 @@ export default function Home() {
                 <div className="eyebrow">03 / INSPECT</div>
                 <h2 className="mt-1 text-[18px] font-semibold tracking-tight text-slate-200">Why this route?</h2>
               </div>
-              <span className="text-[11px] text-slate-500">Expand only what you need</span>
+              <span className="text-[11px] text-slate-500">Open the details you want to see</span>
             </div>
             <div className="details-grid">
               <DetailSection label="01" title="Source-linked extraction" count={result.evidence.length + " exact spans"}>
                 <div className="source-text"><EvidenceText text={result.redactedText} evidence={result.evidence} /></div>
-                <div className="mt-3 text-[11px] leading-5 text-slate-500">Highlights match character offsets in protected text. They confirm what the customer wrote, not whether a claim is true.</div>
+                <div className="mt-3 text-[11px] leading-5 text-slate-500">Highlighted text shows where each detail came from. It does not prove that the customer&apos;s claim is correct.</div>
                 <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {result.evidence.map((entry) => (
                     <div key={entry.id} className="evidence-item">
                       <div className="mini-label">{entry.label}</div>
                       <div className="mt-1.5 break-words text-[12px] text-slate-200">{entry.value}</div>
-                      <div className="mt-2 text-[10px] text-slate-500">Characters {entry.start}–{entry.end}{entry.confidence === null ? "" : " · P(verified extraction): " + asPercentage(entry.confidence)}</div>
+                      <div className="mt-2 text-[10px] text-slate-500">Characters {entry.start} to {entry.end}{entry.confidence === null ? "" : " · P(verified extraction): " + asPercentage(entry.confidence)}</div>
                     </div>
                   ))}
                 </div>
@@ -406,7 +406,7 @@ export default function Home() {
                     <div className="case-data-row"><span>Current intent</span><strong className="capitalize">{result.caseScope.intent.replace("-", " ")}</strong></div>
                     {result.caseScope.issueSignals.length > 0 && <div className="case-data-row"><span>Issue signals</span><strong>{result.caseScope.issueSignals.join(", ")}</strong></div>}
                     {result.caseScope.blockers.length > 0 && <ul className="space-y-2 border-t border-white/[.08] pt-3">{result.caseScope.blockers.map((b, i) => <li key={i} className="flex gap-2 text-[12px] leading-5 text-amber-200/90"><CircleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> {b}</li>)}</ul>}
-                    {!result.caseScope.blockers.length && <div className="text-[12px] leading-6 text-slate-400">No conflicting claims found by the current checks. External merchant verification is still required.</div>}
+                    {!result.caseScope.blockers.length && <div className="text-[12px] leading-6 text-slate-400">These checks found no conflicting claims. You would still need to verify the order with the store.</div>}
                   </div>
                 ) : <p className="text-[12px] text-slate-400">No structured case-scope metadata supplied.</p>}
               </DetailSection>
@@ -421,7 +421,7 @@ export default function Home() {
                         <span className="text-[12px] font-semibold text-slate-200">{a.answer === null ? "Unknown" : a.answer ? "Yes" : "No"}</span>
                       </div>
                       {a.probability !== null && <div className="probability-track mt-2"><div className="probability-fill" style={{ width: Math.min(100, Math.max(0, a.probability * 100)) + "%" }} /></div>}
-                      <div className="mt-1.5 text-right text-[10px] text-slate-500">{result.mode === "demo" ? "Synthetic heuristic; no model call" : "P(Yes): " + asPercentage(a.probability)}</div>
+                      <div className="mt-1.5 text-right text-[10px] text-slate-500">{result.mode === "demo" ? "Demo estimate; no model call" : "P(Yes): " + asPercentage(a.probability)}</div>
                     </div>
                   ))}
                 </div>
@@ -451,7 +451,7 @@ export default function Home() {
 
         <footer className="site-footer">
           <span>CLOCKED / RETURN LAB</span>
-          <span>Illustrative 30-day policy · No executed refunds · Synthetic fixtures</span>
+          <span>Example 30-day policy · No executed refunds · Synthetic fixtures</span>
         </footer>
       </div>
     </main>

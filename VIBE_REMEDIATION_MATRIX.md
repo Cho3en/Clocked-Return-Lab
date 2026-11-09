@@ -1,4 +1,4 @@
-# VIBE remediation matrix — original 11 failing tests
+# VIBE remediation matrix  -  original 11 failing tests
 
 **Baseline:** original 77-test independent audit from commit dbb00f4 against app commit e2e4e2d.
 **Updated suite:** tests/vibe-redteam-audit.test.ts (revised without modifying the original audit branch).

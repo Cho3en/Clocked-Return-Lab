@@ -1,4 +1,4 @@
-# Round 4: release acceptance — fail-closed refund triage and modern UI
+# Round 4: release acceptance  -  fail-closed refund triage and modern UI
 
 Date: November 8, 2026
 Target: Clocked Returns & Refund Autopilot, modern UI branch from commit 24e5da1
@@ -31,7 +31,7 @@ Evidence type: local production-server tests and synthetic mocked services. No p
 | Earlier two-age mutation red-team | **76 / 76 PASS** |
 | Fresh post-repair holdout, two age windows | **42 / 42 PASS; zero unsafe outcomes** |
 | Security HTTP and browser checks | **19 / 19 PASS** |
-| UI browser audit, 320–1440px widths | PASS; zero overflow/page errors |
+| UI browser audit, 320-1440px widths | PASS; zero overflow/page errors |
 | Browser smoke including stale-request invalidation | PASS |
 
 ### Distinguishing deterministic from mocked live tests
@@ -65,7 +65,7 @@ Use synthetic data and a local production server. Run:
 
 The new scripts fail with a nonzero process exit status when the observed release gate is not met. None of these require a Clocked API key or generate Clocked charges.
 
-## Next milestone — before publishing a new video or public live service
+## Next milestone  -  before publishing a new video or public live service
 
 1. User revokes the previously exposed key and installs the replacement privately in .env.local; do not transmit it in chat.
 2. With an explicit limited call budget, run real Clocked Protect/Guard/Extract/Decide on a small set of synthetic safety and ambiguity cases and compare to mocked expectations.

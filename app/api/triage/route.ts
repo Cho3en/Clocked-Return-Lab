@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   }
   const parsed = schema.safeParse(payload);
   if (!parsed.success) {
-    return json({ error: "Enter a message (20–10,000 characters), mode and valid date." }, 400);
+    return json({ error: "Enter a message between 20 and 10,000 characters, choose a mode and provide a valid date." }, 400);
   }
   const { message, mode, asOf } = parsed.data;
   if (mode === "demo") {

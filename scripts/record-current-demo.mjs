@@ -72,11 +72,11 @@ try{
   await caption("CLOCKED CHALLENGE 2026 | SIMULATED","Clocked Return Lab",
     "Returns & refunds triage: three synthetic cases, three explainable recommendations. No paid API calls.");
   await sleep(3000);
-  await scenario("Clear return","Eligible under demo rules","01 / ELIGIBLE","Approve — provisional",
+  await scenario("Clear return","Eligible under demo rules","01 / ELIGIBLE","Approve (provisional)",
     "Unused and within the sample 30-day window. A human must verify the merchant order.");
   await scenario("Defective item","Escalate to a human","02 / EXCEPTION","Human Review",
     "Reported defect and missing delivery date require human assessment of rights and evidence.");
-  await scenario("Outside window","Outside the return window","03 / EXPIRED","Decline — provisional",
+  await scenario("Outside window","Outside the return window","03 / EXPIRED","Decline (provisional)",
     "Reported delivery 58 days ago is outside the illustrative return window.");
   await top();
   await caption("CLOCKED SDK IN SOURCE | FOUR ENDPOINTS","Protect → Guard → Extract → Decide",

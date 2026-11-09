@@ -1,4 +1,4 @@
-# Clocked Return Lab — Second Adversarial Audit and Improvement Plan
+# Clocked Return Lab  -  Second Adversarial Audit and Improvement Plan
 
 *Historical pre-P0 findings from commit 725491f. See [P0_ACCEPTANCE.md](P0_ACCEPTANCE.md) for repaired status, new tests and remaining limitations.*
 Date: November 8, 2026
@@ -13,7 +13,7 @@ Status: DO NOT claim production refund decision reliability. This is a hackathon
 - Demo-mode exception detection missed smoking/overheating products, wrong color, and products falling apart. Live Clocked Decide could detect some of those, but the deterministic policy has no reliable coverage or binding. Do not claim these exact failures were reproduced against the real Clocked endpoint.
 - Additional support, language, privacy, accessibility and deployment boundaries remain.
 
-## Pass 1 — Black-box adversarial behavior
+## Pass 1  -  Black-box adversarial behavior
 23 new synthetic test cases were POSTed to the local /api/triage endpoint in demo mode, without Clocked API charges.
 9 flagged outcomes:
 1. Return requested but refund explicitly disclaimed -> Approve rather than Review. SPECIFICATION AMBIGUITY: return eligibility must be distinguished from refund authorization.
@@ -29,7 +29,7 @@ Normal eligible requests, clear defects, expired requests, simple injection word
 
 Isolated policy-engine test (live mode semantics, mocked inputs): request for ORD-99999 was combined with extracted order/date/product for ORD-11111. All 8 checks passed and returned Approve despite false cross-order attribution.
 
-## Pass 2 — Source, security and operational audit
+## Pass 2  -  Source, security and operational audit
 
 ### Verified strengths
 - Git ignored private .env.local in the inspected HEAD; no .env.local appears in tracked files.
@@ -58,27 +58,27 @@ Isolated policy-engine test (live mode semantics, mocked inputs): request for OR
 
 ## Priority repair plan
 
-### P0 — Correctness, before updated release/demo
+### P0  -  Correctness, before updated release/demo
 1. Bind every extracted field to a specific order/product/return request. Represent orders as separate records, not a global flat field dictionary. Hard-block Approve and Decline when 2+ distinct orders, conflicting dates, mismatched products or request references appear without a defensible resolution.
 2. Distinguish intent types: refund, return-only, exchange, support, complaint, speculative, quoted/historical, withdrawn, and unknown. Treat refund authorization and return eligibility as separate decisions. Require positive current intent tied to an order.
 3. Make exception and consumer-safety detection high recall: overheating, smoke, sparking, electric shock, burns, leaking, wrong color/variant, missing components, damaged delivery, not-as-described and statutory-rights issues. Escalate when uncertain; never treat absence of a regex hit as proof there is no issue.
 4. Build immutable regression cases from the 23 black-box inputs and cross-order contract test. Add conflict-based property tests and negative examples. Acceptance criterion: no incorrect Approve/Decline on the agreed adversarial decision matrix; reviewed cases correctly explain why.
 5. Clearly rename current outcomes as **provisional recommendations based on unverified customer claims**, not validated refunds. If a real verified order source is unavailable, avoid the assertion that all policy conditions are verified.
 
-### P1 — Security and confidence
+### P1  -  Security and confidence
 6. Confirm rotation of the previously exposed Clocked API key. Never log raw env values. Before any public live deployment, use proper user auth, durable shared quotas/budgets with maximum Clocked credit spend, TLS, rate limiting for both demo/live, request-body read timeouts, CSP and anti-framing headers. Review browser handling of temporary access tokens.
 7. Improve PII fallback and its test fixtures for Croatian IDs, local phones and realistic addresses, while retaining the warning that anonymization is best effort. Do not encourage real customer data in fixtures.
 8. Add stage-specific timeouts, retry policy, credit accounting, structured privacy-safe failure codes and visible trace IDs. A canceled browser request may still consume credits.
 9. Establish explicit signal thresholds using measured validation cases; Decide 0.8/0.2 and p_verify 0.75 are arbitrary until calibrated. Route all unresolved ambiguity to Review.
 10. Re-audit and safely update the moderate development-only dependency chain, then rerun build, test and production audit.
 
-### P1 — User journey and hackathon clarity
+### P1  -  User journey and hackathon clarity
 11. Make the recommendation, blocking reason and next human action visible above the fold on mobile; collapse lower-priority evidence and probability details. Show concise case metadata, clear Review requirements and remaining checks. Retain source evidence drilldown.
 12. Add a named Guard step and a visible safe/unsafe/unavailable status in the pipeline. Avoid misleading labels like fully “verified”, “autopilot” or “privacy-first” without precise context.
 13. Add aria-pressed to mode switch, aria-live to analysis status, keyboard focus and minimum 44 px interactive targets. Repeat desktop/mobile screenshot and keyboard walkthrough.
 14. Provide an export/copy case summary and a mock human-review outcome. Make the project demonstrably useful without integrating payments or risky automatic actions.
 
-### P2 — Scope expansion after the robust core
+### P2  -  Scope expansion after the robust core
 15. Add a strictly read-only synthetic merchant-order ledger and reconciliation; carrier/order dates take precedence over customer claims for the demo. Use it to illustrate how verified facts prevent unsafe decisions.
 16. Support actual merchant order-number formats (#1043, alphanumerics, marketplace IDs) and language-aware handling (Croatian, German, etc.) or explicitly scope product to English only.
 17. Introduce versioned store-policy configuration and optional missing-information templates. Consider Clocked Fill only if it truly drives a useful missing-data workflow; do not add endpoints merely for award breadth.

@@ -1,46 +1,75 @@
-# Official Clocked entry — copy-ready fields
+# Clocked Build Challenge: Entry text
 
-The project is NOT submitted until the official form is saved while logged into https://clocked.rezolve.ai/challenge. Never publish team email addresses, identities, API keys or payment details in the repository.
+These are prepared answers for the official submission form. **The project has not been submitted just because this file and the GitHub release exist.** The signed-in entry must be saved and confirmed at https://clocked.rezolve.ai/challenge.
 
 ## Project name
-Clocked Return Lab — Returns & Refund Autopilot
+
+Clocked Return Lab - Returns & Refund Autopilot
 
 ## Project overview
-Clocked Return Lab turns customer return and refund emails into transparent, evidence-backed recommendations: Approve, Human Review or Decline. Protect detects and masks PII, Guard blocks suspicious instructions, Extract retrieves exact customer claims and source offsets, and Decide evaluates typed intent/condition/defect questions. Deterministic policy gates then detect contradictions, missing facts and exceptional consumer-rights cases. Operators see evidence, uncertainty, reasoning and the next action. This is an advisory prototype for small e-commerce support teams, not an automated refund service.
+
+Return requests rarely arrive with every detail neatly organized. Customers forget dates, mention more than one order or report problems that need special attention. Clocked Return Lab helps a support agent make sense of those messages.
+
+The app uses Clocked Protect, Guard, Extract and Decide to examine a request and show the evidence behind a suggested next step: Approve, Human Review or Decline. It highlights the customer's own words, checks for missing or conflicting information and sends uncertain cases to a person.
+
+It is a working hackathon prototype, not a finished refund service. It does not issue refunds, send emails or modify orders. The current demo uses synthetic cases and a controlled product list rather than real merchant records.
 
 ## Problem and audience
-Small merchants spend time reconciling incomplete return requests, dates and policy exceptions. Generative AI may confidently invent facts. Clocked Return Lab demonstrates evidence-first triage and a conservative route to human review when certainty is unavailable.
 
-## How Clocked endpoints change the result
-1. **Protect (pii):** returns anonymized text. An invalid result stops the pipeline.
-2. **Guard (injection):** judges the protected request and stops Extract/Decide on risky, uncertain or failed results.
-3. **Extract:** returns exact customer-stated order, product, delivery date, condition and intent, with source offsets and confidence. Incomplete or unaligned evidence blocks automatic policy recommendations.
-4. **Decide:** returns typed probability judgments for refund intent, unused condition and defects. Unknown results are not silently promoted to certainty.
-5. **Local policy:** enforces single-order scope, reported delivery age, active intent, exception detection and complete statement coverage before recommending a route.
+Small e-commerce teams often handle returns by reading emails, checking dates and figuring out what the customer actually wants. A model can sound certain even when important facts are missing. Our goal is to make that first review clearer and show when a human needs to step in.
+
+## How we use Clocked
+
+1. **Protect:** Masks personal details before further model analysis.
+2. **Guard:** Looks for attempts to manipulate the assistant's instructions. Risky or uncertain requests stop here.
+3. **Extract:** Pulls out the reported order, product, delivery date, condition and refund intent, with source text positions.
+4. **Decide:** Assesses specific questions about intent, condition and possible defects using typed probability results.
+5. **Local policy:** Checks that the claims fit together and that the case has enough supporting information. Unknown product names, conflicting facts and exceptions go to Human Review.
+
+The system gives recommendations, not automatic financial decisions.
 
 ## Repository
+
 https://github.com/Cho3en/clocked-returns-refund-autopilot
 
-## Current demo-v4 video (SIMULATED current UI)
+## Current demo video
+
 https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm
 
-## Supplemental historical real Clocked API demo
+This is a simulated three-case recording of the current interface. It makes no paid Clocked calls.
+
+## Earlier real Clocked API demo
+
 https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm
 
-## Project write-up
+This recording uses a previous version. We include it to show the historical SDK integration, not to claim that the latest safeguards have been checked against live provider responses.
+
+## Technical guide
+
 https://github.com/Cho3en/clocked-returns-refund-autopilot/blob/main/JUDGES_START_HERE.md
 
-## Recommended judged award categories
+## Suggested categories
+
 - Best Overall App
-- Best Use of Decide / Extract / Fill
-- Best Use of Protect / Guard / Inspect
+- Best Use of Decide, Extract, or Fill
+- Best Use of Protect, Guard, or Inspect
 
-Do not select Verify / Compare / Rerank; those endpoints are not integrated. People's Choice requires a qualifying LinkedIn post with its URL saved in the form before the deadline.
+Do not choose the Verify, Compare or Rerank category, since those endpoints are not integrated.
 
-## Lessons learned
-Source offsets and high model confidence cannot verify a real order or distinguish an arbitrary product title from an embedded allegation. An independent audit found both hazardous bare product descriptions and harmless-looking suffixes could be treated as safe. The corrected decision path uses a CLOSED, synthetic fixture-name allowlist and exact evidence/intent checks: unknown product names and modified descriptions require Human Review, not automatic Approve or Decline. This is a hackathon demonstration, not merchant catalog/order validation. New real-provider results have not been obtained.
+People's Choice has separate LinkedIn post requirements. Include an eligible post URL in the official form if entering that category.
 
-## Private final entry fields
-Enter your actual legal name, contact email, GitHub handle and any team members' required details directly in the official form. Confirm personal eligibility and Wise payment support privately.
+## What changed after testing
 
-**Submission cutoff:** November 10, 2026 at 11:59 p.m. Eastern = November 11 at 05:59 Zagreb. The latest SAVED entry is judged. The repository alone is not a contest submission.
+Independent reviewers found that early versions could mistake a fault description for a product name. That could lead to an unsafe recommendation. We changed the design so the complete product name must match a known synthetic fixture. If the name is unfamiliar or contains extra wording, a person reviews the case.
+
+The fix is useful for a controlled demo. A real deployment would need trusted store orders, a merchant catalog, actual return rules and stronger account and spending controls.
+
+Our current evidence is **918 automated tests**, **354 separate HTTP adversarial checks** and **20 security and browser assertions**, plus a successful GitHub CI run. The latest version has not been retested against live paid Clocked responses.
+
+## Information to enter privately
+
+Use your actual name, contact email, GitHub handle and any required team details in the official form. Confirm eligibility and payout details with the organizer rather than adding that information to public source files.
+
+**Announced deadline:** November 10, 2026 at 11:59 p.m. Eastern, or November 11 at 05:59 in Zagreb.
+
+The repository alone is not a competition entry. Make sure the form is saved and the submission appears in your account.

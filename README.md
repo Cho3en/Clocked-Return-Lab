@@ -1,79 +1,95 @@
-# Clocked Return Lab — Returns & Refund Autopilot
+# Clocked Return Lab
 
-An evidence-led return triage dashboard created for the **Clocked Build Challenge, October 21–November 10, 2026**.
+A small returns triage tool built for the Clocked Build Challenge, October 21 to November 10, 2026.
 
-Transforms an incoming customer request into a **recommended** route: Approve / Human Review / Decline. This is a decision-support prototype — it cannot issue refunds, send emails, or change orders.
+Reading return emails takes time, especially when customers leave out dates, mention several orders or report a problem that needs special handling. Clocked Return Lab pulls out the relevant claims, shows where they came from and suggests what a support agent should look at next.
 
-**[Watch the current UI — three-case simulated walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm)**
+Each case receives one of three recommendations: **Approve, Human Review or Decline**. These are suggestions only. The app does not send emails, issue refunds, collect payments or change orders.
 
-**[Watch the historical real Clocked API demonstration (50 seconds)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
+**[Watch the current demo (three simulated cases)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm)**
 
-*The demo-v4 video was recorded from merged main commit 0c16879 after the closed synthetic product-identity gate and input-initialization fix. It contains three synthetic return cases with zero real Clocked calls, not a measurement of live provider accuracy, merchant order truth or every safety scenario. Historical demo-v1 shows older real Clocked calls and demo-v3 is a pre-catalog simulated snapshot.*
+**[Watch the earlier demo with real Clocked API calls](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
 
-**[Judges: start here](JUDGES_START_HERE.md)** · **[Entry form copy](ENTRY_FORM_COPY.md)** · **[Submission summary](SUBMISSION.md)** · **[VIBE remediation report](VIBE_REMEDIATION_REPORT.md)** · **[Round 4 acceptance](ROUND4_ACCEPTANCE.md)**
+**[Judging guide](JUDGES_START_HERE.md)** | **[Entry form copy](ENTRY_FORM_COPY.md)** | **[Submission details](SUBMISSION.md)** | **[Security review](VIBE_REMEDIATION_REPORT.md)**
 
-**Current release status:** A new independent audit found that arbitrary customer-written product names could still hide hazard descriptors and cause unsafe advisory Approve/Decline. This source revision fixes the trust boundary by allowing automatic recommendations only for exact, explicitly enumerated SYNTHETIC fixture product names and controlled variants; all other identities route Human Review. The merged main passes 918 synthetic/mock-based tests (641 earlier + 272 identity-boundary tests + 5 promoted independent reviewer test blocks examining 558 scenarios), alongside 354 synthetic HTTP adversarial cases and 20 security/browser assertions. This is not a verified merchant catalog, provider validation or production approval. The demo-v4 video was recorded after merging the product-identity boundary and is clearly simulated.
+The current demo was recorded from commit 0c16879 after the latest product identity and input handling fixes. It uses three synthetic cases and makes no paid Clocked calls. The historical live demo shows an earlier version, before the current safety checks were added. It should not be taken as validation of the current live integration.
 
-Earlier engineering records: **[P0 safety milestone](P0_ACCEPTANCE.md)** · **[Initial audit](AUDIT.md)**.
+## What the app does
 
-![Demo result dashboard](assets/approved.png)
+A support agent can paste a request, or choose one of three sample messages. The app displays a recommendation, the fields it recognized, the relevant passages from the customer's text and the checks that still need attention.
 
-The three screenshots in **assets/** document the different lanes. Start the app with **npm run dev**, then run **npm run capture** (default http://localhost:3000) to repeat browser-backed checks. Set **RETURNLAB_URL** to override the base URL.
+It takes a conservative approach to unclear cases. During testing, we found that customer complaints could be hidden inside what looked like a product name. The current version only allows an Approve or Decline recommendation when the complete name matches a known **synthetic demo product**. Unknown names, extra descriptions and potential complaints go to Human Review.
 
-## Quick start
+That product list is a controlled test fixture, not a merchant catalog. Matching a name does not prove the order exists, that the customer owns it or that a refund is legally permitted.
 
-Requires Node.js 20.9+ and npm.
+The latest merged version has passed **918 automated tests**, **354 additional HTTP adversarial checks** and **20 security and browser checks**. The GitHub workflow also passed on main. These results support the tested prototype, not every possible input or a production deployment.
 
-1. Run **npm install** in this directory.
-2. Copy **.env.example** to **.env.local**, and set **CLOCKED_API_KEY**. Create a distinct 32+ character **RETURNLAB_ACCESS_TOKEN** using a local cryptographically random generator. Never commit or share either key.
-3. Run **npm run dev** and open http://localhost:3000.
-4. Choose **Demo fixtures** to test without any key, or **Clocked live**. In live mode, copy only RETURNLAB_ACCESS_TOKEN from your own .env.local into the password field. It is retained in browser memory only, not localStorage. The Clocked API key remains exclusively server-side.
-5. Check with **npm test**, **npm run lint**, **npm run typecheck**, and **npm run build**. With a local production server running, use **npm run smoke**, **npm run ui:audit**, **npm run security:audit**, **npm run redteam**, **npm run redteam:mutation**, **npm run redteam:ui**, and **npm run redteam:heldout** (set `RETURNLAB_URL` to its local address). **npm run record** costs live Clocked calls; do not run with an unrotated or exposed key.
+![Return analysis example](assets/approved.png)
 
-On Windows PowerShell, if npm.ps1 is blocked, use **npm.cmd** instead. If an inherited npm_config_allow_scripts environment variable causes EALLOWSCRIPTS, unset it **for the current PowerShell process only**; do not disable global installation safeguards.
+## Run it locally
 
-## Official Clocked integration
+You need Node.js 22 and npm.
 
-The live flow uses the official JavaScript **clocked-sdk** package (server-side only):
+1. Open this repository and run **npm ci**.
+2. Start the app with **npm run dev**.
+3. Open http://localhost:3000.
+4. Leave **Demo fixtures** selected to try the three example cases without credentials.
+5. To check the code, run **npm test**, **npm run typecheck**, **npm run lint** and **npm run build**.
 
-1. Protect: clocked.pii — returns anonymized_text with broader high-risk entity detection. A local pattern scrub adds defense in depth. Neither is guaranteed full anonymization.
-2. Guard: clocked.injection — screens the protected text before Extract or Decide. Dangerous, ambiguous or failed Guard results stop further model calls and route to Review.
-3. Extract: clocked.extract — exact text and Unicode code-point offsets, normalized to JavaScript UTF-16 indices before display. Unaligned or low-confidence evidence cannot approve or decline.
-4. Decide: clocked.decide — typed noul judgments about intent, condition and exceptions. Scores between 0.2 and 0.8 remain Unknown; each P(Yes) refers to that question only.
-5. Deterministic case-scoped policy: Protect, Guard, Extract and Decide inform a conservative review workflow. BOTH Approve and Decline now require an exact reference to a controlled synthetic product fixture, plus valid order linkage, a date, unused-condition and refund-intent checks, and no ambiguous statements, issues or injection. Unknown or modified product descriptions route Human Review even if a model confidently returns no defect. The fixture list is not merchant order verification.
+The demo does not require a Clocked account. Please use made-up customer information. Its local masking rules are not suitable for real personal data.
 
-The original proposal's paths at api.clocked.rezolve.ai were **unverified placeholders**, not the integration.
+The live integration is separate. It requires a server-side CLOCKED_API_KEY in .env.local and a different, randomly generated RETURNLAB_ACCESS_TOKEN with at least 32 characters. Copy .env.example first. Do not commit either secret. Enter only the access token in the browser, never the provider key. Live calls can incur charges.
 
-Documentation: https://clocked.rezolve.ai/docs
+On Windows PowerShell, use **npm.cmd** if running npm directly is blocked by execution policy. If an inherited npm_config_allow_scripts setting causes an EALLOWSCRIPTS error, remove that setting only from your current shell session.
+
+## How Clocked fits in
+
+The server integrates the official JavaScript Clocked SDK. Each stage has a specific purpose:
+
+1. **Protect** masks personal information before other model analysis. The app also applies a local scrub for common patterns. Neither method guarantees perfect anonymization.
+2. **Guard** checks the protected message for prompt injection. If the result is risky, unclear or unavailable, the case goes to Human Review without proceeding to Extract or Decide.
+3. **Extract** returns customer-stated fields such as order number, product, delivery date and refund request, along with evidence spans. Uncertain or mismatched spans cannot support an automatic recommendation.
+4. **Decide** supplies typed probability judgments about intent, item condition and possible defects. The probabilities apply to individual questions, not to an overall chance of refund approval.
+5. **Local policy** checks the evidence for a single coherent order, a valid delivery date, an active refund request, condition and possible exceptions. Approve and Decline also require an exact match to a registered synthetic product label. When something important is missing, the result is Human Review.
+
+The example return window is **30 days**. It is a sample rule for testing, not a real store policy or legal advice. Warranty, safety and consumer-rights issues need human assessment.
+
+Official documentation: https://clocked.rezolve.ai/docs
+
 SDK: https://www.npmjs.com/package/clocked-sdk
+
 Challenge: https://clocked.rezolve.ai/challenge
 
-## Boundaries and safety
+## What has been tested
 
-- No Shopify, Stripe, payment, refund, email, or order platform integration. No automatic actions.
-- **SIMULATED** demo mode uses deterministic heuristics. Its basic regex masking is **not safe for real personal data**. Use synthetic messages only.
-- Live mode sends original authorized text to Clocked Protect and protected text to Guard. Only Guard-approved text reaches Extract and Decide. The app does not intentionally persist requests or log customer text, but Clocked processes the data under its own policies. The private **access token** is supplied by the browser (not persisted); the **Clocked API key** stays server-side.
-- Decision scope: **one explicit, internally consistent order and one delivery date per email**. Multiple orders, conflicting dates, alternative/withdrawn intent and safety or consumer-rights issues go to Human Review. The rules are intentionally English-oriented and conservative.
-- Sample 30-day rule is not a merchant's policy or a statement of legal rights. Defects, warranties, unclear evidence and statutory-rights exceptions always escalate to human review.
-- All delivery dates, product names and order references are customer-reported, not verified carrier/order data. The displayed routes are **advisory only**. Connect trusted order records, store-specific policies and human review before real use. Live mode ignores browser-supplied evaluation dates and uses the server’s Europe/Zagreb date.
-- Model probabilities can be uncalibrated or wrong and are not fraud scores.
-- Incoming JSON streams are limited to 15KB **before parsing**, including chunked requests. HTTP errors are sanitized and live authentication fails closed.
-- Live API requires a separate 32+ character access token, maximum 8 live requests per 15 minutes, 30 per UTC day and two active requests per process. These are **in-memory, per-instance safeguards** and not distributed enforcement. Do not deploy publicly without durable shared quotas, a proper user auth system, monitoring and abuse controls.
+- 918 automated synthetic or mocked tests, including five independently designed reviewer test blocks that cover 558 scenario evaluations.
+- 354 HTTP adversarial checks, performed separately from the normal GitHub workflow.
+- 20 browser and security assertions, plus responsive interface and browser smoke checks.
+- GitHub Actions on the final main branch, including tests, TypeScript, lint and production build.
 
-## Reproducible current simulated demonstration
+You can rerun the HTTP and browser checks against a local production server. Set RETURNLAB_URL to that server's address, then run **npm run redteam**, **npm run redteam:mutation**, **npm run redteam:ui**, **npm run redteam:heldout**, **npm run security:audit**, **npm run ui:audit** and **npm run smoke**.
 
-From the running local app, run **npm run record:demo** to record the three example routes without any provider credentials or billable Clocked calls. The script refuses a recording containing anything other than exactly three demo-mode API requests. It creates an ignored local WebM in assets/; the judge-facing copy is published as the **demo-v4** GitHub Release asset. Use **npm run capture** to refresh current screenshots.
+The published demo was made with **npm run record:demo**. That command records three synthetic requests and should not call the paid provider. The separate **npm run record** command is for an older live-provider recording workflow and can incur charges.
 
-## Historical real-provider demonstration
+## Important limitations
 
-The older live-API video is generated with `npm run record` after starting a local server. It invokes real Clocked calls on three synthetic examples (eligible, defective, outside window), while reading the private access token from the ignored `.env.local` file. Never publish the configuration file or include live keys in recordings. The script records a local WebM video; the public release asset is at the link above.
+- The app does not verify orders, delivery records or product identities against any merchant system.
+- Recommendations are advisory. There is no Shopify, Stripe, email or refund execution integration.
+- The synthetic demo uses local heuristics and must not receive real customer data.
+- Live mode sends authorized original text to Protect. Protected text then reaches Guard, and only Guard-approved text reaches the later stages. The provider processes data under its own policies.
+- The parser is deliberately conservative and mostly designed for English requests. Unfamiliar formats and ambiguous cases may be sent for review.
+- Provider probabilities can be wrong. A passing test suite does not establish live model accuracy.
+- The live access controls and request quotas are maintained per running server instance. They are not a shared, provider-enforced spending cap. Do not expose the paid endpoint publicly without proper authentication, monitoring and billing limits.
+- The final implementation has not been revalidated with live Clocked calls following the safety changes. Credential rotation and provider-side spending protections are still unconfirmed.
 
-## Hackathon submission
+## For the hackathon judges
 
-**[Submission-ready copy](ENTRY_FORM_COPY.md)** lists the official form fields and URLs; **[one-page judging guide](JUDGES_START_HERE.md)** prioritizes reproducibility. The project is not officially submitted merely because GitHub is public: the signed-in Clocked entry form must be saved and verified.
+**[Start with the judging guide](JUDGES_START_HERE.md)** or **[use the prepared entry fields](ENTRY_FORM_COPY.md)**.
 
-Announced deadline: **November 10, 2026 at 11:59 p.m. Eastern, corresponding to November 11 at 05:59 in Zagreb.** Submit a public repository, live demo link or short video, project details and eligible entrant information. Verify the official rules at https://clocked.rezolve.ai/build-challenge/rules before submitting.
+The repository and video are public, but publishing them does not submit a competition entry. The official entry must be saved through the signed-in challenge website.
 
-## Future production requirements
+Announced deadline: **November 10, 2026 at 11:59 p.m. Eastern**, which is **November 11 at 05:59 in Zagreb**. Check the [official rules](https://clocked.rezolve.ai/build-challenge/rules) for the latest requirements.
 
-Verified orders and delivery events, per-merchant policies, authentication, idempotent human-approved action execution, audit trails, permissioned integrations, traffic limits and secure deployment. Deliberately out of MVP scope.
+For a production service, the next step would be to integrate verified merchant orders and policies, then add proper authentication, durable request limits, human approvals and an audit trail.
+
+Earlier technical reports remain available in [P0_ACCEPTANCE.md](P0_ACCEPTANCE.md), [ROUND4_ACCEPTANCE.md](ROUND4_ACCEPTANCE.md) and [AUDIT.md](AUDIT.md).
