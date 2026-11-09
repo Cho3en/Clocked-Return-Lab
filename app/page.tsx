@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowRight, BarChart3, CheckCircle2, ChevronDown, CircleAlert, CircleHelp,
   FileSearch, FileText, Fingerprint, House, Inbox, Layers, LockKeyhole, Package,
-  PieChart, Plus, RotateCcw, Search, Settings, ShieldAlert, ShieldCheck,
+  PieChart, Plus, RotateCcw, ShieldAlert, ShieldCheck,
   Sparkles, TrendingUp, Users, XCircle, Zap,
 } from "lucide-react";
 import { createSamples } from "../lib/samples";
@@ -67,10 +67,10 @@ function DetailSection({ label, title, count, children }: { label: string; title
 
 const pipelineStages = [
   { id: "request", name: "Request", sub: "Received" },
-  { id: "protect", name: "Protect", sub: "Risk & abuse check" },
-  { id: "guard", name: "Guard", sub: "Policy & eligibility" },
-  { id: "extract", name: "Extract", sub: "Evidence & details" },
-  { id: "decide", name: "Decide", sub: "Recommendation" },
+  { id: "protect", name: "Protect", sub: "Privacy masking" },
+  { id: "guard", name: "Guard", sub: "Injection screening" },
+  { id: "extract", name: "Extract", sub: "Evidence extraction" },
+  { id: "decide", name: "Decide", sub: "Typed assessments" },
 ];
 
 export default function Home() {
@@ -85,7 +85,9 @@ export default function Home() {
   const [error, setError] = useState("");
   const [requestEpoch, setRequestEpoch] = useState(0);
   const [accessToken, setAccessToken] = useState("");
-  const [search, setSearch] = useState("");
+  const [activeSection, setActiveSection] = useState("overview");
+  // Counts only successful evaluations from this browser tab; no messages or customer data are stored.
+  const [sessionCounts, setSessionCounts] = useState<Record<Lane, number>>({ approve: 0, review: 0, reject: 0 });
   const sequence = useRef(0);
   const pending = useRef<AbortController | null>(null);
   const outputRef = useRef<HTMLElement | null>(null);
@@ -160,6 +162,10 @@ export default function Home() {
         throw new Error(err.error ?? "Unable to analyze this request.");
       }
       setResult(data as TriageResult);
+      const completed = data as TriageResult;
+      if (completed.lane === "approve" || completed.lane === "review" || completed.lane === "reject") {
+        setSessionCounts((prev) => ({ ...prev, [completed.lane]: prev[completed.lane] + 1 }));
+      }
       setRequestEpoch((n) => n + 1);
     } catch (e) {
       if (controller.signal.aborted || sequence.current !== requestNumber) return;
@@ -182,19 +188,28 @@ export default function Home() {
   const visibleReason = result?.reasons.find((reason) => /review|missing|uncertain|multiple|conflict|issue|ambig|right|date|order|product|intent/i.test(reason))
     ?? result?.reasons[0];
 
-  function stageState(idx: number): string {
-    if (!result) return busy && idx === 1 ? "active" : "";
-    const decideIdx = 4;
-    if (idx < decideIdx) return "done";
-    return idx === decideIdx ? "done decide-done" : "";
+  function stageState(idx: number): "done" | "active" | "waiting" | "demo" | "attention" | "skipped" {
+    // A received request is known; there is no stage-by-stage progress telemetry while fetching.
+    if (idx === 0) return busy || result ? "done" : "waiting";
+    if (!result) return "waiting";
+    // Demo mode uses local heuristics, not Clocked services.
+    if (result.mode === "demo") return "demo";
+    // A successful live response means Protect produced usable redacted text.
+    if (idx === 1) return "done";
+    const guard = result.checks.find((check) => check.label === "Prompt-injection screening");
+    if (idx === 2) return guard?.status === "pass" ? "done" : "attention";
+    // The actual server returns early on Guard failures/uncertainty, before Extract or Decide.
+    return guard?.status === "pass" ? "done" : "skipped";
   }
+
+  const sessionTotal = sessionCounts.approve + sessionCounts.review + sessionCounts.reject;
 
   const detailLane = result ? lanes.find((l) => l.id === result.lane) : null;
   const metrics = [
-    { icon: <Package size={16} aria-hidden="true" />, label: "Cases evaluated", value: result ? "1" : "—", note: result ? "This session · no history stored" : "No history stored — run a case below", tint: "m-peach" },
-    { icon: <Users size={16} aria-hidden="true" />, label: "Human review", value: result && result.lane === "review" ? "1" : result ? "0" : "—", note: "From the current evaluation only", tint: "m-lav" },
-    { icon: <CheckCircle2 size={16} aria-hidden="true" />, label: "Approve (recommended)", value: result && result.lane === "approve" ? "1" : result ? "0" : "—", note: "Recommendation, not a refund", tint: "m-peach2" },
-    { icon: <XCircle size={16} aria-hidden="true" />, label: "Decline (recommended)", value: result && result.lane === "reject" ? "1" : result ? "0" : "—", note: "Under the example policy", tint: "m-lav2" },
+    { icon: <Package size={16} aria-hidden="true" />, label: "Cases evaluated", value: String(sessionTotal), note: "This tab only · not stored", tint: "m-peach" },
+    { icon: <Users size={16} aria-hidden="true" />, label: "Human review", value: String(sessionCounts.review), note: "Recommendations in this tab", tint: "m-lav" },
+    { icon: <CheckCircle2 size={16} aria-hidden="true" />, label: "Approve (recommended)", value: String(sessionCounts.approve), note: "No refunds executed", tint: "m-peach2" },
+    { icon: <XCircle size={16} aria-hidden="true" />, label: "Decline (recommended)", value: String(sessionCounts.reject), note: "Example policy · advisory", tint: "m-lav2" },
   ];
 
   return (
@@ -208,12 +223,20 @@ export default function Home() {
           </div>
         </div>
         <nav className="side-nav">
-          <button type="button" className="side-link active"><House size={17} aria-hidden="true" /> Overview</button>
-          <button type="button" className="side-link"><Layers size={17} aria-hidden="true" /> Cases {result && <span className="side-badge">1</span>}</button>
-          <button type="button" className="side-link"><Plus size={17} aria-hidden="true" /> New Case</button>
-          <button type="button" className="side-link"><BarChart3 size={17} aria-hidden="true" /> Analytics</button>
-          <button type="button" className="side-link"><ShieldCheck size={17} aria-hidden="true" /> Evidence</button>
-          <button type="button" className="side-link"><Settings size={17} aria-hidden="true" /> Settings</button>
+          {[
+            { id: "overview", label: "Overview", icon: <House size={17} aria-hidden="true" />, href: "#overview" },
+            { id: "cases", label: "Cases", icon: <Layers size={17} aria-hidden="true" />, href: "#case-workspace" },
+            { id: "new-case", label: "New Case", icon: <Plus size={17} aria-hidden="true" />, href: "#return-message" },
+            { id: "analytics", label: "Analytics", icon: <BarChart3 size={17} aria-hidden="true" />, href: "#analytics" },
+            { id: "evidence", label: "Evidence", icon: <ShieldCheck size={17} aria-hidden="true" />, href: "#evidence-details" },
+          ].map((link) => (
+            <a key={link.id} className={"side-link" + (activeSection === link.id ? " active" : "")}
+              href={link.href} onClick={() => setActiveSection(link.id)}
+              aria-current={activeSection === link.id ? "location" : undefined}>
+              {link.icon} {link.label}
+              {link.id === "cases" && result && <span className="side-badge">1</span>}
+            </a>
+          ))}
         </nav>
         <div className="side-foot">
           <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
@@ -232,17 +255,6 @@ export default function Home() {
             <p className="topbar-sub">Returns, evidence and decision recommendations</p>
           </div>
           <div className="top-actions">
-            <div className="search-box">
-              <Search size={15} aria-hidden="true" />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search cases, orders, customers…"
-                className="search-input"
-                aria-label="Search cases, orders, customers"
-              />
-            </div>
             <span className="status-chip"><span className="status-dot" aria-hidden="true" /> No refunds executed</span>
             <div className="mode-toggle" role="group" aria-label="Analysis mode">
               <button type="button" aria-pressed={mode === "demo"} className={"mode-btn " + (mode === "demo" ? "active" : "")} onClick={() => { invalidate(); setMode("demo"); }}>Demo fixtures</button>
@@ -251,7 +263,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="content">
+        <main className="content" id="overview">
           <section className="metrics" aria-label="Session metrics">
             {metrics.map((m) => (
               <div key={m.label} className={"metric " + m.tint}>
@@ -265,18 +277,18 @@ export default function Home() {
             ))}
           </section>
 
-          <section className="analytics" aria-label="Analytics">
+          <section className="analytics" aria-label="Analytics" id="analytics">
             <div className="panel">
               <div className="panel-head">
                 <div>
-                  <div className="panel-title"><TrendingUp size={17} aria-hidden="true" /> Case Volume</div>
-                  <div className="panel-sub">Returns processed per day</div>
+                  <div className="panel-title"><TrendingUp size={17} aria-hidden="true" /> Session Activity</div>
+                  <div className="panel-sub">Completed analyses in this browser tab</div>
                 </div>
               </div>
               <div className="empty-state" role="status">
-                <b>No case history to chart</b>
+                <b>{sessionTotal === 0 ? "No evaluations in this tab yet" : sessionTotal + " completed " + (sessionTotal === 1 ? "evaluation" : "evaluations")}</b>
                 <span style={{ marginTop: 4, maxWidth: 340 }}>
-                  This build stores no case history. Volume charts appear here once real processing history exists — run a case below to see its evaluation.
+                  {sessionTotal === 0 ? "Run a case below to start. There is no persistent case history." : "These totals reflect only completed analyses since you opened this tab. Nothing is saved when it closes."}
                 </span>
               </div>
             </div>
@@ -287,21 +299,28 @@ export default function Home() {
                   <div className="panel-sub">Recommendation breakdown</div>
                 </div>
               </div>
-              <div className="empty-state" role="status">
-                <b>Distribution shows your current case</b>
-                <span style={{ marginTop: 4, maxWidth: 340 }}>
-                  Aggregate breakdowns require stored history. The lane strip under the recommendation shows where the current case sits.
-                </span>
-                <span className="chart-legend" aria-hidden="true">
-                  <span><span className="legend-dot" style={{ background: "var(--terra)" }} />Approve</span>
-                  <span><span className="legend-dot" style={{ background: "var(--lavender)" }} />Human review</span>
-                  <span><span className="legend-dot" style={{ background: "var(--rust)" }} />Decline</span>
-                </span>
-              </div>
+              {sessionTotal ? (
+                <div className="session-bars" aria-label="Decision distribution in this browser tab">
+                  {lanes.map((lane) => (
+                    <div className="session-bar-row" key={lane.id}>
+                      <span>{lane.title}</span>
+                      <div className="session-track"><div className={"session-fill session-" + lane.id}
+                        style={{ width: (100 * sessionCounts[lane.id] / sessionTotal) + "%" }} /></div>
+                      <strong className="num">{sessionCounts[lane.id]}</strong>
+                    </div>
+                  ))}
+                  <p className="session-disclaimer">Real evaluations in this tab only. Not stored or representative of overall performance.</p>
+                </div>
+              ) : (
+                <div className="empty-state" role="status">
+                  <b>No session distribution yet</b>
+                  <span style={{ marginTop: 4, maxWidth: 340 }}>Run an analysis to populate a truthful recommendation breakdown. No case history is stored.</span>
+                </div>
+              )}
             </div>
           </section>
 
-          <div className="workspace">
+          <div className="workspace" id="case-workspace">
             <section className="card" aria-labelledby="input-heading">
               <div className="card-head">
                 <div>
@@ -334,7 +353,7 @@ export default function Home() {
                   <span className="mini-label">Try an example</span>
                   <div className="sample-grid">
                     {samples.map((sample) => (
-                      <button key={sample.id} type="button" title={sample.tag} aria-pressed={activeSample === sample.id}
+                      <button key={sample.id} type="button" title={sample.tag} aria-label={sample.label} aria-pressed={activeSample === sample.id}
                         onClick={() => chooseSample(sample.id)} disabled={!inputReady}
                         className={"sample-btn " + (activeSample === sample.id ? "active" : "")}>
                         {sample.label}<span className="tag">{sample.tag.replace("Expected: ", "")}</span>
@@ -392,18 +411,26 @@ export default function Home() {
                 <span className="header-meta">{result ? result.mode === "demo" ? "SIMULATED" : "CLOCKED LIVE" : "READY"}</span>
               </div>
               <div className="card-body">
+                <p className="pipeline-note">{result?.mode === "demo" || (!result && mode === "demo")
+                  ? "Demo uses local heuristics; Clocked services are not called."
+                  : "Live-stage status reflects available response evidence, not simulated progress."}</p>
                 <div className="pipeline" aria-label="Analysis pipeline">
                   {pipelineStages.map((stage, i) => {
                     const st = stageState(i);
-                    const isDecide = stage.id === "decide";
+                    const label = st === "done" ? "Completed" : st === "demo" ? "Not called in demo" :
+                      st === "skipped" ? "Not run" : st === "attention" ? "Blocked or uncertain" :
+                      st === "active" ? "State not yet known" : "Awaiting analysis";
                     return (
-                      <div key={stage.id} className={"pp-stage " + st}>
+                      <div key={stage.id} className={"pp-stage " + st} aria-label={stage.name + ": " + label}>
                         <span className="pp-marker" aria-hidden="true">
-                          {st.includes("done") ? <CheckCircle2 size={16} /> : st === "active" ? <Sparkles size={16} /> : <span style={{ fontSize: 11, fontWeight: 800 }}>{i + 1}</span>}
+                          {st === "done" ? <CheckCircle2 size={16} /> :
+                            st === "attention" ? <CircleAlert size={16} /> :
+                            st === "active" ? <Sparkles size={16} /> :
+                            <span style={{ fontSize: 11, fontWeight: 800 }}>{i + 1}</span>}
                         </span>
                         <span className="pp-name">{stage.name}</span>
                         <span className="pp-sub">{stage.sub}</span>
-                        {isDecide && result && <span className="sr-only">Completed</span>}
+                        <span className="pp-status">{label}</span>
                       </div>
                     );
                   })}
@@ -487,7 +514,7 @@ export default function Home() {
                     <div className="kv"><span><Fingerprint size={14} aria-hidden="true" /> Coherent claims</span><strong>{result.caseScope?.coherent ? "Yes" : result.caseScope ? "Needs review" : "Unknown"}</strong></div>
                   </>
                 ) : (
-                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>No case selected. Run an analysis to populate the inspector with verified details from the message.</p>
+                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>No case evaluated yet. Run an analysis to populate this inspector with details extracted from the customer message.</p>
                 )}
               </div>
               <div className="insp-section">
@@ -522,14 +549,22 @@ export default function Home() {
                 )}
               </div>
               <div className="insp-section insp-actions">
-                <a className="terra-btn" href="#decision-panel" style={{ textDecoration: "none" }}><Inbox size={15} aria-hidden="true" /> Inspect Evidence</a>
+                <a className="terra-btn" href="#evidence-details" onClick={() => setActiveSection("evidence")}
+                  style={{ textDecoration: "none" }}><Inbox size={15} aria-hidden="true" /> Inspect Evidence</a>
                 <button type="button" className="ghost-btn" onClick={reset}><RotateCcw size={15} aria-hidden="true" /> Clear request</button>
               </div>
             </aside>
           </div>
 
+          {!result && (
+            <section id="evidence-details" className="inspect" aria-label="Case evidence and decision details">
+              <div className="empty-state"><b>Evidence appears after analysis</b>
+                <span>Evaluate a synthetic return request to inspect source-linked findings, assessments and policy checks.</span>
+              </div>
+            </section>
+          )}
           {result && (
-            <section className="inspect" aria-label="Case evidence and decision details">
+            <section id="evidence-details" className="inspect" aria-label="Case evidence and decision details">
               <div className="inspect-head">
                 <div>
                   <div className="card-eyebrow">03 / Inspect</div>
@@ -546,7 +581,7 @@ export default function Home() {
                       <div key={entry.id} className="evidence-item">
                         <div className="mini-label">{entry.label}</div>
                         <div style={{ marginTop: 6, wordBreak: "break-word", fontSize: 12.5, fontWeight: 700, color: "var(--ink)" }}>{entry.value}</div>
-                        <div style={{ marginTop: 6, fontSize: 10.5, color: "var(--ink-3)" }}>Chars {entry.start}–{entry.end}{entry.confidence === null ? "" : " · P(verified): " + asPercentage(entry.confidence)}</div>
+                        <div style={{ marginTop: 6, fontSize: 10.5, color: "var(--ink-3)" }}>Chars {entry.start}–{entry.end}{entry.confidence === null ? "" : " · Extraction confidence: " + asPercentage(entry.confidence)}</div>
                       </div>
                     ))}
                   </div>

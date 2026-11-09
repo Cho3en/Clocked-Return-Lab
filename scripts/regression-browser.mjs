@@ -25,7 +25,7 @@ try {
   ]) {
     await page.getByRole("button", { name: sample, exact: true }).click();
     await page.getByRole("button", { name: "Run demo analysis" }).click();
-    await page.getByText(expected, { exact: true }).waitFor({ timeout: 15000 });
+    await page.locator("#decision-panel").getByText(expected, { exact: true }).waitFor({ timeout: 15000 });
     await assert(true, "demo route " + sample);
   }
   await page.getByRole("button", { name: "Clear return", exact: true }).click();
@@ -65,7 +65,7 @@ try {
   await mobile.getByRole("button", { name: "Run demo analysis" }).waitFor();
   await assert(await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "no mobile horizontal overflow at 390px");
   await mobile.getByRole("button", { name: "Run demo analysis" }).click();
-  await mobile.getByText("Eligible under demo rules", {exact:true}).waitFor({timeout:15000});
+  await mobile.locator("#decision-panel").getByText("Eligible under demo rules", {exact:true}).waitFor({timeout:15000});
   await assert(true, "mobile still displays useful decision output");
   await mobile.close();
   await assert(failures.length === 0, "zero page JavaScript exceptions");

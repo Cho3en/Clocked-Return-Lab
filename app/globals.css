@@ -390,3 +390,31 @@ button, input, textarea { font: inherit; }
   .pp-sub { display: none; }
   .topbar-title { font-size: 19px; }
 }
+
+/* Release remediation: truthful pipeline, working anchors and session-only visualization */
+.side-link { text-decoration: none; }
+.side-link:focus-visible { outline: 2px solid var(--peach); outline-offset: 2px; }
+html { scroll-padding-top: 106px; }
+#overview, #analytics, #case-workspace, #evidence-details, #return-message { scroll-margin-top: 106px; }
+.pipeline-note { margin: 3px 0 8px; font-size: 11px; line-height: 1.5; color: var(--ink-2); }
+.pp-status { margin-top: 3px; font-size: 9px; line-height: 1.3; color: var(--ink-3); }
+.pp-stage.demo .pp-marker { border-style: dashed; border-color: var(--border-strong); color: var(--ink-3); background: var(--canvas); }
+.pp-stage.attention .pp-marker { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); }
+.pp-stage.skipped .pp-marker { border-style: dashed; background: var(--canvas); }
+.session-bars { min-height: 190px; display: flex; flex-direction: column; gap: 14px; justify-content: center; padding: 20px 10px 4px; }
+.session-bar-row { display: grid; grid-template-columns: 94px minmax(0,1fr) 30px; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-2); }
+.session-track { height: 13px; overflow: hidden; background: var(--warm); border-radius: 99px; }
+.session-fill { height: 100%; border-radius: 99px; transition: width .2s ease; }
+.session-approve { background: var(--terra); }
+.session-review { background: var(--lavender); }
+.session-reject { background: var(--rust); }
+.session-disclaimer { font-size: 11px; color: var(--ink-3); line-height: 1.55; }
+.sample-btn, .mode-btn { min-height: 44px; }
+@media (max-width: 1023px) {
+  .content { display: flex; flex-direction: column; }
+  .workspace { order: 1; margin-top: 0; }
+  .inspect { order: 2; }
+  .metrics { order: 3; margin-top: 16px; }
+  .analytics { order: 4; }
+  .footer { order: 5; }
+}

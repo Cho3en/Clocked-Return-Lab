@@ -86,7 +86,7 @@ try {
  await page.getByRole("button",{name:"Run demo analysis"}).click();
   const actualRequest = await submittedRequest;
   assert("browser submits the exact edited customer message", actualRequest.postDataJSON()?.message === payload);
- await page.getByText("Escalate to a human",{exact:true}).waitFor();
+ await page.locator("#decision-panel").getByText("Escalate to a human",{exact:true}).waitFor();
  const execution=await page.evaluate(()=>Boolean(window.__redteamExecuted));
  assert("user message does not execute script",!execution);
  assert("page hydrates without CSP violations",cspErrors.length===0);
