@@ -1,37 +1,42 @@
-# Clocked Return Lab — final challenge submission
+# Clocked Return Lab: Submission overview
 
-## Public project name
-Clocked Return Lab
+## The idea
 
-## One-line pitch
-Evidence-first returns triage combining Clocked's structured understanding with conservative policy gates and clear human-review handoffs.
+**Make customer returns easier to review without letting an AI make the final decision.**
 
-## Problem
-Support teams receive unstructured return requests containing dates, order references, vague product names, conflicting claims and occasional safety concerns. Model outputs can sound certain when the actual evidence is weak. First-pass triage should be inspectable and safe to escalate.
+Support teams spend time picking through emails that are missing dates, mix up order numbers, or mention problems that don't fit a standard return policy. A quick automated answer is useful only if the agent can see what it was based on.
 
-## Solution
-Clocked Return Lab takes a return message and recommends Approve, Human Review or Decline, showing the exact evidence and supporting policy checks. The live code combines Clocked **Protect** for best-effort PII masking, **Guard** for injection screening, **Extract** for exact source-linked fields and **Decide** for typed assessments. Local rules conservatively determine whether enough information exists to recommend a route.
+Clocked Return Lab reads a return request, identifies the important details, and recommends Approve, Human Review, or Decline. It explains the result and lets the agent inspect the words in the original message.
 
-Cases with ambiguous identity, unsupported product descriptions, contradictory claims, uncertain Guard status or potential statutory and safety concerns stay with a human. The app does not issue refunds, send messages or modify orders.
+## How I used Clocked
 
-The narrated demo is deliberately synthetic; it uses local heuristics and zero paid Clocked calls. A historical live recording exists, but predates recent safety and UI changes.
+The live integration uses Protect to mask personal information, Guard to screen for prompt injection, Extract to pull out dates and other details, and Decide to assess questions such as whether the customer is asking for a refund or reporting damage.
 
-## Audience
-Small e-commerce support teams seeking transparent first-review decisions without automating irreversible financial actions.
+The app doesn't simply follow those responses. It checks for missing or contradictory information and flags product or safety issues. When the case is unclear, it recommends Human Review.
 
-## Key links
-- **Narrated demo:** https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4
-- **Public source:** https://github.com/Cho3en/clocked-returns-refund-autopilot
-- **Judging guide:** https://github.com/Cho3en/clocked-returns-refund-autopilot/blob/main/JUDGES_START_HERE.md
-- **Historical live demonstration (older version):** https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm
+There is no refund button and no connection to a merchant's payment system. The result is guidance for an agent, not an executed decision.
 
-## Award categories to consider
-Best Overall App; Best Use of Decide / Extract / Fill; Best Use of Protect / Guard / Inspect.
+## Who would use it?
 
-No Verify, Compare or Rerank endpoint is integrated. Do not select those categories.
+Small online stores and customer support teams that want to spend less time sorting return emails and more time handling the cases that actually need attention.
 
-## Verification and limitations
-918 passing unit/regression tests; 20 security checks; responsive browser smoke/UI audit; 32 UI adversarial cases; 32 independent, 76 mutation and 42 held-out HTTP cases. No merchant data, real catalog, order verification, legal determination, actual refund execution or latest-version paid Clocked validation. Provider probabilities are not proof that a customer claim is true.
+## Demo and source code
 
-## Official submission reminder
-The owner must enter their participant details and verify eligibility privately, link the demo and public repository, select relevant categories and **save the official entry** at https://clocked.rezolve.ai/challenge before November 10, 2026, 11:59 p.m. Eastern (November 11, 05:59 Zagreb). GitHub release publication does not automatically submit an entry.
+- [Narrated demo](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4)
+- [GitHub repository](https://github.com/Cho3en/clocked-returns-refund-autopilot)
+- [Guide for judges](https://github.com/Cho3en/clocked-returns-refund-autopilot/blob/main/JUDGES_START_HERE.md)
+- [Earlier live Clocked recording](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/tag/demo-v1)
+
+The narrated video shows three synthetic requests handled by local demo rules. It does not call Clocked. The repository contains the real SDK integration; the older live video shows an earlier build.
+
+## Testing and limits
+
+The latest version passed 918 unit tests, a production build, browser and mobile checks, 20 security checks, and several synthetic adversarial suites.
+
+It hasn't been connected to a real store, and paid Clocked calls haven't been rerun since the recent changes. The demo's 30-day return policy and product list are examples. No refunds, messages, or payments are sent.
+
+## Challenge submission
+
+The project is intended for the Clocked Build Challenge. Depending on the options offered in the form, relevant categories include Best Overall App and the categories covering Protect, Guard, Extract, and Decide.
+
+The official entry still needs to be saved on [the challenge website](https://clocked.rezolve.ai/challenge). Posting the code to GitHub does not submit an entry. The stated deadline is November 10, 2026, at 11:59 p.m. Eastern (November 11 at 05:59 in Zagreb).

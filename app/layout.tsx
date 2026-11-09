@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Clocked Return Lab | Evidence-First Returns Triage",
+  title: "Clocked Return Lab | Customer Return Review",
   description: "Review customer return requests with evidence from the original message. Built with Clocked Protect, Guard, Extract and Decide. No refunds are issued.",
   robots: { index: false, follow: false },
 };

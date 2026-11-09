@@ -3,59 +3,59 @@
     {
       "id": "intro",
       "kicker": "WELCOME",
-      "title": "Returns, routed with evidence",
-      "spoken": "Clocked Return Lab turns messy return emails into traceable recommendations for support teams. This is a synthetic walkthrough. No refund, message, or order is changed.",
-      "duration": 13.184,
-      "audioDuration": 11.784
+      "title": "A clearer way to review returns",
+      "spoken": "Return requests aren't always clear. Clocked Return Lab helps a support agent find the important details and see what to check next. This demo uses made-up customer messages. Nothing gets refunded or sent.",
+      "duration": 15.632,
+      "audioDuration": 14.232
     },
     {
       "id": "approve",
       "kicker": "01 / APPROVE",
-      "title": "A clear, unused return",
-      "spoken": "Start with an unused desk lamp reportedly delivered twelve days ago. The tool interprets the customer's statement and recommends approval under an illustrative thirty day policy.",
-      "duration": 11.84,
-      "audioDuration": 10.44
+      "title": "A straightforward return",
+      "spoken": "In our first example, a customer says an unopened lamp arrived twelve days ago. Under the sample thirty-day policy, the app suggests approval. The agent would still need to check the real order.",
+      "duration": 13.52,
+      "audioDuration": 12.12
     },
     {
       "id": "evidence",
-      "kicker": "SOURCE EVIDENCE",
-      "title": "Every claim can be inspected",
-      "spoken": "The recommendation is advisory. Open source linked extraction to inspect the highlighted phrases, then review the policy and safety checks. These are customer claims, not independent verification.",
-      "duration": 14.288,
-      "audioDuration": 12.888
+      "kicker": "CHECK THE DETAILS",
+      "title": "See where each detail came from",
+      "spoken": "You can open the details to see what the app found. The date, item and refund request are highlighted in the original message. That shows where the information came from. It doesn't prove the customer is right.",
+      "duration": 15.08,
+      "audioDuration": 13.68
     },
     {
       "id": "review",
       "kicker": "02 / HUMAN REVIEW",
-      "title": "Uncertainty escalates",
-      "spoken": "Now consider a defective item with incomplete details. It goes to human review. Consumer rights and safety concerns remain with a person, never an automatic denial.",
-      "duration": 12.824,
-      "audioDuration": 11.424
+      "title": "Some cases need a person",
+      "spoken": "Next is a request about broken headphones. The delivery date is missing and the item may be defective. Rather than guessing, the app sends the case to a support agent for review.",
+      "duration": 12.776,
+      "audioDuration": 11.376
     },
     {
       "id": "decline",
       "kicker": "03 / DECLINE",
-      "title": "Illustrative policy boundary",
-      "spoken": "A third request reports delivery fifty eight days ago. Outside the example window, the route is decline, but it is still only a recommendation, pending merchant and legal checks.",
-      "duration": 12.32,
-      "audioDuration": 10.92
+      "title": "Outside the example window",
+      "spoken": "Here, a customer says an unused item arrived fifty-eight days ago. That's outside the sample return window, so the app suggests declining. A person still needs to check the store policy and the customer's legal rights.",
+      "duration": 14.936,
+      "audioDuration": 13.536
     },
     {
       "id": "pipeline",
-      "kicker": "THE LIVE INTEGRATION",
-      "title": "Four Clocked API endpoints",
-      "spoken": "The separate live integration uses four Clocked endpoints. Protect masks personal information. Guard screens for prompt injection and can halt unsafe requests. Extract returns source linked fields. Decide returns typed assessments. Conservative local policy checks choose the suggested route.",
-      "duration": 21.872,
-      "audioDuration": 20.472
+      "kicker": "CLOCKED INTEGRATION",
+      "title": "Where Clocked fits",
+      "spoken": "Now let's look at live mode, which I won't run in this video. The integration uses Protect to mask personal details, Guard to screen suspicious input, Extract to find information in the message, and Decide to assess specific questions. Our own checks then determine which recommendation to show.",
+      "duration": 18.656,
+      "audioDuration": 17.256
     },
     {
       "id": "end",
       "kicker": "HUMAN CONTROL",
-      "title": "Built for clear first review",
-      "spoken": "This recording used local fixtures, not paid API calls. The public repository contains the Clocked software development kit pipeline, tests, and setup instructions. Clocked Return Lab keeps people in control.",
-      "duration": 15.104,
-      "audioDuration": 13.704
+      "title": "The agent makes the final call",
+      "spoken": "That's the idea behind Clocked Return Lab. It gives support staff a suggested next step and lets them check the reasons. This demo doesn't call Clocked or change a customer order. The actual integration and tests are available on GitHub.",
+      "duration": 16.568,
+      "audioDuration": 15.168
     }
   ],
-  "totalDuration": 101.432
+  "totalDuration": 107.168
 }

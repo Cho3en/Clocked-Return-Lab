@@ -1,32 +1,47 @@
-# Clocked Build Challenge — entry form text
+# Clocked Build Challenge: Entry form answers
 
-**Note:** These are prepared answers, **not an official submission**. Enter identity and contact information privately in the signed-in challenge form.
+These are the answers to copy into the challenge form. The project has not been submitted through the official website yet. Add your name and contact details in the form, not here.
 
 ## Project name
+
 Clocked Return Lab
 
 ## Short description
-Evidence-first return triage using Clocked Protect, Guard, Extract and Decide, with conservative advisory outcomes and human review for uncertain cases.
 
-## Project overview
-Clocked Return Lab helps small e-commerce teams process messy customer return emails. It extracts order references, delivery dates, item condition and refund intent, and shows exact customer-text spans behind those fields. The live code uses Clocked Protect to mask personal information, Guard to check prompt injection and halt risky analysis, Extract to identify verifiable source positions, and Decide for typed model assessments. Local rules conservatively route to Approve, Human Review or Decline.
+A tool that reads customer return requests, checks the details with Clocked, and suggests whether to approve, decline, or ask a person to review the case. Every recommendation comes with reasons.
 
-Recommendations are provisional. The product does not verify a merchant order, issue a refund, make a legal determination, send messages or change payments. The public narrated video uses synthetic examples and local heuristics, not paid Clocked calls. The real SDK orchestration and tests are available in the repository.
+## Project description
 
-## Intended users
-Small online merchants and customer-support teams handling incomplete or contradictory return requests.
+Returns can be surprisingly difficult to handle. A customer might leave out the delivery date, mention two orders, or report a faulty product alongside a simple refund request. A support agent has to work out what happened before deciding what to do.
 
-## Repo
+I built Clocked Return Lab to make that first review easier. You paste in a customer's message and the app pulls out the relevant details, checks for missing or conflicting information, and recommends one of three next steps: Approve, Human Review, or Decline. It also shows the parts of the message used to reach that result, so the agent can check them.
+
+The live integration uses four Clocked services. Protect masks personal information before the other calls. Guard looks for prompt injection and stops the process when the input is risky or unclear. Extract identifies details such as order references and delivery dates. Decide helps assess the customer's request, item condition, and reported problems. Local rules then determine which recommendation is safe to show.
+
+The app does not process refunds, contact customers, or confirm that an order actually exists. Its job is to help a person review a request, not replace that person.
+
+The video uses three made-up customer requests and local demo rules, so it does not spend Clocked credits. The actual Clocked integration is in the public source code. An earlier recording shows live Clocked calls, but it was made before the latest changes.
+
+## Who is this for?
+
+Small online stores and support teams that deal with return emails and want a quicker way to spot missing details and cases that need attention.
+
+## Source code
+
 https://github.com/Cho3en/clocked-returns-refund-autopilot
 
-## Demo video
+## Narrated demo
+
 https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4
 
-## Judges' guide
+## Guide for judges
+
 https://github.com/Cho3en/clocked-returns-refund-autopilot/blob/main/JUDGES_START_HERE.md
 
-## Suggested categories
-Best Overall App; Best Use of Decide/Extract/Fill; Best Use of Protect/Guard/Inspect.
+## Categories to consider
 
-## Owner actions
-Confirm eligibility and payout restrictions; enter participant name, email and GitHub handle; link the materials; submit and verify confirmation by November 10, 2026, 11:59 p.m. Eastern (November 11, 05:59 Zagreb).
+Best Overall App, Best Use of Decide/Extract/Fill, and Best Use of Protect/Guard/Inspect. Select only categories offered by the official form.
+
+## Before you submit
+
+Confirm eligibility, enter your contact details, attach the links, and check that the entry was saved. The stated deadline is November 10, 2026, at 11:59 p.m. Eastern, which is November 11 at 05:59 in Zagreb.
