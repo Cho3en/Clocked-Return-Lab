@@ -68,6 +68,9 @@ export function evaluatePolicy(input: {
   const hasOrder = Boolean(order && /^(?:#[0-9]{3,18}|[A-Z0-9][A-Z0-9-]{4,35})$/i.test(order)
     && scope.orderRefs.length === 1 && scope.orderRefs[0].toUpperCase() === order.toUpperCase());
   const hasProduct = Boolean(product && product.trim().length >= 3);
+  // Synthetic fixture-name recognition is an independent prerequisite for
+  // BOTH advisory outcomes. It is NOT merchant order verification.
+  const recognizedFixtureName = Boolean(product && !isProductAmbiguous(product));
   const identityClear = scope.identityBlockers.length === 0 && hasOrder;
   const hasUnusedEvidence = Boolean(condition)
     && isUnusedClaim(condition!) && isUnusedClaim(redactedText)
@@ -83,7 +86,7 @@ export function evaluatePolicy(input: {
   const negatedIssue = Boolean(issueValue && (/\b(?:not|never|isn't|wasn't|is not|was not)\s+(?:damaged|broken|defective|faulty|hazardous|electrocuted|swollen|expanded|smoking|sparking|leaking)\b/i.test(issueValue)
     || /\b(?:not|never|isn't|wasn't|is not|was not|no)\s*$/i.test(issueContext)));
   const hasExtractedIssue = Boolean(issueValue && !negatedIssue);
-  const productAmbiguous = Boolean(product && isProductAmbiguous(product));
+  const productAmbiguous = hasProduct && !recognizedFixtureName;
   const hasException = hasRightsOrIssue(redactedText) || assessment("damaged_or_defective") === true
     || hasExtractedIssue || productAmbiguous || scope.issueSignals.length > 0;
   const noExceptionEstablished = !hasException && assessment("damaged_or_defective") === false;
@@ -97,8 +100,10 @@ export function evaluatePolicy(input: {
       detail: identityClear ? "One linked customer-reported order: " + scope.linkedOrderId : scope.identityBlockers.join(" ") || "Order needs verification" },
     { label: "Order reference", status: hasOrder ? "pass" : "unknown",
       detail: hasOrder ? order + " (customer-reported; not independently verified)" : "Order identification or attribution is uncertain" },
-    { label: "Product identification", status: productAmbiguous ? "unknown" : hasProduct ? "pass" : "unknown",
-      detail: productAmbiguous ? "Product description contains a clause or customer event that must be separated from product identity by a human" : hasProduct ? product + " (customer-reported)" : "Product needs confirmation" },
+    { label: "Product identification", status: recognizedFixtureName ? "pass" : "unknown",
+      detail: recognizedFixtureName ? product + " (matches a controlled synthetic fixture name; order remains unverified)"
+        : hasProduct ? "Unregistered customer-written product name; human catalog confirmation required before Approve or Decline"
+          : "Product needs confirmation" },
     { label: "Delivery date", status: days === null ? "unknown" : days < 0 ? "fail" : "pass",
       detail: days === null ? "No adequately grounded delivery date" : days < 0 ? "Delivery date is in the future" : statedDate + " (customer-reported)" },
     { label: "30-day return window", status: days === null || days < 0 ? "unknown" : days <= WINDOW_DAYS ? "pass" : "fail",
@@ -108,7 +113,7 @@ export function evaluatePolicy(input: {
     { label: "Refund request", status: wantsRefund ? "pass" : "unknown",
       detail: wantsRefund ? "Current, explicit refund request" : "Current intent: " + scope.intent + "; an affirmative refund request has not been established" },
     { label: "Legal / damage exceptions", status: hasException ? "unknown" : noExceptionEstablished && scope.unclassifiedStatements === 0 ? "pass" : "unknown",
-      detail: hasException ? "Issue/safety concern: " + (scope.issueSignals.join(", ") || "model flagged concern") + ". Human review required."
+      detail: hasException ? "Product identity or reported issue needs review: " + (scope.issueSignals.join(", ") || "model flagged concern") + ". Human review required."
         : noExceptionEstablished ? "No issue reported in this message" : "Exception status not confidently ruled out" },
     { label: "Prompt-injection screening", status: injectionFlag === true ? "fail" : injectionFlag === null ? "unknown" : "pass",
       detail: injectionFlag === true ? "Suspicious instructions: escalate" : injectionFlag === null ? "Guard unavailable or uncertain"
@@ -121,12 +126,12 @@ export function evaluatePolicy(input: {
   if (!hasUnusedEvidence) reasons.push("The customer has not clearly established unused condition.");
   if (!wantsRefund && scope.intent === "refund") reasons.push("Current refund authorization is not sufficiently supported by extracted evidence and model assessment.");
   if (!noExceptionEstablished && !hasException) reasons.push("The exception check cannot confidently rule out reported issues.");
-  if (productAmbiguous) reasons.push("Product description is ambiguous: a clause or customer event is embedded in the product field and must be separated by a human.");
+  if (productAmbiguous) reasons.push("Customer-written product description is not a recognized synthetic fixture name. A human must verify the catalog identity and check for hidden complaints.");
   if (hasExtractedIssue) reasons.push("Extracted issue evidence reports a concern even though the model assessment reported no defect.");
 
   // Both positive and negative recommendations require the SAME complete case.
   // All ambiguity is resolved by abstaining, not by choosing the first plausible match.
-  const complete = scope.coherent && identityClear && hasProduct && days !== null && days >= 0
+  const complete = scope.coherent && identityClear && hasProduct && recognizedFixtureName && days !== null && days >= 0
     && hasUnusedEvidence && wantsRefund && noExceptionEstablished && guardClear;
   let lane: TriageResult["lane"] = "review";
   if (complete && days! > WINDOW_DAYS) {
