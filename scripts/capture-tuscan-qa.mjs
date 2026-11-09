@@ -1,12 +1,13 @@
 import { chromium } from "playwright-core";
 import { existsSync, mkdirSync } from "node:fs";
+import { resolve, join } from "node:path";
 const executablePath = [
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
 ].find(existsSync);
 if (!executablePath) throw new Error("Chrome or Edge not installed");
-const url = process.env.RETURNLAB_URL || "http://127.0.0.1:3156";
-const target = process.env.RETURNLAB_QA_DIR || "C:\\VELES\\QA\\Clocked-Return-Lab\\post-remediation";
+const url = process.env.RETURNLAB_URL || "http://127.0.0.1:3000";
+const target = process.env.RETURNLAB_QA_DIR || join(resolve(import.meta.dirname,".."),"qa","screenshots");
 mkdirSync(target, {recursive:true});
 const browser = await chromium.launch({executablePath,headless:true});
 try {
