@@ -6,13 +6,13 @@ Reading return emails takes time, especially when customers leave out dates, men
 
 Each case receives one of three recommendations: **Approve, Human Review or Decline**. These are suggestions only. The app does not send emails, issue refunds, collect payments or change orders.
 
-**[Watch the current demo (three simulated cases)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm)**
+**[Watch the current demo (three simulated cases)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v5/clocked-return-lab-current-demo.webm)**
 
 **[Watch the earlier demo with real Clocked API calls](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
 
 **[Judging guide](JUDGES_START_HERE.md)** | **[Entry form copy](ENTRY_FORM_COPY.md)** | **[Submission details](SUBMISSION.md)** | **[Security review](VIBE_REMEDIATION_REPORT.md)**
 
-The current demo was recorded from commit 0c16879 after the latest product identity and input handling fixes. It uses three synthetic cases and makes no paid Clocked calls. The historical live demo shows an earlier version, before the current safety checks were added. It should not be taken as validation of the current live integration.
+The current demo was recorded from commit de454ca after the latest product identity and input handling fixes. It uses three synthetic cases and makes no paid Clocked calls. The historical live demo shows an earlier version, before the current safety checks were added. It should not be taken as validation of the current live integration.
 
 ## What the app does
 

@@ -34,7 +34,7 @@ https://github.com/Cho3en/clocked-returns-refund-autopilot
 
 ## Current demo video
 
-https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm
+https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v5/clocked-return-lab-current-demo.webm
 
 This is a simulated three-case recording of the current interface. It makes no paid Clocked calls.
 
