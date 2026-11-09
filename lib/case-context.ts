@@ -32,6 +32,13 @@ export function classifyCurrentIntent(text: string): CurrentIntent {
   const reauthorized = /\b(?:i\s+)?changed\s+my\s+mind\s+earlier,\s+but\s+now\s+i\s+(?:definitely\s+)?(?:want|need|request)\s+(?:a\s+)?refund\b/i.test(outsideQuotes);
   const withdrawn = /\b(?:changed\s+my\s+mind|withdraw(?:ing|n)?\s+(?:my\s+)?(?:request|refund)|cancel(?:led|ed)?\s+(?:my\s+)?(?:refund|return)|no\s+longer\s+(?:want|need)|do\s+not\s+want\s+(?:a\s+)?refund|don['’]t\s+want\s+(?:a\s+)?refund|not\s+(?:requesting|asking\s+for)\s+(?:a\s+)?refund|i\s+only\s+(?:need|want)\s+(?:help|support))\b/i.test(text);
   const superseded = /\b(?:cancel\s+(?:(?:that|the|my)\s+)?(?:refund\s+)?request|nevermind|never\s+mind|decided\s+to\s+keep\s+(?:it|the\s+(?:product|item))|on\s+second\s+thought|do\s+not\s+refund\s+me|don['’]t\s+refund\s+me|only\s+quoting|quoting\s+someone|i['’]d\s+prefer\s+store\s+credit|prefer\s+store\s+credit|instead\s*,?\s*(?:please\s+)?exchange|rather\s+than\s+(?:a\s+)?refund)\b/i.test(text);
+  // A return WITHOUT a refund is an active return-only request, not a
+  // withdrawal of an earlier monetary request. Keep explicit cancellations
+  // and quoted/historical requests above this exception.
+  const activeReturnOnly = /\b(?:i|we)\s+(?:want|need|wish|would\s+like)\s+(?:to\s+)?(?:return|send\s+(?:it|the\s+(?:item|product))?\s*back)\b/i.test(outsideQuotes)
+    && /\b(?:without\s+(?:(?:asking\s+for|requesting|getting)\s+)?(?:a\s+)?refund|(?:do\s+not|don't|don’t)\s+(?:want|need)\s+(?:a\s+)?refund|no\s+refund\s+(?:needed|requested|wanted)|not\s+(?:requesting|asking\s+for)\s+(?:a\s+)?refund)\b/i.test(outsideQuotes);
+  const explicitCancellation = /\b(?:cancel(?:led|ed|ing)?\s+(?:my|that|the)?\s*(?:refund|return)\s*(?:request)?|withdraw(?:n|ing)?\s+(?:my|the)?\s*(?:refund|request)|changed\s+my\s+mind|no\s+longer\s+(?:want|need)|never\s+mind)\b/i.test(outsideQuotes);
+  if (!containsQuotedRequest && activeReturnOnly && !explicitCancellation) return "return-only";
   if (containsQuotedRequest || ((withdrawn || superseded) && !reauthorized)) return "withdrawn";
   if (reauthorized) return "refund";
 
@@ -66,10 +73,11 @@ export function classifyCurrentIntent(text: string): CurrentIntent {
 /** This lexicon is a conservative escalation backstop, not a substitute for merchant review. */
 export function detectIssueSignals(text: string): string[] {
   // Negated simple defect descriptions must not turn a valid unused return into a defect claim.
-  const clean = text.replace(/\b(?:not|never|is(?:n't| not)|was(?:n't| not)|no)\s+(?:damaged|broken|defective|faulty|malfunctioning|overheating|smoking|sparking|leaking)\b/gi, " ")
+  const clean = text.replace(/\b(?:battery|cell|power\s+pack)\s+(?:(?:is|was)\s+)?(?:not|never)\s+(?:swollen|swelling|bulging|leaking|puffed)\b|\b(?:battery|cell|power\s+pack)\s+(?:isn\u0027t|wasn\u0027t)\s+(?:swollen|swelling|bulging|leaking|puffed)\b/gi, " ")
+    .replace(/\b(?:not|never|is(?:n\u0027t| not)|was(?:n\u0027t| not)|no)\s+(?:damaged|broken|defective|faulty|malfunctioning|overheating|smoking|sparking|leaking)\b/gi, " ")
     .replace(/\bbut\s+now\s+i\s+(?:definitely\s+)?want\b/gi, " I want");
   const patterns: Array<[string, RegExp]> = [
-    ["unsafe product", /\b(?:overheat(?:ing|s|ed)?|smok(?:e|es|ing)|sparks?|sparking|electric(?:al)?\s+shock|caught\s+fire|on\s+fire|burn(?:ing|t|ed)?\s+smell|smells?\s+(?:like\s+)?burn(?:t|ing)|scorched|explod(?:e|ed|ing)|battery\s+(?:swollen|bulging)|fire\s+hazard|safety\s+hazard|hot\s+to\s+the\s+touch|cable\s+melted)\b/i],
+    ["unsafe product", /\b(?:overheat(?:ing|s|ed)?|smok(?:e|es|ing)|sparks?|sparking|electric(?:al)?\s+shocks?|caught\s+fire|on\s+fire|burn(?:ing|t|ed)?\s+smell|smells?\s+(?:like\s+)?burn(?:t|ing)|scorched|explod(?:e|ed|ing)|battery\s+(?:(?:is|was|has\s+become|appears|looks)\s+)?(?:visibly\s+)?(?:swollen|swelling|bulging|leaking|puffed)|fire\s+hazard|safety\s+hazard|hot\s+to\s+the\s+touch|cable\s+melted)\b/i],
     ["damaged or faulty", /\b(?:broken|damaged|defective|faulty|malfunctioning|falling\s+apart|fell\s+apart|stopped\s+working|does\s+not\s+work|doesn['’]t\s+work|not\s+working|cracked|shattered|leaking|leaks?|injured|injury|peeling|peels?|peeled|flaking|flaked|melted|melting|melt|buttons?\s+(?:do\s+not|does\s+not|don't|doesn't)\s+(?:work|respond))\b/i],
     ["wrong item or description", /\b(?:wrong\s+(?:item|product|size|colo[u]?r|shade|variant|model)|incorrect\s+(?:item|product|size|colo[u]?r|model)|different\s+(?:item|product|size|colo[u]?r|variant|model)|colou?r\s+is\s+(?:completely\s+)?wrong|not\s+(?:as\s+)?described|not\s+what\s+i\s+ordered|does\s+not\s+match\s+(?:the\s+)?(?:description|order))\b/i],
     ["missing or undelivered", /\b(?:missing\s+(?:parts?|items?|accessories|parcel|package)|(?:parts?|items?|accessories)\s+(?:are\s+)?missing|never\s+arrived|not\s+delivered|item\s+not\s+received|parcel\s+(?:lost|missing)|lost\s+in\s+transit|(?:package|parcel|item|shipment)\s+(?:has\s+not|hasn[\u0027’]t)\s+arrived)\b/i],

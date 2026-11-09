@@ -8,12 +8,12 @@
  */
 const SAFE: RegExp[] = [
   /^subject:\s*(?:(?:return|refund)\s+(?:request|for)\s+(?:for\s+)?order\s+|order\s+)?(?:ORD-[A-Z0-9-]{4,35}|#\d{3,18})$/i,
-  /^(?:(?:hi|hello),?\s+)?(?:my\s+)?order\s+(?:ORD-[A-Z0-9-]{4,35}|#\d{3,18})(?:\s+for\s+(?:the|a|my)\s+[\w -]{3,80})?\s+was\s+(?:(?:purchased|ordered)\s+on\s+\d{4}-\d{2}-\d{2}\s+and\s+)?delivered\s+on\s+\d{4}-\d{2}-\d{2}$/i,
-  /^(?:my\s+)?order\s+(?:ORD-[A-Z0-9-]{4,35}|#\d{3,18})\s+for\s+(?:the|a|my)\s+[\w -]{3,80}\s+(?:arrived|was\s+received)\s+on\s+\d{4}-\d{2}-\d{2}$/i,
+  /^(?:(?:hi|hello),?\s+)?(?:my\s+)?order\s+(?:ORD-[A-Z0-9-]{4,35}|#\d{3,18})(?:\s+for\s+(?:the|a|my)\s+[\p{L}\p{N}\p{M}\p{P}\p{S}\p{Zs}\p{Cf}]{3,100})?\s+was\s+(?:(?:purchased|ordered)\s+on\s+\d{4}-\d{2}-\d{2}\s+and\s+)?delivered\s+on\s+\d{4}-\d{2}-\d{2}$/iu,
+  /^(?:my\s+)?order\s+(?:ORD-[A-Z0-9-]{4,35}|#\d{3,18})\s+for\s+(?:the|a|my)\s+[\p{L}\p{N}\p{M}\p{P}\p{S}\p{Zs}\p{Cf}]{3,100}\s+(?:arrived|was\s+received)\s+on\s+\d{4}-\d{2}-\d{2}$/iu,
   /^(?:my\s+)?delivery\s+date\s+(?:was|is)\s+\d{4}-\d{2}-\d{2}$/i,
   /^(?:my\s+)?order\s+delivery\s+was\s+on\s+\d{4}-\d{2}-\d{2}$/i,
   /^(?:order|order\s+reference|order\s+id|order\s+number):?\s*(?:ORD-[A-Z0-9-]{4,35}|#\d{3,18})$/i,
-  /^product:\s*[\w ()-]{3,80}$/i,
+  /^product:\s*[\p{L}\p{N}\p{M}\p{P}\p{S}\p{Zs}\p{Cf}]{3,100}$/iu,
   /^delivered:\s*\d{4}-\d{2}-\d{2}$/i,
   /^delivery\s*date:\s*\d{4}-\d{2}-\d{2}$/i,
   /^(?:it|this(?:\s+item)?|the\s+(?:item|product))\s+is\s+(?:unused|unopened)(?:\s+and\s+(?:unused|unopened))?(?:\s+(?:in|with)\s+(?:its\s+|the\s+)?original\s+packaging)?(?:\s+and\s+(?:not\s+damaged|not\s+used|never\s+used|i\s+never\s+used\s+it))?$/i,
@@ -36,15 +36,26 @@ const SAFE: RegExp[] = [
   /^(?:my\s+email\s+is|email:|please\s+contact)\s*\[EMAIL\]$/i,
 ];
 
+// A free-form product name must not swallow a complaint clause. The generic
+// product-name grammar is permissive to support Unicode names, but predicates
+// describing behavior, harm or malfunction within that span are ambiguous.
+const embeddedPredicate = /\b(?:made|makes|caus(?:e|es|ed|ing)|produc(?:e|es|ed|ing)|emitt?(?:ed|ing|s)?|grind(?:s|ing)?|squeal(?:s|ing)?|hurt(?:s|ing)?|smell(?:s|ing)?|vibrat(?:e|es|ing)|fail(?:s|ed|ing)?|malfunction(?:s|ed|ing)?|burn(?:s|ed|ing)?|trigger(?:s|ed|ing)?|short(?:ing|ed|s)?(?:\s+out)?|exposed\s+(?:wires?|copper|cables?|conductors?)|stopp?ed\s+(?:functioning|working)|non[-\s]?functional|sparks?|sparking|arcing|overheat(?:ing|ed)?|(?:burning|acrid)\s+odou?r|leak(?:ing|s)?|shocks?)\b/i;
+function hasEmbeddedComplaint(statement: string): boolean {
+  const product = statement.match(/\bfor\s+(?:the|a|my)\s+(.+?)\s+(?:was\s+(?:delivered|purchased|received)|arrived)\b/i)?.[1]
+    ?? statement.match(/^product:\s*(.+)$/i)?.[1];
+  return Boolean(product && embeddedPredicate.test(product));
+}
+
 export interface CoverageAssessment {
   unknownCount: number;
   totalStatements: number;
 }
 export function checkSafeStatementCoverage(text: string): CoverageAssessment {
-  const statements = text.replace(/\r/g, "").split(/[.!?\n]+/)
+  const statements = text.replace(/\r/g, "").replace(/(\d)\.(?=\d)/g, "$1\uE000").split(/[.!?\n]+/)
+    .map(part=>part.replace(/\uE000/g, "."))
     .map(part=>part.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F]+\s*/u,"").replace(/\s+/g," ").trim())
     .filter(Boolean);
   let unknownCount=0;
-  for(const statement of statements) if(!SAFE.some(pattern=>pattern.test(statement))) unknownCount++;
+  for(const statement of statements) if(hasEmbeddedComplaint(statement) || !SAFE.some(pattern=>pattern.test(statement))) unknownCount++;
   return {unknownCount,totalStatements:statements.length};
 }
