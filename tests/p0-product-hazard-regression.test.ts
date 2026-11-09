@@ -274,3 +274,43 @@ describe("P0 follow-up: restrictive product attribute parsing", () => {
     }
   }
 });
+
+
+describe("Final independent P0 acceptance: bare finite verbs and electrical-temperature qualifiers", () => {
+  const bareHazards = [
+    "jolts", "hisses", "melts", "stings", "bites",
+    "catches fire", "gives off fumes", "arcs",
+    "pops", "sizzles", "fizzes", "buzzes", "drips",
+  ] as const;
+  const make = (suffix: string, field: boolean, delivered = "2026-11-01") => field
+    ? "Order ORD-90017\nProduct: Aurora Desk Lamp " + suffix
+      + "\nDelivered: " + delivered + "\nIt is unused and unopened.\nI want a refund."
+    : "Order ORD-90017 for the Aurora Desk Lamp " + suffix
+      + " was delivered on " + delivered + ". It is unused and unopened. I want a refund.";
+
+  for (const suffix of bareHazards) {
+    for (const field of [false, true]) {
+      it("does not auto-approve bare event: " + suffix + " (" + (field ? "Product:" : "order") + ")", () => {
+        const result = triageDemo(make(suffix, field), AS_OF);
+        expect(result.lane).toBe("review");
+        expect(result.checks.find(check => check.label === "Order reference")?.status).toBe("pass");
+        expect(result.checks.find(check => check.label === "Unused condition")?.status).toBe("pass");
+        expect(result.checks.find(check => check.label === "Refund request")?.status).toBe("pass");
+        expect((result.caseScope?.issueSignals.length ?? 0)
+          + (result.caseScope?.unclassifiedStatements ?? 0)).toBeGreaterThan(0);
+      });
+    }
+  }
+
+  for (const field of [false, true]) {
+    it("warm electrical cable escalates (" + (field ? "Product:" : "order") + ")", () => {
+      expect(triageDemo(make("with warm cable", field), AS_OF).lane).toBe("review");
+    });
+    it("warm light remains a harmless catalog attribute (" + (field ? "Product:" : "order") + ")", () => {
+      expect(triageDemo(make("with warm light", field), AS_OF).lane).toBe("approve");
+    });
+    it("expired bare hazard cannot become Decline (" + (field ? "Product:" : "order") + ")", () => {
+      expect(triageDemo(make("jolts", field, "2026-09-01"), AS_OF).lane).toBe("review");
+    });
+  }
+});
