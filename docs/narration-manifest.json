@@ -1,0 +1,61 @@
+{
+  "segments": [
+    {
+      "id": "intro",
+      "kicker": "WELCOME",
+      "title": "Returns, routed with evidence",
+      "spoken": "Clocked Return Lab turns messy return emails into traceable recommendations for support teams. This is a synthetic walkthrough. No refund, message, or order is changed.",
+      "duration": 13.184,
+      "audioDuration": 11.784
+    },
+    {
+      "id": "approve",
+      "kicker": "01 / APPROVE",
+      "title": "A clear, unused return",
+      "spoken": "Start with an unused desk lamp reportedly delivered twelve days ago. The tool interprets the customer's statement and recommends approval under an illustrative thirty day policy.",
+      "duration": 11.84,
+      "audioDuration": 10.44
+    },
+    {
+      "id": "evidence",
+      "kicker": "SOURCE EVIDENCE",
+      "title": "Every claim can be inspected",
+      "spoken": "The recommendation is advisory. Open source linked extraction to inspect the highlighted phrases, then review the policy and safety checks. These are customer claims, not independent verification.",
+      "duration": 14.288,
+      "audioDuration": 12.888
+    },
+    {
+      "id": "review",
+      "kicker": "02 / HUMAN REVIEW",
+      "title": "Uncertainty escalates",
+      "spoken": "Now consider a defective item with incomplete details. It goes to human review. Consumer rights and safety concerns remain with a person, never an automatic denial.",
+      "duration": 12.824,
+      "audioDuration": 11.424
+    },
+    {
+      "id": "decline",
+      "kicker": "03 / DECLINE",
+      "title": "Illustrative policy boundary",
+      "spoken": "A third request reports delivery fifty eight days ago. Outside the example window, the route is decline, but it is still only a recommendation, pending merchant and legal checks.",
+      "duration": 12.32,
+      "audioDuration": 10.92
+    },
+    {
+      "id": "pipeline",
+      "kicker": "THE LIVE INTEGRATION",
+      "title": "Four Clocked API endpoints",
+      "spoken": "The separate live integration uses four Clocked endpoints. Protect masks personal information. Guard screens for prompt injection and can halt unsafe requests. Extract returns source linked fields. Decide returns typed assessments. Conservative local policy checks choose the suggested route.",
+      "duration": 21.872,
+      "audioDuration": 20.472
+    },
+    {
+      "id": "end",
+      "kicker": "HUMAN CONTROL",
+      "title": "Built for clear first review",
+      "spoken": "This recording used local fixtures, not paid API calls. The public repository contains the Clocked software development kit pipeline, tests, and setup instructions. Clocked Return Lab keeps people in control.",
+      "duration": 15.104,
+      "audioDuration": 13.704
+    }
+  ],
+  "totalDuration": 101.432
+}
