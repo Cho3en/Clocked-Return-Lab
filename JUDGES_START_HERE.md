@@ -23,7 +23,9 @@ Implementation: [lib/pipeline.ts](lib/pipeline.ts), [lib/evidence.ts](lib/eviden
 | **Protect (pii)** | Returns anonymized text. A failed or invalid result stops analysis; an additional local scrub catches common leftover identifiers. |
 | **Guard (injection)** | Evaluates prompt-injection risk. Suspicious, ambiguous or failed outcomes prevent Extract and Decide calls and route to Human Review. |
 | **Extract** | Returns exact field values, confidence and Unicode code-point offsets. Unaligned or low-confidence evidence cannot support Approve/Decline. |
-| **Decide** | Returns typed probabilities about refund intent, unused condition and defects. Uncertain judgments remain unknown; confident model errors cannot override conservative policy gates. |
+| **Decide** | Returns typed probabilities about refund intent, unused condition and defects. Uncertain judgments remain unknown; a confident "no defect" verdict cannot override the structural policy gates: a relative clause, unverified prepositional qualifier, event or finite-verb-like product suffix embedded in the product field, a source-aligned affirmative extracted issue phrase, or an unclassified statement each independently force Human Review. |
+
+**P0 product-description fix (2026-11-09):** an independent audit found that a hazard complaint embedded in the product name (e.g. "Aurora Desk Lamp that nearly electrocuted me") was absorbed as a harmless product name and approved. The fix makes product-field ambiguity a structural blocker (relative clauses, unverified prepositional qualifiers, events or finite-verb-like product suffixes in the product span → Human Review, in both order-sentence and `Product:` formats, and never an automatic Decline), and makes extracted `issue` evidence an independent exception signal. This is verified by mocked-Clocked tests only — the current revision has not been retested against the live provider, and mocked results must not be read as live provider observations. The historical demo-v1 video remains a pre-hardening real-provider recording; demo-v2 is simulated.
 
 A deterministic policy then evaluates current intent, delivery age, single-order consistency, exceptions and unclassified statements. Claims are customer-reported, not merchant-verified.
 
@@ -40,7 +42,7 @@ The demo mode performs no Clocked calls. The separate live mode requires secure 
 
 ## Test and reproducibility evidence
 
-- **462 local automated tests** passed in the release audit.
+- **641 local automated tests** passed (462 pre-existing + 179 P0 product-hazard regressions including 132 independently challenged hazard/benign qualifier and finite-verb controls; mocked-Clocked policy tests only — no paid provider calls).
 - **182 synthetic HTTP red-team and mutation cases** passed.
 - **19 local security/browser assertions** passed, alongside mobile UI and browser smoke tests.
 - [.github/workflows/ci.yml](.github/workflows/ci.yml) provides CI for tests, TypeScript, lint and production build without provider API calls.

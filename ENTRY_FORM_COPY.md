@@ -38,7 +38,7 @@ https://github.com/Cho3en/clocked-returns-refund-autopilot/blob/main/JUDGES_STAR
 Do not select Verify / Compare / Rerank; those endpoints are not integrated. People's Choice requires a qualifying LinkedIn post with its URL saved in the form before the deadline.
 
 ## Lessons learned
-Source offsets and high model confidence are not independent proof. An adversarial review discovered unsafe approvals from permissive parser boundaries. Our final implementation preserves independent, fail-closed checks even when a model confidently misclassifies a defect. We favor explainable escalation over confidently mistaken financial recommendations.
+Source offsets and high model confidence are not independent proof. An adversarial review discovered unsafe approvals from permissive parser boundaries — a hazard complaint embedded in the product name was absorbed as a harmless product name. The fix is structural, not a longer keyword list: any relative clause, unverified qualifier or customer event inside the product span, and any affirmative source-aligned extracted issue phrase, independently force Human Review (never an automatic Decline), even when Decide confidently reports no defect. We favor explainable escalation over confidently mistaken financial recommendations. Mocked-Clocked tests verify this; the current revision has not been retested against the live provider.
 
 ## Private final entry fields
 Enter your actual legal name, contact email, GitHub handle and any team members' required details directly in the official form. Confirm personal eligibility and Wise payment support privately.

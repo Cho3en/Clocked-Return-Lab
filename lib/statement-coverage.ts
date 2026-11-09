@@ -37,13 +37,59 @@ const SAFE: RegExp[] = [
 ];
 
 // A free-form product name must not swallow a complaint clause. The generic
-// product-name grammar is permissive to support Unicode names, but predicates
-// describing behavior, harm or malfunction within that span are ambiguous.
-const embeddedPredicate = /\b(?:made|makes|caus(?:e|es|ed|ing)|produc(?:e|es|ed|ing)|emitt?(?:ed|ing|s)?|grind(?:s|ing)?|squeal(?:s|ing)?|hurt(?:s|ing)?|smell(?:s|ing)?|vibrat(?:e|es|ing)|fail(?:s|ed|ing)?|malfunction(?:s|ed|ing)?|burn(?:s|ed|ing)?|trigger(?:s|ed|ing)?|short(?:ing|ed|s)?(?:\s+out)?|exposed\s+(?:wires?|copper|cables?|conductors?)|stopp?ed\s+(?:functioning|working)|non[-\s]?functional|sparks?|sparking|arcing|overheat(?:ing|ed)?|(?:burning|acrid)\s+odou?r|leak(?:ing|s)?|shocks?)\b/i;
+// product-name grammar is permissive to support Unicode names, but any
+// relative clause, first-person event, or behavior/harm predicate inside
+// that span is ambiguous — regardless of whether its exact wording appears
+// in a finite hazard lexicon. The structural clause check below is the
+// primary defence; the predicate list is supplementary, not sufficient.
+const relativeClause = /\b(?:that|whose|which|who|whom)\b/i;
+const eventMarker = /\b(?:nearly|unexpectedly|overnight|yesterday|gave\s+(?:me|us)|deliver(?:s|ed)?\s+(?:a|an|the)\s+(?:painful\s+)?(?:shock|jolt|zap)|(?:me|us)\s+(?:a\s+)?(?:shock|jolt|zap))\b/i;
+const embeddedPredicate = /\b(?:made|makes|caus(?:e|es|ed|ing)|produc(?:e|es|ed|ing)|emitt?(?:ed|ing|s)?|grind(?:s|ing)?|squeal(?:s|ing)?|hurt(?:s|ing)?|smell(?:s|ing)?|vibrat(?:e|es|ing)|fail(?:s|ed|ing)?|malfunction(?:s|ed|ing)?|burn(?:s|ed|ing)?|trigger(?:s|ed|ing)?|short(?:ing|ed|s)?(?:\s+out)?|exposed\s+(?:wires?|copper|cables?|conductors?)|stopp?ed\s+(?:functioning|working)|non[-\s]?functional|sparks?|sparking|arcing|overheat(?:ing|ed)?|(?:burning|acrid)\s+odou?r|leak(?:ing|s)?|shocks?|electrocut\w*|zap(?:ped|s|ping)?|poison\w*|hazard\w*|expand\w*|fray\w*|(?:coming|falling|taken|breaking)\s+apart|turns?\s+(?:off|itself)|turning\s+off|unexpected\w*|jolt(?:s|ed|ing)?|hiss(?:es|ed|ing)?|melt(?:s|ed|ing)?|sting(?:s|ing|ung)?|bit(?:e|es|ing|ten)|catch(?:es)?\s+fire|giv(?:e|es|ing)\s+off(?:\s+\w+)?|arc(?:s|ed|ing)?)\b/i;
+/**
+ * An arbitrary customer description is not a verified catalogue product name.
+ * Only a restricted, explicitly non-event accessory vocabulary may appear after
+ * "with" in a name eligible for automatic advisory routing. Everything else
+ * escalates, rather than attempting to enumerate all possible harm vocabulary.
+ * This is deliberately conservative until a merchant catalogue verifies names.
+ */
+const safeAttributeTokens = new Set([
+  "a", "an", "and", "the", "with", "usb-c", "led", "2.0",
+  "wireless", "charging", "dock", "adjustable", "desk", "arm",
+  "black", "white", "blue", "green", "red", "grey", "gray",
+  "plastic", "metal", "wooden", "bamboo", "housing", "extra", "bright", "warm",
+  "firmware", "revision", "additional", "power", "adapters",
+  "lamp", "shade", "replacement", "bulb", "included", "spare",
+  "cable", "light", "case", "cover", "stand", "holder", "matte",
+  "glossy", "silver", "gold", "small", "large", "medium", "pro",
+]);
+const uncertainProductContext = /\b(?:after|before|during|while|when|having|following|because|due\s+to|causing|resulting|despite|until|upon|since|from|without|containing|featuring|showing|giving|emitting)\b/i;
+function isSafeAccessoryPhrase(value: string): boolean {
+  const words = value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  // "warm light" is a benign lamp variant; "warm cable" or "warm power"
+  // could describe overheating and must not be silently treated as a title.
+  const heatOnElectricalPart = /\b(?:warm|hot|heated)\b/i.test(value)
+    && /\b(?:cable|charger|connector|battery|power|wire|wiring|adapter)\b/i.test(value);
+  return words.length > 0 && words.length <= 10 && !heatOnElectricalPart
+    && words.every((word) => /^\d+(?:\.\d+)?$/.test(word) || safeAttributeTokens.has(word));
+}
+/** True when product text cannot be trusted as a simple harmless name. */
+export function isProductAmbiguous(product: string): boolean {
+  const value = product.trim();
+  if (!value) return false;
+  if (relativeClause.test(value) || eventMarker.test(value) || embeddedPredicate.test(value)
+    || /\b(?:me|us)\b/i.test(value) || uncertainProductContext.test(value)) return true;
+  const withParts = value.split(/\bwith\b/i);
+  if (withParts.length > 2) return true;
+  if (withParts.length === 2) return !isSafeAccessoryPhrase(withParts[1]);
+  // Without merchant catalogue verification, a bare final word resembling
+  // a 3rd-person action ("pops", "jolts", "sizzles") is not safe product
+  // identity. This intentionally also escalates some plural product nouns.
+  return /(?:^|\s)[a-z]{3,}(?:s|es)$/i.test(value);
+}
 function hasEmbeddedComplaint(statement: string): boolean {
   const product = statement.match(/\bfor\s+(?:the|a|my)\s+(.+?)\s+(?:was\s+(?:delivered|purchased|received)|arrived)\b/i)?.[1]
     ?? statement.match(/^product:\s*(.+)$/i)?.[1];
-  return Boolean(product && embeddedPredicate.test(product));
+  return Boolean(product && isProductAmbiguous(product));
 }
 
 export interface CoverageAssessment {
