@@ -12,6 +12,7 @@
     "capture": "node ./scripts/capture-demo.mjs",
     "smoke": "node ./scripts/regression-browser.mjs",
     "record": "node ./scripts/record-demo.mjs",
+    "record:demo": "node ./scripts/record-current-demo.mjs",
     "redteam": "node ./scripts/redteam-p0.mjs",
     "redteam:mutation": "node ./scripts/redteam-metamorphic.mjs",
     "ui:audit": "node ./scripts/ui-audit.mjs",

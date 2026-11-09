@@ -4,7 +4,7 @@
 **Clocked Return Lab — Returns & Refund Autopilot**
 
 ## Overview (for the entry form)
-An evidence-led returns triage application that turns an unstructured customer email into an explainable recommendation: Approve, Human Review, or Decline. It protects personal data before analysis, extracts precise order and delivery evidence, evaluates typed yes/no questions with Clocked's probabilistic judgments, and screens for prompt injection. A conservative single-order policy engine refuses automatic recommendations for conflicting order IDs or delivery dates, withdrawn or quoted intent, alternative return-only/exchange requests, safety complaints, defects and missing information. It applies an illustrative 30-day window only to coherent customer-reported cases. An older demonstration recorded three synthetic requests through the real Clocked API, before the Round 4 safety hardening. The CURRENT revision has been validated with synthetic fixtures and mocked Clocked responses; new live-provider validation is pending credential rotation. It never executes a refund, sends an email, or edits an order.
+An evidence-led returns triage application that turns an unstructured customer email into an explainable recommendation: Approve, Human Review, or Decline. It protects personal data before analysis, extracts precise order and delivery evidence, evaluates typed yes/no questions with Clocked's probabilistic judgments, and screens for prompt injection. A conservative single-order policy engine refuses automatic recommendations for conflicting order IDs or delivery dates, withdrawn or quoted intent, alternative return-only/exchange requests, safety complaints, defects and missing information. It applies an illustrative 30-day window only to coherent customer-reported cases. The current demonstration uses zero-cost synthetic fixtures and the latest interface. A separately labeled historical recording demonstrates real Clocked provider calls before safety hardening; live-provider retesting of the current revision is pending credential rotation and provider-side billing verification. It never executes a refund, sends an email, or edits an order.
 
 ## Audience and problem
 Independent e-commerce teams spend time reading returns emails, locating order data, interpreting eligibility, and dealing with incomplete requests. A naïve AI classifier can hallucinate dates or recommend a refund for a defective product without reviewing applicable consumer protections. This prototype demonstrates evidence-first triage and explicit human escalation.
@@ -20,11 +20,13 @@ Independent e-commerce teams spend time reading returns emails, locating order d
 **Why the calls matter:** PII shapes the input, Guard blocks unsafe downstream processing, Extract determines whether sufficiently supported policy gates can be evaluated, Decide supports claim assessments, and deterministic policy checks decide the advisory route. The app fails closed to Review when necessary inputs or checks are uncertain.
 
 ## Demonstration
-- Video: https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm
+- **Current UI video (simulated; no Clocked provider calls):** https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v2/clocked-return-lab-current-demo.webm
+- **Historical Clocked API video (real calls; pre-hardening):** https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm
+- **One-page judging guide:** https://github.com/Cho3en/clocked-returns-refund-autopilot/blob/main/JUDGES_START_HERE.md
 - Public source code: https://github.com/Cho3en/clocked-returns-refund-autopilot
 - Screenshots: assets/approved.png, assets/review.png, assets/declined.png and assets/mobile.png
 
-Three live test paths: (1) unused, within example return window -> **Approve recommendation**; (2) damaged or defective without reliable delivery date -> **Human Review**; (3) unopened product 58 days after delivery -> **Decline recommendation**.
+Three **current simulated routes**: (1) unused, within example return window -> **Approve recommendation**; (2) reported defect and missing reliable delivery date -> **Human Review**; (3) unopened product 58 days after delivery -> **Decline recommendation**. The older real-API recording uses similar scenarios but predates subsequent safety revisions.
 
 ## Judge-facing notes
 - New project developed during the contest build window (created November 8, 2026).
@@ -34,7 +36,7 @@ Three live test paths: (1) unused, within example return window -> **Approve rec
 - A review/decline/approve recommendation is not an executed financial action.
 - Example 30-day policy is illustrative, not legal advice or a production store policy. Statutory rights, defects, warranties, conflicts and missing data require human review.
 - Source-controlled .env.example contains no credentials; .env.local is excluded from Git.
-- Includes setup instructions, development commits, 291 automated tests (including controlled Clocked mock and held-out cases), independent HTTP adversarial suites of 32, 32, 76 and 42 cases, 19 security assertions, browser/UI audits, and transparent [Round 4 acceptance notes](ROUND4_ACCEPTANCE.md).
+- Includes setup instructions, development commits, 462 automated tests (including the corrected independent VIBE audit and held-out cases), independent synthetic HTTP adversarial suites of 32, 32, 76 and 42 cases, 19 security assertions, browser/UI audits, and transparent [VIBE remediation and final release notes](VIBE_REMEDIATION_REPORT.md).
 
 ## Categories to select in the entry form
 1. Best Overall App

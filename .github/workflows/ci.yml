@@ -1,0 +1,35 @@
+name: Build and regression
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Unit and adversarial tests (synthetic only)
+        run: npm test
+      - name: TypeScript check
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: Build optimized application
+        run: npm run build
