@@ -6,9 +6,9 @@ Clocked Return Lab turns unstructured customer refund emails into **Approve / Hu
 
 ## Demo videos
 
-**[Current UI — synthetic three-case walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v3/clocked-return-lab-post-p0-demo.webm)**
+**[Current UI — synthetic three-case walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm)**
 
-The demo-v3 recording was made from the PREVIOUS P0 implementation at commit d85ff5a and shows only three built-in simulated cases, not the subsequent synthetic-product-identity boundary. A refreshed recording should be made after the catalog-gate PR is independently accepted. The recording made zero Clocked provider calls.
+The demo-v4 video was recorded from merged main commit 0c16879 after the closed synthetic product-identity gate and input-initialization fix. It shows only three built-in simulated cases, with zero Clocked provider calls, and does NOT establish real provider accuracy or prove all 918 tests visually. Historical demo-v3 was recorded before this gate.
 
 **[Historical real Clocked API demonstration](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
 

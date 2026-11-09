@@ -21,8 +21,8 @@ Small merchants spend time reconciling incomplete return requests, dates and pol
 ## Repository
 https://github.com/Cho3en/clocked-returns-refund-autopilot
 
-## Current demo video (SIMULATED current UI)
-https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v3/clocked-return-lab-post-p0-demo.webm
+## Current demo-v4 video (SIMULATED current UI)
+https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm
 
 ## Supplemental historical real Clocked API demo
 https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm

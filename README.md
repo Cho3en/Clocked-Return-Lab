@@ -4,15 +4,15 @@ An evidence-led return triage dashboard created for the **Clocked Build Challeng
 
 Transforms an incoming customer request into a **recommended** route: Approve / Human Review / Decline. This is a decision-support prototype — it cannot issue refunds, send emails, or change orders.
 
-**[Watch the current UI — three-case simulated walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v3/clocked-return-lab-post-p0-demo.webm)**
+**[Watch the current UI — three-case simulated walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v4/clocked-return-lab-current-demo.webm)**
 
 **[Watch the historical real Clocked API demonstration (50 seconds)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
 
-*The demo-v3 video was freshly recorded from the merged P0 source commit d85ff5a using deterministic synthetic fixtures, with zero paid API calls. It depicts three built-in cases; the broader hazard safeguards are verified by synthetic tests, not by the recording. The older video exercised actual Clocked provider calls before the latest case-integrity and UI improvements. Do not confuse either video's evidence with the other.*
+*The demo-v4 video was recorded from merged main commit 0c16879 after the closed synthetic product-identity gate and input-initialization fix. It contains three synthetic return cases with zero real Clocked calls, not a measurement of live provider accuracy, merchant order truth or every safety scenario. Historical demo-v1 shows older real Clocked calls and demo-v3 is a pre-catalog simulated snapshot.*
 
 **[Judges: start here](JUDGES_START_HERE.md)** · **[Entry form copy](ENTRY_FORM_COPY.md)** · **[Submission summary](SUBMISSION.md)** · **[VIBE remediation report](VIBE_REMEDIATION_REPORT.md)** · **[Round 4 acceptance](ROUND4_ACCEPTANCE.md)**
 
-**Current release status:** A new independent audit found that arbitrary customer-written product names could still hide hazard descriptors and cause unsafe advisory Approve/Decline. This source revision fixes the trust boundary by allowing automatic recommendations only for exact, explicitly enumerated SYNTHETIC fixture product names and controlled variants; all other identities route Human Review. The current branch passes 918 synthetic/mock-based tests (641 earlier + 272 identity-boundary tests + 5 promoted independent reviewer test blocks examining 558 scenarios), alongside 354 synthetic HTTP adversarial cases and 20 security/browser assertions. This is not a verified merchant catalog, provider validation or production approval. The demo-v3 video predates the catalog boundary and is clearly simulated.
+**Current release status:** A new independent audit found that arbitrary customer-written product names could still hide hazard descriptors and cause unsafe advisory Approve/Decline. This source revision fixes the trust boundary by allowing automatic recommendations only for exact, explicitly enumerated SYNTHETIC fixture product names and controlled variants; all other identities route Human Review. The merged main passes 918 synthetic/mock-based tests (641 earlier + 272 identity-boundary tests + 5 promoted independent reviewer test blocks examining 558 scenarios), alongside 354 synthetic HTTP adversarial cases and 20 security/browser assertions. This is not a verified merchant catalog, provider validation or production approval. The demo-v4 video was recorded after merging the product-identity boundary and is clearly simulated.
 
 Earlier engineering records: **[P0 safety milestone](P0_ACCEPTANCE.md)** · **[Initial audit](AUDIT.md)**.
 
@@ -62,7 +62,7 @@ Challenge: https://clocked.rezolve.ai/challenge
 
 ## Reproducible current simulated demonstration
 
-From the running local app, run **npm run record:demo** to record the three example routes without any provider credentials or billable Clocked calls. The script refuses a recording containing anything other than exactly three demo-mode API requests. It creates an ignored local WebM in assets/; the judge-facing copy is published as the **demo-v3** GitHub Release asset. Use **npm run capture** to refresh current screenshots.
+From the running local app, run **npm run record:demo** to record the three example routes without any provider credentials or billable Clocked calls. The script refuses a recording containing anything other than exactly three demo-mode API requests. It creates an ignored local WebM in assets/; the judge-facing copy is published as the **demo-v4** GitHub Release asset. Use **npm run capture** to refresh current screenshots.
 
 ## Historical real-provider demonstration
 
