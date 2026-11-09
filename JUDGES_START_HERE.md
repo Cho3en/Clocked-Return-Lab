@@ -6,9 +6,9 @@ Clocked Return Lab turns unstructured customer refund emails into **Approve / Hu
 
 ## Demo videos
 
-**[Current UI — synthetic three-case walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v2/clocked-return-lab-current-demo.webm)**
+**[Current UI — synthetic three-case walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v3/clocked-return-lab-post-p0-demo.webm)**
 
-This demonstrates the CURRENT interface and safety gates using deterministic synthetic fixtures; **zero Clocked provider requests** were made for this recording.
+Recorded from the merged P0 implementation at commit d85ff5a. This shows the current interface and three built-in synthetic cases; the extended adversarial safety behavior is tested separately. **Zero Clocked provider requests** were made for the recording.
 
 **[Historical real Clocked API demonstration](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
 
@@ -25,7 +25,7 @@ Implementation: [lib/pipeline.ts](lib/pipeline.ts), [lib/evidence.ts](lib/eviden
 | **Extract** | Returns exact field values, confidence and Unicode code-point offsets. Unaligned or low-confidence evidence cannot support Approve/Decline. |
 | **Decide** | Returns typed probabilities about refund intent, unused condition and defects. Uncertain judgments remain unknown; a confident "no defect" verdict cannot override the structural policy gates: a relative clause, unverified prepositional qualifier, event or finite-verb-like product suffix embedded in the product field, a source-aligned affirmative extracted issue phrase, or an unclassified statement each independently force Human Review. |
 
-**P0 product-description fix (2026-11-09):** an independent audit found that a hazard complaint embedded in the product name (e.g. "Aurora Desk Lamp that nearly electrocuted me") was absorbed as a harmless product name and approved. The fix makes product-field ambiguity a structural blocker (relative clauses, unverified prepositional qualifiers, events or finite-verb-like product suffixes in the product span → Human Review, in both order-sentence and `Product:` formats, and never an automatic Decline), and makes extracted `issue` evidence an independent exception signal. This is verified by mocked-Clocked tests only — the current revision has not been retested against the live provider, and mocked results must not be read as live provider observations. The historical demo-v1 video remains a pre-hardening real-provider recording; demo-v2 is simulated.
+**P0 product-description fix (2026-11-09):** an independent audit found that a hazard complaint embedded in the product name (e.g. "Aurora Desk Lamp that nearly electrocuted me") was absorbed as a harmless product name and approved. The fix makes product-field ambiguity a structural blocker (relative clauses, unverified prepositional qualifiers, events or finite-verb-like product suffixes in the product span → Human Review, in both order-sentence and `Product:` formats, and never an automatic Decline), and makes extracted `issue` evidence an independent exception signal. This is verified by mocked-Clocked tests only — the current revision has not been retested against the live provider, and mocked results must not be read as live provider observations. The historical demo-v1 video remains a pre-hardening real-provider recording; demo-v3 is simulated and recorded from the merged P0 implementation.
 
 A deterministic policy then evaluates current intent, delivery age, single-order consistency, exceptions and unclassified statements. Claims are customer-reported, not merchant-verified.
 

@@ -4,11 +4,11 @@ An evidence-led return triage dashboard created for the **Clocked Build Challeng
 
 Transforms an incoming customer request into a **recommended** route: Approve / Human Review / Decline. This is a decision-support prototype — it cannot issue refunds, send emails, or change orders.
 
-**[Watch the current UI — three-case simulated walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v2/clocked-return-lab-current-demo.webm)**
+**[Watch the current UI — three-case simulated walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v3/clocked-return-lab-post-p0-demo.webm)**
 
 **[Watch the historical real Clocked API demonstration (50 seconds)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
 
-*The current video uses deterministic synthetic fixtures with zero paid API calls. The older video exercised actual Clocked provider calls before the latest case-integrity and UI improvements. Do not confuse either video's evidence with the other.*
+*The demo-v3 video was freshly recorded from the merged P0 source commit d85ff5a using deterministic synthetic fixtures, with zero paid API calls. It depicts three built-in cases; the broader hazard safeguards are verified by synthetic tests, not by the recording. The older video exercised actual Clocked provider calls before the latest case-integrity and UI improvements. Do not confuse either video's evidence with the other.*
 
 **[Judges: start here](JUDGES_START_HERE.md)** · **[Entry form copy](ENTRY_FORM_COPY.md)** · **[Submission summary](SUBMISSION.md)** · **[VIBE remediation report](VIBE_REMEDIATION_REPORT.md)** · **[Round 4 acceptance](ROUND4_ACCEPTANCE.md)**
 
@@ -62,7 +62,7 @@ Challenge: https://clocked.rezolve.ai/challenge
 
 ## Reproducible current simulated demonstration
 
-From the running local app, run **npm run record:demo** to record the three example routes without any provider credentials or billable Clocked calls. The script refuses a recording containing anything other than exactly three demo-mode API requests. It creates an ignored local WebM in assets/; the judge-facing copy is published as the **demo-v2** GitHub Release asset. Use **npm run capture** to refresh current screenshots.
+From the running local app, run **npm run record:demo** to record the three example routes without any provider credentials or billable Clocked calls. The script refuses a recording containing anything other than exactly three demo-mode API requests. It creates an ignored local WebM in assets/; the judge-facing copy is published as the **demo-v3** GitHub Release asset. Use **npm run capture** to refresh current screenshots.
 
 ## Historical real-provider demonstration
 
