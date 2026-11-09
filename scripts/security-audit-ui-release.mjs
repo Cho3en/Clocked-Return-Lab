@@ -82,7 +82,10 @@ try {
  await page.goto(base,{waitUntil:"networkidle"});
  const payload='Order ORD-84219 for the Aurora Table Lamp was delivered on 2026-10-28. It is unused and unopened. I want a refund. <img src=x onerror="window.__redteamExecuted=true"><svg onload="window.__redteamExecuted=true">';
  await page.locator("#return-message").fill(payload);
+  const submittedRequest = page.waitForRequest(r => r.url().endsWith("/api/triage") && r.method() === "POST");
  await page.getByRole("button",{name:"Run demo analysis"}).click();
+  const actualRequest = await submittedRequest;
+  assert("browser submits the exact edited customer message", actualRequest.postDataJSON()?.message === payload);
  await page.getByText("Escalate to a human",{exact:true}).waitFor();
  const execution=await page.evaluate(()=>Boolean(window.__redteamExecuted));
  assert("user message does not execute script",!execution);

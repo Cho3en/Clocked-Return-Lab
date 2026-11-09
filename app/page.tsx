@@ -92,6 +92,8 @@ const pipeline: { title: string; icon: typeof ShieldCheck }[] = [
 export default function Home() {
   const [mode, setMode] = useState<Mode>("demo");
   const [email, setEmail] = useState("");
+  // Do not accept edits before the client has hydrated and initialized its sample.
+  const [inputReady, setInputReady] = useState(false);
   const [activeSample, setActiveSample] = useState<string | null>(null);
   const [asOf, setAsOf] = useState("");
   const samples = useMemo(() => asOf ? createSamples(asOf) : [], [asOf]);
@@ -111,6 +113,7 @@ export default function Home() {
       setAsOf(date);
       setEmail(first.message);
       setActiveSample(first.id);
+      setInputReady(true);
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
@@ -245,9 +248,9 @@ export default function Home() {
             <div className="panel-body">
               <div className="flex items-center justify-between gap-3">
                 <label htmlFor="return-message" className="field-label">Incoming message</label>
-                <button type="button" onClick={reset} className="subtle-action"><RotateCcw size={14} aria-hidden="true" /> Clear</button>
+                <button type="button" onClick={reset} disabled={!inputReady} className="subtle-action"><RotateCcw size={14} aria-hidden="true" /> Clear</button>
               </div>
-              <textarea id="return-message" value={email} spellCheck={false} onChange={(e) => { invalidate(); setEmail(e.target.value); setActiveSample(null); }} placeholder="Paste a synthetic customer return message..." className="message-input mt-2.5 min-h-[194px] w-full resize-y rounded-xl px-4 py-3 text-[13px] leading-[1.8] sm:min-h-[224px]" />
+              <textarea id="return-message" value={email} disabled={!inputReady} spellCheck={false} onChange={(e) => { invalidate(); setEmail(e.target.value); setActiveSample(null); }} placeholder="Paste a synthetic customer return message..." className="message-input mt-2.5 min-h-[194px] w-full resize-y rounded-xl px-4 py-3 text-[13px] leading-[1.8] sm:min-h-[224px]" />
               <div className="mt-2 flex flex-wrap justify-between gap-2 text-[11px] text-slate-500">
                 <span>{email.length.toLocaleString()} / 10,000 characters</span>
                 <span>Not stored by this application</span>
@@ -261,7 +264,7 @@ export default function Home() {
                 <div className="flex flex-wrap gap-2">
                   {samples.map((sample) => (
                     <button key={sample.id} type="button" title={sample.tag} aria-pressed={activeSample === sample.id}
-                      onClick={() => chooseSample(sample.id)}
+                      onClick={() => chooseSample(sample.id)} disabled={!inputReady}
                       className={"sample-button " + (activeSample === sample.id ? "sample-active" : "")}>
                       {sample.label}
                     </button>
@@ -273,7 +276,7 @@ export default function Home() {
                 <div className="mt-5">
                   <label htmlFor="live-access-token" className="field-label">Private live access token</label>
                   <input id="live-access-token" aria-label="Private live access token" type="password" autoComplete="off" spellCheck={false}
-                    value={accessToken} onChange={(e) => { invalidate(); setAccessToken(e.target.value); }}
+                    value={accessToken} disabled={!inputReady} onChange={(e) => { invalidate(); setAccessToken(e.target.value); }}
                     placeholder="From your local .env.local" className="message-input mt-2 w-full rounded-xl px-4 py-3 text-[13px]" />
                   <p className="mt-2 text-[11px] leading-5 text-slate-500">Kept in this tab’s memory, not saved to browser storage. Do not share or commit it.</p>
                 </div>
@@ -282,10 +285,10 @@ export default function Home() {
               <div className="mt-6 flex flex-col justify-between gap-3 border-t border-white/[.08] pt-5 sm:flex-row sm:items-end">
                 <div>
                   <label htmlFor="policy-date" className="field-label">{mode === "live" ? "Date is server-controlled" : "Evaluation date"}</label>
-                  <input id="policy-date" type="date" value={asOf} disabled={mode === "live"} onChange={(e) => { invalidate(); setAsOf(e.target.value); }}
+                  <input id="policy-date" type="date" value={asOf} disabled={!inputReady || mode === "live"} onChange={(e) => { invalidate(); setAsOf(e.target.value); }}
                     className="date-input mt-2 h-11 rounded-xl px-3 text-[12px]" />
                 </div>
-                <button type="button" onClick={analyze} disabled={busy || email.trim().length < 20 || email.length > 10000 || !asOf || (mode === "live" && accessToken.length < 32)}
+                <button type="button" onClick={analyze} disabled={!inputReady || busy || email.trim().length < 20 || email.length > 10000 || !asOf || (mode === "live" && accessToken.length < 32)}
                   className="primary-button group inline-flex min-h-[47px] items-center justify-center gap-2 rounded-xl px-5 text-[13px] font-bold disabled:cursor-not-allowed disabled:opacity-45">
                   {busy ? <span className="busy-indicator" aria-hidden="true" /> : <Zap size={15} aria-hidden="true" />}
                   <span>{busy ? "Analyzing request..." : mode === "live" ? "Run Clocked analysis" : "Run demo analysis"}</span>
