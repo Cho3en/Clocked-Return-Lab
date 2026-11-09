@@ -28,15 +28,15 @@ Small online stores and support teams that deal with return emails and want a qu
 
 ## Source code
 
-https://github.com/Cho3en/clocked-returns-refund-autopilot
+https://github.com/Cho3en/Clocked-Return-Lab
 
 ## Narrated demo
 
-https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4
+https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4
 
 ## Guide for judges
 
-https://github.com/Cho3en/clocked-returns-refund-autopilot/blob/main/JUDGES_START_HERE.md
+https://github.com/Cho3en/Clocked-Return-Lab/blob/main/JUDGES_START_HERE.md
 
 ## Categories to consider
 

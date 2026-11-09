@@ -8,7 +8,7 @@ Clocked Return Lab helps a support agent sort through those details. It reads th
 
 It is a prototype for reviewing cases, not a refund processing system. **It does not confirm orders, send messages, charge customers, or issue refunds.**
 
-[Watch the narrated demo](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4) | [Start here if you're judging](JUDGES_START_HERE.md) | [Submission details](SUBMISSION.md)
+[Watch the narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4) | [Start here if you're judging](JUDGES_START_HERE.md) | [Submission details](SUBMISSION.md)
 
 ![Clocked Return Lab dashboard](assets/dashboard.png)
 
@@ -41,8 +41,8 @@ You can inspect the [Clocked integration](lib/pipeline.ts), [field handling](lib
 You'll need Node.js 22 or newer and npm.
 
 ```bash
-git clone https://github.com/Cho3en/clocked-returns-refund-autopilot.git
-cd clocked-returns-refund-autopilot
+git clone https://github.com/Cho3en/Clocked-Return-Lab.git
+cd Clocked-Return-Lab
 npm ci
 npm run dev
 ```
@@ -59,7 +59,7 @@ The current release passed 918 unit and regression tests, the TypeScript check, 
 
 We also ran 20 security checks and several sets of synthetic adversarial cases. The production dependency audit reported no vulnerabilities on November 9, 2026. These checks help catch bugs, but they don't prove that every possible request will be handled correctly.
 
-**We have not rerun paid Clocked calls against the latest version.** An [older live recording](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/tag/demo-v1) shows real calls from an earlier build, not a verification of this release.
+**We have not rerun paid Clocked calls against the latest version.** An [older live recording](https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v1) shows real calls from an earlier build, not a verification of this release.
 
 There is no connection to a store database, shipping provider, payment system, or live product catalog. There is also no persistent case history or shared spending cap. The app has mainly been tested with English requests and should not be used with real customer information in demo mode.
 

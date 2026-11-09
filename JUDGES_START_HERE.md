@@ -4,7 +4,7 @@ Clocked Return Lab helps a support agent work through a customer return request 
 
 ## Watch the demo
 
-[Watch the narrated walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4)
+[Watch the narrated walkthrough](https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4)
 
 The video shows three made-up requests in the real app:
 
@@ -29,7 +29,7 @@ The live integration is in [lib/pipeline.ts](lib/pipeline.ts). It calls Clocked 
 
 The app then applies its own checks to decide whether it has enough information to suggest a result. If the facts are unclear, the case is sent for Human Review.
 
-The narrated video uses the local demo, not paid Clocked calls. There is an [older recording of live Clocked usage](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/tag/demo-v1), but it predates the latest safety changes.
+The narrated video uses the local demo, not paid Clocked calls. There is an [older recording of live Clocked usage](https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v1), but it predates the latest safety changes.
 
 ## Run the three examples yourself
 
