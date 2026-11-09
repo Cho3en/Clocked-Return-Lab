@@ -8,7 +8,7 @@ Clocked Return Lab turns unstructured customer refund emails into **Approve / Hu
 
 **[Current UI — synthetic three-case walkthrough](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v3/clocked-return-lab-post-p0-demo.webm)**
 
-Recorded from the merged P0 implementation at commit d85ff5a. This shows the current interface and three built-in synthetic cases; the extended adversarial safety behavior is tested separately. **Zero Clocked provider requests** were made for the recording.
+The demo-v3 recording was made from the PREVIOUS P0 implementation at commit d85ff5a and shows only three built-in simulated cases, not the subsequent synthetic-product-identity boundary. A refreshed recording should be made after the catalog-gate PR is independently accepted. The recording made zero Clocked provider calls.
 
 **[Historical real Clocked API demonstration](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm)**
 
@@ -23,9 +23,9 @@ Implementation: [lib/pipeline.ts](lib/pipeline.ts), [lib/evidence.ts](lib/eviden
 | **Protect (pii)** | Returns anonymized text. A failed or invalid result stops analysis; an additional local scrub catches common leftover identifiers. |
 | **Guard (injection)** | Evaluates prompt-injection risk. Suspicious, ambiguous or failed outcomes prevent Extract and Decide calls and route to Human Review. |
 | **Extract** | Returns exact field values, confidence and Unicode code-point offsets. Unaligned or low-confidence evidence cannot support Approve/Decline. |
-| **Decide** | Returns typed probabilities about refund intent, unused condition and defects. Uncertain judgments remain unknown; a confident "no defect" verdict cannot override the structural policy gates: a relative clause, unverified prepositional qualifier, event or finite-verb-like product suffix embedded in the product field, a source-aligned affirmative extracted issue phrase, or an unclassified statement each independently force Human Review. |
+| **Decide** | Returns typed probabilities about refund intent, unused condition and defects. Unknown probability remains Unknown. Independent local gates require recognized synthetic fixture identity plus coherent order, condition, date and intent before either Approve or Decline. An unregistered or suspicious product description routes Human Review even when Decide returns a confident false negative. |
 
-**P0 product-description fix (2026-11-09):** an independent audit found that a hazard complaint embedded in the product name (e.g. "Aurora Desk Lamp that nearly electrocuted me") was absorbed as a harmless product name and approved. The fix makes product-field ambiguity a structural blocker (relative clauses, unverified prepositional qualifiers, events or finite-verb-like product suffixes in the product span → Human Review, in both order-sentence and `Product:` formats, and never an automatic Decline), and makes extracted `issue` evidence an independent exception signal. This is verified by mocked-Clocked tests only — the current revision has not been retested against the live provider, and mocked results must not be read as live provider observations. The historical demo-v1 video remains a pre-hardening real-provider recording; demo-v3 is simulated and recorded from the merged P0 implementation.
+**Latest P0 identity-boundary revision:** The independent audit found that hazards hidden inside arbitrary product names (for example, 'Aurora Desk Lamp toxic with warm light') could still receive Approve or Decline. The fix in this source revision validates the ENTIRE product text against a closed synthetic fixture registry, refusing both automated advisory outcomes for unknown names or variants, even if Decide reports no problem. This is NOT merchant database verification. All outcomes remain advisory, and the current revision has not been tested against the paid Clocked provider.
 
 A deterministic policy then evaluates current intent, delivery age, single-order consistency, exceptions and unclassified statements. Claims are customer-reported, not merchant-verified.
 
@@ -42,7 +42,7 @@ The demo mode performs no Clocked calls. The separate live mode requires secure 
 
 ## Test and reproducibility evidence
 
-- **641 local automated tests** passed (462 pre-existing + 179 P0 product-hazard regressions including 132 independently challenged hazard/benign qualifier and finite-verb controls; mocked-Clocked policy tests only — no paid provider calls).
+- **877 local automated tests** passed (641 previous + 236 new independent synthetic catalog-boundary tests). Of the 194 local identity-boundary cases, 76 cover unknown product descriptions across both formats and 60 cover hazards across dates and formats; the remaining cases verify benign names and optimistic mocked-policy behavior. Another 42 cases exercise the complete mocked Protect/Guard/Extract/Decide integration. No paid provider calls.
 - **182 synthetic HTTP red-team and mutation cases** passed.
 - **19 local security/browser assertions** passed, alongside mobile UI and browser smoke tests.
 - [.github/workflows/ci.yml](.github/workflows/ci.yml) provides CI for tests, TypeScript, lint and production build without provider API calls.
