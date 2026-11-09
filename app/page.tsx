@@ -294,7 +294,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="empty-state" role="status">
-                <b>{sessionTotal === 0 ? "No requests checked yet" : sessionTotal + " completed " + (sessionTotal === 1 ? "evaluation" : "evaluations")}</b>
+                <b>{sessionTotal === 0 ? "No requests checked yet" : sessionTotal + (sessionTotal === 1 ? " request checked" : " requests checked")}</b>
                 <span style={{ marginTop: 4, maxWidth: 340 }}>
                   {sessionTotal === 0 ? "Try a sample request below. Results are not saved." : "These numbers only cover this tab. They disappear when you close it."}
                 </span>
@@ -522,7 +522,7 @@ export default function Home() {
                     <div className="kv"><span><Package size={14} aria-hidden="true" /> Claimed order</span><strong>{result.caseScope?.linkedOrderId ?? "Unresolved"}</strong></div>
                     <div className="kv"><span><Users size={14} aria-hidden="true" /> Evaluation date</span><strong>{result.asOf}</strong></div>
                     <div className="kv"><span><CircleHelp size={14} aria-hidden="true" /> Delivery age</span><strong>{result.elapsedDays === null ? "Unknown" : result.elapsedDays + " days"}</strong></div>
-                    <div className="kv"><span><Fingerprint size={14} aria-hidden="true" /> No obvious conflicts</span><strong>{result.caseScope?.coherent ? "Yes" : result.caseScope ? "Needs review" : "Unknown"}</strong></div>
+                    <div className="kv"><span><Fingerprint size={14} aria-hidden="true" /> Details consistent</span><strong>{result.caseScope?.coherent ? "Yes" : result.caseScope ? "Needs review" : "Unknown"}</strong></div>
                   </>
                 ) : (
                   <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>Run a check to see the order details we can find in the message.</p>
