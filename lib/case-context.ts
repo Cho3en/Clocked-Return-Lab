@@ -1,5 +1,5 @@
 import type { EvidenceField } from "./types";
-import { checkSafeStatementCoverage } from "./statement-coverage";
+import { checkSafeStatementCoverage, isProductAmbiguous } from "./statement-coverage";
 
 /**
  * Deterministic safeguards around AI output. A highlighted field is text evidence,
@@ -73,11 +73,11 @@ export function classifyCurrentIntent(text: string): CurrentIntent {
 /** This lexicon is a conservative escalation backstop, not a substitute for merchant review. */
 export function detectIssueSignals(text: string): string[] {
   // Negated simple defect descriptions must not turn a valid unused return into a defect claim.
-  const clean = text.replace(/\b(?:battery|cell|power\s+pack)\s+(?:(?:is|was)\s+)?(?:not|never)\s+(?:swollen|swelling|bulging|leaking|puffed)\b|\b(?:battery|cell|power\s+pack)\s+(?:isn\u0027t|wasn\u0027t)\s+(?:swollen|swelling|bulging|leaking|puffed)\b/gi, " ")
-    .replace(/\b(?:not|never|is(?:n\u0027t| not)|was(?:n\u0027t| not)|no)\s+(?:damaged|broken|defective|faulty|malfunctioning|overheating|smoking|sparking|leaking)\b/gi, " ")
+  const clean = text.replace(/\b(?:battery|cell|power\s+pack)\s+(?:(?:is|was)\s+)?(?:not|never)\s+(?:swollen|swelling|bulging|leaking|puffed|expanded|expanding)\b|\b(?:battery|cell|power\s+pack)\s+(?:isn\u0027t|wasn\u0027t)\s+(?:swollen|swelling|bulging|leaking|puffed|expanded|expanding)\b/gi, " ")
+    .replace(/\b(?:not|never|is(?:n\u0027t| not)|was(?:n\u0027t| not)|no)\s+(?:damaged|broken|defective|faulty|malfunctioning|overheating|smoking|sparking|leaking|hazardous|electrocuted)\b/gi, " ")
     .replace(/\bbut\s+now\s+i\s+(?:definitely\s+)?want\b/gi, " I want");
   const patterns: Array<[string, RegExp]> = [
-    ["unsafe product", /\b(?:overheat(?:ing|s|ed)?|smok(?:e|es|ing)|sparks?|sparking|electric(?:al)?\s+shocks?|caught\s+fire|on\s+fire|burn(?:ing|t|ed)?\s+smell|smells?\s+(?:like\s+)?burn(?:t|ing)|scorched|explod(?:e|ed|ing)|battery\s+(?:(?:is|was|has\s+become|appears|looks)\s+)?(?:visibly\s+)?(?:swollen|swelling|bulging|leaking|puffed)|fire\s+hazard|safety\s+hazard|hot\s+to\s+the\s+touch|cable\s+melted)\b/i],
+    ["unsafe product", /\b(?:overheat(?:ing|s|ed)?|smok(?:e|es|ing)|sparks?|sparking|electric(?:al)?\s+shocks?|caught\s+fire|on\s+fire|burn(?:ing|t|ed)?\s+smell|smells?\s+(?:like\s+)?burn(?:t|ing)|scorched|explod(?:e|ed|ing)|battery\s+(?:(?:is|was|has\s+become|appears|looks)\s+)?(?:visibly\s+)?(?:swollen|swelling|bulging|leaking|puffed|expanded|expanding)|fire\s+hazard|safety\s+hazard|hot\s+to\s+the\s+touch|cable\s+melted|electrocut\w*|zapped|electric\s+shock|hazardous)\b/i],
     ["damaged or faulty", /\b(?:broken|damaged|defective|faulty|malfunctioning|falling\s+apart|fell\s+apart|stopped\s+working|does\s+not\s+work|doesn['’]t\s+work|not\s+working|cracked|shattered|leaking|leaks?|injured|injury|peeling|peels?|peeled|flaking|flaked|melted|melting|melt|buttons?\s+(?:do\s+not|does\s+not|don't|doesn't)\s+(?:work|respond))\b/i],
     ["wrong item or description", /\b(?:wrong\s+(?:item|product|size|colo[u]?r|shade|variant|model)|incorrect\s+(?:item|product|size|colo[u]?r|model)|different\s+(?:item|product|size|colo[u]?r|variant|model)|colou?r\s+is\s+(?:completely\s+)?wrong|not\s+(?:as\s+)?described|not\s+what\s+i\s+ordered|does\s+not\s+match\s+(?:the\s+)?(?:description|order))\b/i],
     ["missing or undelivered", /\b(?:missing\s+(?:parts?|items?|accessories|parcel|package)|(?:parts?|items?|accessories)\s+(?:are\s+)?missing|never\s+arrived|not\s+delivered|item\s+not\s+received|parcel\s+(?:lost|missing)|lost\s+in\s+transit|(?:package|parcel|item|shipment)\s+(?:has\s+not|hasn[\u0027’]t)\s+arrived)\b/i],
@@ -87,7 +87,7 @@ export function detectIssueSignals(text: string): string[] {
     ["unexpected product behavior", /\b(?:crackl(?:e|es|ing)|rattl(?:e|es|ing)|smells?\s+odd|(?:will\s+not|won['’]t|does\s+not|doesn['’]t)\s+(?:turn|switch)\s+on|does\s+not\s+(?:respond|power\s+on)|won['’]t\s+start)\b/i],
     ["prior replacement or shipment", /\b(?:already\s+(?:received|got)\s+(?:a\s+)?replacement|(?:seller|shop|store)\s+promised\s+(?:to\s+)?replace|promised\s+(?:a\s+)?replacement|replacement\s+already\s+(?:received|shipped))\b/i],
     ["address mismatch", /\b(?:(?:delivery|shipping)\s+address\s+(?:was|is)\s+different|wrong\s+(?:delivery|shipping)\s+address|address\s+(?:does\s+not|doesn['’]t)\s+match)\b/i],
-    ["hazard or injury report", /\b(?:exposed\s+(?:wire|copper|cable|wiring)|scratched|scratch(?:es|ed)?|bent\s+(?:frame|part|metal)|chemical\s+smell|(?:skin\s+)?rash|(?:got|was|is)\s+burn(?:ed|t)|dangerous|unsafe\s+to\s+use|stolen|theft|recalled|recall\s+notice|counterfeit|fake\s+item|strong\s+(?:chemical\s+)?odou?r|tampered\s+with)\b/i],
+    ["hazard or injury report", /\b(?:exposed\s+(?:wire|copper|cable|wiring)|scratched|scratch(?:es|ed)?|bent\s+(?:frame|part|metal)|chemical\s+smell|(?:skin\s+)?rash|(?:got|was|is)\s+burn(?:ed|t)|dangerous|hazardous|poison\w*|fray\w*|electrocut\w*|unsafe\s+to\s+use|stolen|theft|recalled|recall\s+notice|counterfeit|fake\s+item|strong\s+(?:chemical\s+)?odou?r|tampered\s+with|wiring\s+is\s+(?:coming|falling)\s+apart|turns?\s+off\s+unexpectedly|turns\s+itself\s+off)\b/i],
     ["product or quantity discrepancy", /\b(?:doesn['’]t\s+match|does\s+not\s+match|advertised\s+specifications?|not\s+included|box\s+(?:was|is)\s+empty|(?:only\s+)?one\s+of\s+(?:the\s+)?two\s+(?:units?|items?)\s+arrived|wrong\s+voltage|SKU-[\w-]+\s+instead\s+of\s+SKU-[\w-]+|(?:seller|merchant)\s+sent\s+SKU-[\w-]+\s+instead\s+of|popping\s+sound|died\s+after|never\s+(?:got|received)\s+(?:the\s+)?(?:package|parcel)|return\s+(?:was\s+)?already\s+rejected|received\s+(?:a\s+)?replacement)\b/i],
     ["billing exception", /\b(?:card\s+(?:was\s+)?charged\s+twice|charged\s+twice|double[\s-]charged|duplicate\s+(?:charge|payment|billing)|partial\s+refund|(?:refund|credit)\s+amount\s+(?:is|was)\s+wrong)\b/i],
     ["other mismatch or safety warning", /\b(?:getting\s+(?:extremely\s+|too\s+|very\s+)?hot|hot\s+to\s+(?:the\s+)?touch|(?:sharp|dangerously\s+sharp)\s+edges?|cut\s+my\s+(?:hand|finger)|dimensions?\s+(?:do(?:es)?\s+not|don[\u0027’]t)\s+match|incorrect\s+(?:variant|colour|color)|(?:ordered|selected|chose)[^.!?\n]{0,90}\bbut\s+(?:received|got)|wrong\s+dimensions?)\b/i],
@@ -125,6 +125,14 @@ export function inspectCaseScope(text: string, evidence: EvidenceField[] = []): 
   const deliveryDates = [...new Set(claimedDeliveries)];
   const intent = classifyCurrentIntent(text);
   const issueSignals = detectIssueSignals(text);
+  // An extracted product span that absorbs a clause/event is itself an
+  // exception signal, even when the lexicon misses its exact wording and
+  // even when an extracted product in live mode is clean but the raw
+  // statement was already flagged by statement coverage.
+  const productField = evidence.find((e)=>e.id==="product");
+  if (productField && isProductAmbiguous(productField.value) && !issueSignals.includes("ambiguous product description")) {
+    issueSignals.push("ambiguous product description");
+  }
   const blockers: string[] = [];
   const identityBlockers: string[] = [];
   if (orderRefs.length !== 1) identityBlockers.push(

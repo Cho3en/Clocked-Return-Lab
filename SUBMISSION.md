@@ -36,7 +36,7 @@ Three **current simulated routes**: (1) unused, within example return window -> 
 - A review/decline/approve recommendation is not an executed financial action.
 - Example 30-day policy is illustrative, not legal advice or a production store policy. Statutory rights, defects, warranties, conflicts and missing data require human review.
 - Source-controlled .env.example contains no credentials; .env.local is excluded from Git.
-- Includes setup instructions, development commits, 462 automated tests (including the corrected independent VIBE audit and held-out cases), independent synthetic HTTP adversarial suites of 32, 32, 76 and 42 cases, 19 security assertions, browser/UI audits, and transparent [VIBE remediation and final release notes](VIBE_REMEDIATION_REPORT.md).
+- Includes setup instructions, development commits, 609 automated tests (462 pre-existing including the corrected independent VIBE audit and held-out cases, plus 147 P0 product-hazard regressions including 100 unseen qualifier/benign controls; mocked-Clocked policy evidence only — no paid provider calls), independent synthetic HTTP adversarial suites of 32, 32, 76 and 42 cases (182 total, 0 unsafe decisions), 19 security assertions, browser/UI audits, and transparent [VIBE remediation and final release notes](VIBE_REMEDIATION_REPORT.md).
 
 ## Categories to select in the entry form
 1. Best Overall App

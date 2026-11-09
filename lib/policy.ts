@@ -1,4 +1,5 @@
 import { classifyCurrentIntent, hasIssue, inspectCaseScope } from "./case-context";
+import { isProductAmbiguous } from "./statement-coverage";
 import type { Assessment, EvidenceField, Mode, PolicyCheck, TriageResult } from "./types";
 
 const WINDOW_DAYS = 30;
@@ -73,7 +74,18 @@ export function evaluatePolicy(input: {
     && assessment("item_explicitly_unused") === true;
   const wantsRefund = Boolean(request) && scope.intent === "refund"
     && isAffirmativeReturnRequest(request!) && assessment("refund_requested") === true;
-  const hasException = hasRightsOrIssue(redactedText) || assessment("damaged_or_defective") === true;
+  // Extracted issue evidence is an independent exception signal. A model
+  // Decide verdict of "no defect" cannot erase a source-aligned issue
+  // phrase; only an explicitly negated issue phrase is not a concern.
+  const issueValue = trusted("issue");
+  const issueField = field("issue");
+  const issueContext = issueField ? redactedText.slice(Math.max(0, issueField.start - 24), issueField.start) : "";
+  const negatedIssue = Boolean(issueValue && (/\b(?:not|never|isn't|wasn't|is not|was not)\s+(?:damaged|broken|defective|faulty|hazardous|electrocuted|swollen|expanded|smoking|sparking|leaking)\b/i.test(issueValue)
+    || /\b(?:not|never|isn't|wasn't|is not|was not|no)\s*$/i.test(issueContext)));
+  const hasExtractedIssue = Boolean(issueValue && !negatedIssue);
+  const productAmbiguous = Boolean(product && isProductAmbiguous(product));
+  const hasException = hasRightsOrIssue(redactedText) || assessment("damaged_or_defective") === true
+    || hasExtractedIssue || productAmbiguous || scope.issueSignals.length > 0;
   const noExceptionEstablished = !hasException && assessment("damaged_or_defective") === false;
   const guardClear = injectionFlag === false;
 
@@ -85,8 +97,8 @@ export function evaluatePolicy(input: {
       detail: identityClear ? "One linked customer-reported order: " + scope.linkedOrderId : scope.identityBlockers.join(" ") || "Order needs verification" },
     { label: "Order reference", status: hasOrder ? "pass" : "unknown",
       detail: hasOrder ? order + " (customer-reported; not independently verified)" : "Order identification or attribution is uncertain" },
-    { label: "Product identification", status: hasProduct ? "pass" : "unknown",
-      detail: hasProduct ? product + " (customer-reported)" : "Product needs confirmation" },
+    { label: "Product identification", status: productAmbiguous ? "unknown" : hasProduct ? "pass" : "unknown",
+      detail: productAmbiguous ? "Product description contains a clause or customer event that must be separated from product identity by a human" : hasProduct ? product + " (customer-reported)" : "Product needs confirmation" },
     { label: "Delivery date", status: days === null ? "unknown" : days < 0 ? "fail" : "pass",
       detail: days === null ? "No adequately grounded delivery date" : days < 0 ? "Delivery date is in the future" : statedDate + " (customer-reported)" },
     { label: "30-day return window", status: days === null || days < 0 ? "unknown" : days <= WINDOW_DAYS ? "pass" : "fail",
@@ -109,6 +121,8 @@ export function evaluatePolicy(input: {
   if (!hasUnusedEvidence) reasons.push("The customer has not clearly established unused condition.");
   if (!wantsRefund && scope.intent === "refund") reasons.push("Current refund authorization is not sufficiently supported by extracted evidence and model assessment.");
   if (!noExceptionEstablished && !hasException) reasons.push("The exception check cannot confidently rule out reported issues.");
+  if (productAmbiguous) reasons.push("Product description is ambiguous: a clause or customer event is embedded in the product field and must be separated by a human.");
+  if (hasExtractedIssue) reasons.push("Extracted issue evidence reports a concern even though the model assessment reported no defect.");
 
   // Both positive and negative recommendations require the SAME complete case.
   // All ambiguity is resolved by abstaining, not by choosing the first plausible match.
