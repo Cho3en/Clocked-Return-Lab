@@ -37,7 +37,7 @@ Three **current simulated routes**: (1) unused, within example return window -> 
 - A review/decline/approve recommendation is not an executed financial action.
 - Example 30-day policy is illustrative, not legal advice or a production store policy. Statutory rights, defects, warranties, conflicts and missing data require human review.
 - Source-controlled .env.example contains no credentials; .env.local is excluded from Git.
-- Includes setup instructions, development commits, **877 synthetic/mock automated tests** (641 earlier tests + 236 independent catalog-trust-boundary tests), independent synthetic HTTP adversarial suites of 32, 32, 76 and 42 cases (182 total, previously verified), 19 previously verified security assertions, browser/UI audits, and earlier independent remediation reports. This source revision also requires trusted SYNTHETIC fixture identity before an advisory Approve/Decline. Real merchant identity/order verification and current live-provider reliability are NOT established.
+- Includes setup instructions, development commits, **913 synthetic/mock automated tests** (641 earlier tests + 272 independent catalog-trust-boundary tests), independent synthetic HTTP adversarial suites of 32, 32, 76 and 42 cases (182 total, previously verified), 19 previously verified security assertions, browser/UI audits, and earlier independent remediation reports. This source revision also requires trusted SYNTHETIC fixture identity before an advisory Approve/Decline. Real merchant identity/order verification and current live-provider reliability are NOT established.
 
 ## Categories to select in the entry form
 1. Best Overall App

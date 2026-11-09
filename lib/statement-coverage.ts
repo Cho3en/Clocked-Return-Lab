@@ -56,11 +56,17 @@ export interface CoverageAssessment {
   totalStatements: number;
 }
 export function checkSafeStatementCoverage(text: string): CoverageAssessment {
-  const statements = text.replace(/\r/g, "").replace(/(\d)\.(?=\d)/g, "$1\uE000").split(/[.!?\n]+/)
-    .map(part=>part.replace(/\uE000/g, "."))
-    .map(part=>part.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F]+\s*/u,"").replace(/\s+/g," ").trim())
-    .filter(Boolean);
-  let unknownCount=0;
-  for(const statement of statements) if(hasEmbeddedComplaint(statement) || !SAFE.some(pattern=>pattern.test(statement))) unknownCount++;
-  return {unknownCount,totalStatements:statements.length};
+  // Preserve each Product: line in full before sentence punctuation splitting.
+  // A trailing warning symbol or question marks must not silently disappear.
+  const statements = text.replace(/\r/g, "").split("\n").flatMap(line => {
+    if (/^\s*product\s*:/i.test(line)) return [line];
+    return line.replace(/(\d)\.(?=\d)/g, "$1\uE000").split(/[.!?]+/)
+      .map(part => part.replace(/\uE000/g, "."));
+  }).map(part => part.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F]+\s*/u, "")
+    .replace(/\s+/g, " ").trim()).filter(Boolean);
+  let unknownCount = 0;
+  for (const statement of statements) {
+    if (hasEmbeddedComplaint(statement) || !SAFE.some(pattern => pattern.test(statement))) unknownCount++;
+  }
+  return { unknownCount, totalStatements: statements.length };
 }

@@ -12,7 +12,7 @@ Transforms an incoming customer request into a **recommended** route: Approve / 
 
 **[Judges: start here](JUDGES_START_HERE.md)** · **[Entry form copy](ENTRY_FORM_COPY.md)** · **[Submission summary](SUBMISSION.md)** · **[VIBE remediation report](VIBE_REMEDIATION_REPORT.md)** · **[Round 4 acceptance](ROUND4_ACCEPTANCE.md)**
 
-**Current release status:** A new independent audit found that arbitrary customer-written product names could still hide hazard descriptors and cause unsafe advisory Approve/Decline. This source revision fixes the trust boundary by allowing automatic recommendations only for exact, explicitly enumerated SYNTHETIC fixture product names and controlled variants; all other identities route Human Review. The current branch passes 877 synthetic/mock-based tests (641 earlier + 236 identity-boundary tests). This is not a verified merchant catalog, provider validation or production approval. The demo-v3 video predates the catalog boundary and is clearly simulated.
+**Current release status:** A new independent audit found that arbitrary customer-written product names could still hide hazard descriptors and cause unsafe advisory Approve/Decline. This source revision fixes the trust boundary by allowing automatic recommendations only for exact, explicitly enumerated SYNTHETIC fixture product names and controlled variants; all other identities route Human Review. The current branch passes 913 synthetic/mock-based tests (641 earlier + 272 identity-boundary tests). This is not a verified merchant catalog, provider validation or production approval. The demo-v3 video predates the catalog boundary and is clearly simulated.
 
 Earlier engineering records: **[P0 safety milestone](P0_ACCEPTANCE.md)** · **[Initial audit](AUDIT.md)**.
 

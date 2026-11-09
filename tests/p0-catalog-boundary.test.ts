@@ -258,3 +258,21 @@ describe("P0 complete mocked SDK pipeline — no paid Clocked requests", () => {
     });
   }
 });
+
+
+describe("P0 raw Product: field must survive punctuation and warning-symbol boundaries", () => {
+  const suffixes = [
+    " ?", " ??", " !!!", " !?", " .",
+    " \u26a0\ufe0f", " \ud83d\udca5", " \u2049\ufe0f", " \u2026",
+  ];
+  for (const suffix of suffixes) for (const format of FORMATS)
+    for (const date of ["2026-11-01", "2026-09-01"]) {
+      it("preserves unknown suffix before coverage classification: "
+        + JSON.stringify(suffix) + " / " + format + " / " + date, () => {
+        const result = triageDemo(message("Aurora Desk Lamp" + suffix, date, format), AS_OF);
+        expect(result.lane).toBe("review");
+        expect(result.checks.find(c => c.label === "Order reference")?.status).toBe("pass");
+        expect(result.caseScope?.unclassifiedStatements).toBeGreaterThan(0);
+      });
+    }
+});

@@ -42,7 +42,7 @@ The demo mode performs no Clocked calls. The separate live mode requires secure 
 
 ## Test and reproducibility evidence
 
-- **877 local automated tests** passed (641 previous + 236 new independent synthetic catalog-boundary tests). Of the 194 local identity-boundary cases, 76 cover unknown product descriptions across both formats and 60 cover hazards across dates and formats; the remaining cases verify benign names and optimistic mocked-policy behavior. Another 42 cases exercise the complete mocked Protect/Guard/Extract/Decide integration. No paid provider calls.
+- **913 local automated tests** passed (641 previous + 272 new independent synthetic catalog-boundary tests). Of the 194 local identity-boundary cases, 76 cover unknown product descriptions across both formats and 60 cover hazards across dates and formats; the remaining cases verify benign names and optimistic mocked-policy behavior. Another 42 cases exercise the complete mocked Protect/Guard/Extract/Decide integration; 36 additional cases cover warning symbols and punctuation in raw Product: fields. No paid provider calls.
 - **182 synthetic HTTP red-team and mutation cases** passed.
 - **19 local security/browser assertions** passed, alongside mobile UI and browser smoke tests.
 - [.github/workflows/ci.yml](.github/workflows/ci.yml) provides CI for tests, TypeScript, lint and production build without provider API calls.
