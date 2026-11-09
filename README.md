@@ -12,6 +12,20 @@ It is a prototype for reviewing cases, not a refund processing system. **It does
 
 ![Clocked Return Lab dashboard](assets/dashboard.png)
 
+## Try the three example requests
+
+Each example shows how the app handles a different type of return. You can run all three without an API key.
+
+| Example | Suggested result | Why |
+|---|---|---|
+| Clear return | Approve | The customer reports an unused item within the example 30-day window. |
+| Defective item | Human Review | A product problem needs a person to check the details. |
+| Outside window | Decline | The reported delivery date falls outside the example window. A person still needs to check customer rights. |
+
+[See an approval](assets/approved.png) | [See a case sent for review](assets/review.png) | [See a decline](assets/declined.png)
+
+These are example recommendations, not final decisions or refunds.
+
 ## What you can do
 
 - Paste in a return request or select one of the three example messages.
