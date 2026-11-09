@@ -214,10 +214,10 @@ export default function Home() {
 
   const detailLane = result ? lanes.find((l) => l.id === result.lane) : null;
   const metrics = [
-    { icon: <Package size={16} aria-hidden="true" />, label: "Cases evaluated", value: String(sessionTotal), note: "This tab only · not stored", tint: "m-peach" },
-    { icon: <Users size={16} aria-hidden="true" />, label: "Human review", value: String(sessionCounts.review), note: "Recommendations in this tab", tint: "m-lav" },
+    { icon: <Package size={16} aria-hidden="true" />, label: "Cases evaluated", value: String(sessionTotal), note: "Since you opened this tab", tint: "m-peach" },
+    { icon: <Users size={16} aria-hidden="true" />, label: "Human review", value: String(sessionCounts.review), note: "Requests sent for review", tint: "m-lav" },
     { icon: <CheckCircle2 size={16} aria-hidden="true" />, label: "Approve (recommended)", value: String(sessionCounts.approve), note: "No refunds executed", tint: "m-sage" },
-    { icon: <XCircle size={16} aria-hidden="true" />, label: "Decline (recommended)", value: String(sessionCounts.reject), note: "Example policy · advisory", tint: "m-rose" },
+    { icon: <XCircle size={16} aria-hidden="true" />, label: "Decline (recommended)", value: String(sessionCounts.reject), note: "Based on the demo policy", tint: "m-rose" },
   ];
 
   return (
@@ -227,7 +227,7 @@ export default function Home() {
           <div className="brand-mark"><Package size={20} aria-hidden="true" /></div>
           <div>
             <div className="brand-name">Clocked Return Lab</div>
-            <div className="brand-sub">Returns &amp; Refunds Decision Intelligence</div>
+            <div className="brand-sub">Return request review</div>
           </div>
         </div>
         <nav className="side-nav">
@@ -260,7 +260,7 @@ export default function Home() {
         <header className="topbar">
           <div>
             <h1 className="topbar-title">Overview</h1>
-            <p className="topbar-sub">Returns, evidence and decision recommendations</p>
+            <p className="topbar-sub">Review returns and see why each result was suggested</p>
           </div>
           <div className="top-actions">
             <span className="status-chip"><span className="status-dot" aria-hidden="true" /> No refunds executed</span>
@@ -289,22 +289,22 @@ export default function Home() {
             <div className="panel">
               <div className="panel-head">
                 <div>
-                  <div className="panel-title"><TrendingUp size={17} aria-hidden="true" /> Session Activity</div>
-                  <div className="panel-sub">Completed analyses in this browser tab</div>
+                  <div className="panel-title"><TrendingUp size={17} aria-hidden="true" /> This session</div>
+                  <div className="panel-sub">Requests checked since you opened this tab</div>
                 </div>
               </div>
               <div className="empty-state" role="status">
-                <b>{sessionTotal === 0 ? "No evaluations in this tab yet" : sessionTotal + " completed " + (sessionTotal === 1 ? "evaluation" : "evaluations")}</b>
+                <b>{sessionTotal === 0 ? "No requests checked yet" : sessionTotal + (sessionTotal === 1 ? " request checked" : " requests checked")}</b>
                 <span style={{ marginTop: 4, maxWidth: 340 }}>
-                  {sessionTotal === 0 ? "Run a case below to start. There is no persistent case history." : "These totals reflect only completed analyses since you opened this tab. Nothing is saved when it closes."}
+                  {sessionTotal === 0 ? "Try a sample request below. Results are not saved." : "These numbers only cover this tab. They disappear when you close it."}
                 </span>
               </div>
             </div>
             <div className="panel">
               <div className="panel-head">
                 <div>
-                  <div className="panel-title"><PieChart size={17} aria-hidden="true" /> Decision Distribution</div>
-                  <div className="panel-sub">Recommendation breakdown</div>
+                  <div className="panel-title"><PieChart size={17} aria-hidden="true" /> Recommendations</div>
+                  <div className="panel-sub">Results from this tab</div>
                 </div>
               </div>
               {sessionTotal ? (
@@ -317,12 +317,12 @@ export default function Home() {
                       <strong className="num">{sessionCounts[lane.id]}</strong>
                     </div>
                   ))}
-                  <p className="session-disclaimer">Real evaluations in this tab only. Not stored or representative of overall performance.</p>
+                  <p className="session-disclaimer">Only requests checked in this tab are counted here.</p>
                 </div>
               ) : (
                 <div className="empty-state" role="status">
-                  <b>No session distribution yet</b>
-                  <span style={{ marginTop: 4, maxWidth: 340 }}>Run an analysis to populate a truthful recommendation breakdown. No case history is stored.</span>
+                  <b>No results to show yet</b>
+                  <span style={{ marginTop: 4, maxWidth: 340 }}>Check a request to see a breakdown of the results.</span>
                 </div>
               )}
             </div>
@@ -335,7 +335,7 @@ export default function Home() {
                   <div className="card-eyebrow">01 / Input</div>
                   <h2 id="input-heading" className="card-title">Customer request</h2>
                 </div>
-                <span className="header-meta">{mode === "demo" ? "Synthetic demo" : "Private live"}</span>
+                <span className="header-meta">{mode === "demo" ? "Sample data" : "Private live"}</span>
               </div>
               <div className="card-body">
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
@@ -354,7 +354,7 @@ export default function Home() {
                 />
                 <div className="char-row">
                   <span>{email.length.toLocaleString()} / 10,000 characters</span>
-                  <span>Not stored by this application</span>
+                  <span>Not saved by this app</span>
                 </div>
 
                 <div style={{ marginTop: 18 }}>
@@ -413,16 +413,16 @@ export default function Home() {
             <section ref={outputRef} className="card scroll-mt-4" aria-labelledby="result-heading" id="decision-panel">
               <div className="card-head">
                 <div>
-                  <div className="card-eyebrow">02 / Outcome</div>
-                  <h2 id="result-heading" className="card-title">Decision routing</h2>
+                  <div className="card-eyebrow">02 / Result</div>
+                  <h2 id="result-heading" className="card-title">Suggested next step</h2>
                 </div>
                 <span className="header-meta">{result ? result.mode === "demo" ? "SIMULATED" : "CLOCKED LIVE" : "READY"}</span>
               </div>
               <div className="card-body">
                 <p className="pipeline-note">{(result?.mode ?? mode) === "demo"
-                  ? "Demo preview · Local policy checks only. No Clocked API calls."
+                  ? "This demo checks the request locally. It does not call Clocked."
                   : busy ? "Analyzing with Clocked. Individual provider status is not reported while processing."
-                    : "Live analysis · Provider status is shown when results arrive."}</p>
+                    : "The results will show which Clocked checks were completed."}</p>
                 <div className={"pipeline " + ((result?.mode ?? mode) === "demo" ? "pipeline-demo" : "pipeline-live")} aria-label="Analysis pipeline">
                   {((result?.mode ?? mode) === "demo" ? demoPipelineStages : pipelineStages).map((stage, i) => {
                     const st = stageState(stage.id);
@@ -460,15 +460,15 @@ export default function Home() {
                     <p style={{ marginTop: 4, fontSize: 12.5, fontWeight: 700, color: "var(--ink)" }}>{summary.label}</p>
                     <p className="reco-desc">{summary.description}</p>
                     <div className="reco-next">
-                      <span className="reco-next-label">Next human action</span>
+                      <span className="reco-next-label">What to check next</span>
                       <span className="reco-next-text">{summary.nextAction}</span>
                     </div>
                   </div>
                 ) : (
                   <div className={"waiting " + (busy ? "waiting-busy" : "")} style={{ marginTop: 16 }}>
                     <div className="waiting-orb"><FileSearch size={24} strokeWidth={1.8} aria-hidden="true" /></div>
-                    <div className="waiting-title">{busy ? "Checking the evidence" : "Ready when you are"}</div>
-                    <p className="waiting-copy">{busy ? "Checking the request, dates, possible problems and missing details." : "Try one of the sample requests to see the suggested next step and any issues that need review."}</p>
+                    <div className="waiting-title">{busy ? "Checking the evidence" : "Ready to check a request"}</div>
+                    <p className="waiting-copy">{busy ? "Checking the request, dates, possible problems and missing details." : "Choose an example or paste a message to see what needs attention."}</p>
                   </div>
                 )}
 
@@ -508,28 +508,28 @@ export default function Home() {
 
                 <div style={{ marginTop: 16, display: "flex", alignItems: "flex-start", gap: 8, borderTop: "1px solid var(--border)", paddingTop: 14, fontSize: 11.5, lineHeight: 1.6, color: "var(--ink-2)" }}>
                   <LockKeyhole size={14} style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
-                  <span>These are suggestions based on the message, not verified store records. No payment, email or order is changed.</span>
+                  <span>This result is based on what the customer wrote. No store records were checked, and nothing has been sent or refunded.</span>
                 </div>
               </div>
             </section>
 
             <aside className="card inspector" aria-label="Case inspector">
               <div className="insp-section">
-                <div className="insp-title">Case Details</div>
+                <div className="insp-title">Request details</div>
                 {result ? (
                   <>
                     <div className="kv"><span><FileText size={14} aria-hidden="true" /> Request ID</span><strong className="num">{result.requestId}</strong></div>
                     <div className="kv"><span><Package size={14} aria-hidden="true" /> Claimed order</span><strong>{result.caseScope?.linkedOrderId ?? "Unresolved"}</strong></div>
                     <div className="kv"><span><Users size={14} aria-hidden="true" /> Evaluation date</span><strong>{result.asOf}</strong></div>
                     <div className="kv"><span><CircleHelp size={14} aria-hidden="true" /> Delivery age</span><strong>{result.elapsedDays === null ? "Unknown" : result.elapsedDays + " days"}</strong></div>
-                    <div className="kv"><span><Fingerprint size={14} aria-hidden="true" /> Coherent claims</span><strong>{result.caseScope?.coherent ? "Yes" : result.caseScope ? "Needs review" : "Unknown"}</strong></div>
+                    <div className="kv"><span><Fingerprint size={14} aria-hidden="true" /> Details consistent</span><strong>{result.caseScope?.coherent ? "Yes" : result.caseScope ? "Needs review" : "Unknown"}</strong></div>
                   </>
                 ) : (
-                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>No case evaluated yet. Run an analysis to populate this inspector with details extracted from the customer message.</p>
+                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>Run a check to see the order details we can find in the message.</p>
                 )}
               </div>
               <div className="insp-section">
-                <div className="insp-title">Decision Summary</div>
+                <div className="insp-title">Result at a glance</div>
                 {result && summary && detailLane ? (
                   <>
                     <div className={"decision-pill dp-" + result.lane}>
@@ -539,11 +539,11 @@ export default function Home() {
                     <p style={{ marginTop: 10, fontSize: 12, lineHeight: 1.6, color: "var(--ink-2)" }}>{summary.label}</p>
                   </>
                 ) : (
-                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>Awaiting analysis. The recommendation and rationale will appear here.</p>
+                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>The suggested next step will appear after you check a request.</p>
                 )}
               </div>
               <div className="insp-section">
-                <div className="insp-title">Key Factors</div>
+                <div className="insp-title">What matters</div>
                 {result ? (
                   <ul className="factor-list">
                     {result.checks.slice(0, 4).map((check) => (
@@ -556,7 +556,7 @@ export default function Home() {
                     ))}
                   </ul>
                 ) : (
-                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>Key evidence factors will be listed here after analysis.</p>
+                  <p style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-3)" }}>Important details will appear here after a check.</p>
                 )}
               </div>
               <div className="insp-section insp-actions">
@@ -569,8 +569,8 @@ export default function Home() {
 
           {!result && (
             <section id="evidence-details" className="inspect" aria-label="Case evidence and decision details">
-              <div className="empty-state"><b>Evidence appears after analysis</b>
-                <span>Evaluate a synthetic return request to inspect source-linked findings, assessments and policy checks.</span>
+              <div className="empty-state"><b>Run a check to see the details</b>
+                <span>Choose one of the example requests to see the details and the reasons for the result.</span>
               </div>
             </section>
           )}
@@ -579,27 +579,27 @@ export default function Home() {
               <div className="inspect-head">
                 <div>
                   <div className="card-eyebrow">03 / Inspect</div>
-                  <h2 style={{ marginTop: 3, fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em" }}>Why this route?</h2>
+                  <h2 style={{ marginTop: 3, fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em" }}>Why this result?</h2>
                 </div>
-                <span className="header-meta">Open the details you want to see</span>
+                <span className="header-meta">Open any section to see more</span>
               </div>
               <div className="details-grid">
-                <DetailSection label="01" title="Source-linked extraction" count={result.evidence.length + " exact spans"}>
+                <DetailSection label="01" title="Details found in the message" count={result.evidence.length + " exact spans"}>
                   <div className="source-text"><EvidenceText text={result.redactedText} evidence={result.evidence} /></div>
-                  <p style={{ marginTop: 11, fontSize: 11.5, lineHeight: 1.6, color: "var(--ink-3)" }}>Highlighted text shows where each detail came from. It does not prove that the customer&apos;s claim is correct.</p>
+                  <p style={{ marginTop: 11, fontSize: 11.5, lineHeight: 1.6, color: "var(--ink-3)" }}>The highlighted words show where we found each detail. They do not prove that the claim is true.</p>
                   <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 9 }}>
                     {result.evidence.map((entry) => (
                       <div key={entry.id} className="evidence-item">
                         <div className="mini-label">{entry.label}</div>
                         <div style={{ marginTop: 6, wordBreak: "break-word", fontSize: 12.5, fontWeight: 700, color: "var(--ink)" }}>{entry.value}</div>
-                        <div style={{ marginTop: 6, fontSize: 10.5, color: "var(--ink-3)" }}>Chars {entry.start}–{entry.end}{entry.confidence === null ? "" : " · Extraction confidence: " + asPercentage(entry.confidence)}</div>
+                        <div style={{ marginTop: 6, fontSize: 10.5, color: "var(--ink-3)" }}>Characters {entry.start} to {entry.end}{entry.confidence === null ? "" : " · Extraction confidence: " + asPercentage(entry.confidence)}</div>
                       </div>
                     ))}
                   </div>
                   <p style={{ marginTop: 14, fontSize: 11.5, lineHeight: 1.6, color: "var(--ink-3)" }}>{result.privacyNotice}</p>
                 </DetailSection>
 
-                <DetailSection label="02" title="Case linkage & intent" count={result.caseScope?.coherent ? "Coherent claims" : "Needs review"}>
+                <DetailSection label="02" title="Order and request details" count={result.caseScope?.coherent ? "No obvious conflicts" : "Needs review"}>
                   {result.caseScope ? (
                     <div style={{ display: "grid", gap: 10 }}>
                       <div className="data-row"><span>Referenced orders</span><strong>{result.caseScope.orderRefs.join(", ") || "None identified"}</strong></div>
@@ -615,14 +615,14 @@ export default function Home() {
                           ))}
                         </ul>
                       )}
-                      {!result.caseScope.blockers.length && <p style={{ fontSize: 12, lineHeight: 1.65, color: "var(--ink-2)" }}>These checks found no conflicting claims. You would still need to verify the order with the store.</p>}
+                      {!result.caseScope.blockers.length && <p style={{ fontSize: 12, lineHeight: 1.65, color: "var(--ink-2)" }}>We did not find conflicting details in this message. The actual order still needs checking.</p>}
                     </div>
-                  ) : <p style={{ fontSize: 12, color: "var(--ink-2)" }}>No structured case-scope metadata supplied.</p>}
+                  ) : <p style={{ fontSize: 12, color: "var(--ink-2)" }}>No extra order details were found.</p>}
                 </DetailSection>
 
-                <DetailSection label="03" title="Typed assessments" count={result.mode === "demo" ? "Heuristics" : "Clocked Decide"}>
+                <DetailSection label="03" title="Request checks" count={result.mode === "demo" ? "Heuristics" : "Clocked Decide"}>
                   <div style={{ display: "grid", gap: 18 }}>
-                    {result.assessments.length === 0 && <p style={{ fontSize: 12, color: "var(--ink-2)" }}>No model assessments. Guard may have blocked subsequent calls.</p>}
+                    {result.assessments.length === 0 && <p style={{ fontSize: 12, color: "var(--ink-2)" }}>No assessments were returned. A safety check may have stopped the request.</p>}
                     {result.assessments.map((a) => (
                       <div key={a.id}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
@@ -636,7 +636,7 @@ export default function Home() {
                   </div>
                 </DetailSection>
 
-                <DetailSection label="04" title="Policy & safety gates" count={pendingChecks.length ? pendingChecks.length + " need attention" : "All checks passed"}>
+                <DetailSection label="04" title="Policy and safety checks" count={pendingChecks.length ? pendingChecks.length + " need attention" : "All checks passed"}>
                   <div style={{ display: "grid", gap: 14 }}>
                     {result.checks.map((check) => (
                       <div key={check.label} className="check-row">
@@ -661,8 +661,8 @@ export default function Home() {
           )}
 
           <footer className="footer">
-            <span>Clocked Return Lab — Returns &amp; Refunds Decision Intelligence</span>
-            <span>Example 30-day policy · No executed refunds · Synthetic fixtures</span>
+            <span>Clocked Return Lab | Return request review</span>
+            <span>Example 30-day policy. No refunds issued. Sample data only.</span>
           </footer>
         </main>
       </div>

@@ -1,50 +1,51 @@
-# Judges' guide — Clocked Return Lab
+# Clocked Return Lab: Guide for judges
 
-**The problem:** Unstructured customer return emails contain missing dates, conflicting details and exceptions. Support agents need the evidence behind a recommendation, not unexplained model certainty.
+Clocked Return Lab helps a support agent work through a customer return request without losing track of important details. It suggests a next step and shows why it made that suggestion.
 
-**The solution:** Clocked Return Lab presents three advisory lanes—Approve, Human Review or Decline—with traceable source evidence, typed assessments and transparent local policy checks. It never executes refunds.
+## Watch the demo
 
-## Start here: narrated demo
+[Watch the narrated walkthrough](https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4)
 
-**[Watch the latest Tuscan Sunset walkthrough (~101 seconds)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4)**
+The video shows three made-up requests in the real app:
 
-The video runs real application UI against **synthetic demo fixtures, with no paid Clocked calls**:
+1. An unused item delivered 12 days ago. The example rules suggest Approve.
+2. A defective item with missing details. The case goes to Human Review.
+3. An unused item reported as delivered 58 days ago. The example 30-day policy suggests Decline.
 
-1. An unused return inside the illustrative 30-day window → provisional Approve.
-2. A defective item with incomplete information → Human Review.
-3. A customer-reported delivery 58 days ago → provisional Decline under the example policy.
+These are recommendations only. An agent would still need to check the actual order, store policy, and any applicable customer rights.
 
-All three outcomes remain subject to merchant verification, customer rights and human judgment.
+![Approval recommendation](assets/approved.png)
 
-![Recommendation screen](assets/approved.png)
+## Where Clocked fits
 
-## Where Clocked is integrated
+The live integration is in [lib/pipeline.ts](lib/pipeline.ts). It calls Clocked through the SDK rather than using a fake response.
 
-**[lib/pipeline.ts](lib/pipeline.ts)** is the actual JavaScript SDK orchestration (not a fake API adapter).
-
-| Endpoint | Contribution |
+| Service | What happens |
 |---|---|
-| Protect (pii) | Best-effort personal-data masking before downstream analysis |
-| Guard (injection) | Injection risk screening; blocks or abstains before Extract/Decide if unsafe or uncertain |
-| Extract (extract) | Reported fields and exact source offsets, validated locally |
-| Decide (decide) | Typed probabilities for intent, item condition and defect concerns |
-| Local policy | Checks scope, coherence and exceptions before recommending a lane |
+| Protect | Personal information is masked before the message is processed further. |
+| Guard | The message is screened for prompt injection. If it is risky or uncertain, later calls are stopped. |
+| Extract | The app receives structured details and the positions of the corresponding words in the message. |
+| Decide | The app receives assessments of refund intent, item condition, and reported problems. |
 
-The newest live implementation was not revalidated with paid provider calls after its safety updates. An [older real-API demo](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm) is provided as historical evidence only.
+The app then applies its own checks to decide whether it has enough information to suggest a result. If the facts are unclear, the case is sent for Human Review.
 
-## Run the product
+The narrated video uses the local demo, not paid Clocked calls. There is an [older recording of live Clocked usage](https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v1), but it predates the latest safety changes.
 
-    npm ci
-    npm run dev
+## Run the three examples yourself
 
-Open http://localhost:3000 and leave **Demo fixtures** selected. Three buttons reproduce the complete journey without credentials or paid calls.
+```bash
+npm ci
+npm run dev
+```
 
-Review the Source-linked extraction, Case linkage & intent, Typed assessments, and Policy & safety gates panels. They distinguish stated claims from independent verification.
+Open http://localhost:3000, choose **Demo fixtures**, then try each example.
 
-## Engineering record and limitations
+After you run a case, open the panels below the result. They show the original text, order details, request checks, and policy findings. The highlighted words tell you where information came from, not whether the customer is telling the truth.
 
-- **918 passing local automated unit tests**, plus security, browser, and adversarial suites.
-- Guard uncertainty prevents downstream calls. Unknown demo products, contradictory claims and safety problems route to a person.
-- No actual order or catalog verification, legal rulings, payment or refund execution, shared billing cap, or current-version live-provider accuracy claim.
+## What is ready, and what isn't
 
-[README](README.md) · [Submission copy](SUBMISSION.md) · [Historical audits](docs/archive/) · [Official rules](https://clocked.rezolve.ai/build-challenge/rules)
+The synthetic demo passed 918 unit tests, browser checks, security tests, and several sets of adversarial cases.
+
+The app cannot verify real store orders, confirm delivery, issue refunds, or make legal decisions. The current live integration has not been retested with paid Clocked requests since the latest changes.
+
+[README](README.md) | [Submission text](SUBMISSION.md) | [Test report](docs/FINAL_RELEASE_AUDIT.md) | [Challenge rules](https://clocked.rezolve.ai/build-challenge/rules)

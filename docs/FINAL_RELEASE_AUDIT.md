@@ -1,60 +1,64 @@
-# Final release audit — Clocked Return Lab
+# Final test report
 
-**Date:** November 9, 2026. **Audit scope:** backend/API, typed evidence and policy, frontend, browser customer journey, security, dependency status, GitHub release packaging.
+**Checked on November 9, 2026.**
 
-## Verdict
+This report covers the return-handling code, the user interface, the three demo examples, API security, and the published video.
 
-**Local synthetic-demo release gate: PASS.** Not a production-service certification; current live paid Clocked behavior remains unverified after recent safety changes.
+## Result
 
-## Backend and integrity checks
+The local demo passed the checks listed below and is ready to show to judges. This is not approval to use it for real customer refunds.
 
-- Clocked SDK code calls Protect (PII masking), Guard (prompt injection), then Extract and Decide on the protected message. Guard blocking/uncertainty prevents later calls.
-- Extracted fields must be source-aligned; typed model outputs are policy inputs, not proof of merchant truth.
-- Deterministic policy checks escalate ambiguity, missing or conflicting information, and risk signals to Human Review.
-- Strict request body size and schema; private live access token; per-process rate and concurrency controls; server-side Clocked API key; no refund/payment/email execution.
-- CSP, framing/referrer/security headers, token rejection and cross-site scripting tests passed.
-- Real merchant order verification, shared billing quotas and consumer-rights determinations are **not** implemented.
+The live Clocked integration still needs a fresh test with paid requests. We did not make those calls during this review.
 
-## Frontend/customer journey
+## Backend and API
 
-- Synthetic demo: Clear return → APPROVE; Defective item → HUMAN REVIEW; Outside window → DECLINE.
-- User can navigate sections, inspect source spans, reveal assessments and policy gates, and clear/change a request without stale results overwriting it.
-- Four distinct Tuscan Sunset metric cards, compact true-state pipeline, fixed full-height desktop sidebar, responsive mobile workflow before optional analytics.
-- Browser UI audit tested 320, 360, 390, 768, 1024 and 1440px, no horizontal overflow or reported JavaScript errors.
+We checked that the live pipeline calls Protect and Guard before extracting details or asking Decide to assess the message. If Guard flags a problem or cannot return a clear result, the app stops before the remaining calls.
 
-## Actual checks executed
+The app checks that extracted details match the source message. It also sends unclear order details, conflicting dates, product problems, and safety concerns for Human Review.
 
-| Gate | Result |
+The server has request validation, size limits, a private access token for live mode, and local rate limits. It does not have access to a payment system or an endpoint that issues refunds.
+
+Security tests covered invalid requests, unauthorized live access, response headers, and browser script protections.
+
+## Frontend and user journey
+
+We ran all three built-in examples: Clear return, Defective item, and Outside window. Each returned the expected recommendation.
+
+We also checked that a user can change an input without an old result replacing the new one, open the evidence details, navigate the sections, and use the page on narrow screens.
+
+The interface was tested at widths of 320, 360, 390, 768, 1024, and 1440 pixels. We found no horizontal overflow or browser JavaScript exceptions in those runs.
+
+## Test results
+
+| Check | Result |
 |---|---|
-| TypeScript | PASS |
-| ESLint | PASS |
-| Unit/regression tests | 918/918 (11 files) |
-| Optimized Next build | PASS |
-| Browser smoke | PASS |
-| Expanded browser UI audit | 0 failures |
-| Security UI/API audit | 20/20 |
-| UI adversarial | 32/32 |
-| Independent HTTP adversarial | 32/32 |
-| Mutation cases | 76/76 |
-| Held-out HTTP cases | 42/42 |
-| Production dependency audit | 0 reported vulnerabilities |
+| TypeScript | Passed |
+| ESLint | Passed |
+| Production build | Passed |
+| Unit tests | 918 passed |
+| Browser smoke test | Passed |
+| UI audit | No reported failures |
+| Security tests | 20 passed |
+| UI adversarial cases | 32 passed |
+| Independent HTTP adversarial cases | 32 passed |
+| Mutation cases | 76 passed |
+| Held-out HTTP cases | 42 passed |
+| Production dependency audit | No vulnerabilities reported |
 
-All checks use synthetic data or authentication-negative tests, **not paid Clocked provider usage**.
+These checks use synthetic data and negative authentication tests. They are not a substitute for testing the current live Clocked service.
 
-## Demo integrity
+## Video
 
-The new narrated MP4 (approximately 101.44 seconds) records seven real browser scenes in the Tuscan Sunset interface. Recording telemetry: three distinct decisions, four synthetic POST requests, zero live POST requests, zero browser exceptions. English narration is a synthetic voice; source and timing manifest are retained for reproduction. A prior historical recording documents earlier live calls but does not validate this release.
+The narrated video is about 107 seconds long. It records the real interface and shows all three possible recommendations. The recording made four demo requests and no live Clocked requests. Browser capture reported no JavaScript errors.
 
-## Release documentation and cleanup
+The video was narrated with a synthetic English voice. The files used to assemble it are kept on the development PC.
 
-- Current screenshots replaced stale UI captures, and public README/judge guide/form text now refer to the newest narrated recording.
-- Eight historical technical audit files are preserved in docs/archive instead of cluttering the repository root.
-- Three obsolete legacy video/screenshot scripts were removed from the current tree; Git history preserves them.
-- Video binaries and narration are hosted as release or QA assets, **not committed to Git history**.
+## GitHub cleanup
 
-## Remaining blockers for production (not hackathon demo)
+The README, judging guide, submission text, and screenshots were updated for the current design. Older audit reports were moved into `docs/archive` so they are still available without taking over the repository's main page. Obsolete video recording scripts were removed from the current tree, but their history remains in Git.
 
-1. Revalidate Protect/Guard/Extract/Decide with real Clocked responses after budget authorization and ensure provider billing limits.
-2. Connect authenticated merchant order/catalog/policy records and a legally reviewed refund workflow.
-3. Add durable, shared rate limits, user authentication, audit records and data retention controls before public live deployment.
-4. Confirm competition eligibility privately and save the official entry. A public repo and GitHub release alone do not constitute entry submission.
+## Before using this beyond a demo
+
+We would need to test the current Clocked integration, connect actual order and product records, review the relevant consumer rights, and build proper authentication, shared rate limits, data retention rules, and spending controls.
+
+The challenge entry also needs to be submitted through the official website. A public repository and demo release do not count as a submitted entry.

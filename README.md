@@ -1,65 +1,72 @@
 # Clocked Return Lab
 
-**Evidence-first returns and refunds triage, powered by Clocked.**
+**A simpler way to review customer return requests.**
 
-Small support teams get incomplete return emails, contradictory details and product complaints. Clocked Return Lab turns each request into an **Approve**, **Human Review** or **Decline** recommendation with visible source evidence and conservative local checks.
+A return email can look straightforward until you read it carefully. Maybe the customer forgot to mention when the item arrived. Maybe they have two orders. Maybe the item is defective, so the usual return policy is not the whole story.
 
-> **Advisory prototype:** Nothing here verifies a real merchant order, issues a refund, sends a message or changes a payment. The 30-day example policy and product catalog are synthetic demonstration fixtures.
+Clocked Return Lab helps a support agent sort through those details. It reads the request, identifies what the customer is claiming, and suggests whether to Approve, ask for Human Review, or Decline under a sample policy. The agent can then inspect the reasons and the exact text behind them.
 
-**[Watch the narrated demo (~101 seconds)](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4)** · [Judges' guide](JUDGES_START_HERE.md) · [Submission details](SUBMISSION.md)
+It is a prototype for reviewing cases, not a refund processing system. **It does not confirm orders, send messages, charge customers, or issue refunds.**
 
-![Clocked Return Lab, Tuscan Sunset interface](assets/dashboard.png)
+[Watch the narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4) | [Start here if you're judging](JUDGES_START_HERE.md) | [Submission details](SUBMISSION.md)
 
-## What makes it useful
+![Clocked Return Lab dashboard](assets/dashboard.png)
 
-- **Traceable claims.** Extracted information is linked to exact character spans in the customer message. This is source alignment, not verification of truth.
-- **Real SDK orchestration in live mode.** Clocked Protect masks PII; Guard detects suspicious instructions and can stop the workflow; Extract returns fields with offsets; Decide produces typed assessments.
-- **Conservative human handoff.** Local checks require coherent order linkage, date, intent, condition and absence of unresolved exceptions. Unclear cases go to Human Review.
-- **No hidden execution.** All outcomes are advice, with reviewable checks. No refunds, payments or emails are executed.
+## What you can do
 
-The provider integration is in [lib/pipeline.ts](lib/pipeline.ts), typed interpretation in [lib/evidence.ts](lib/evidence.ts), and decision rules in [lib/policy.ts](lib/policy.ts).
+- Paste in a return request or select one of the three example messages.
+- See the suggested next step and what information is missing.
+- Open the evidence panels to check which words in the message led to each finding.
+- See which policy or safety checks passed and which ones need a person to investigate.
 
-## Demo vs. live
+The demo uses a small, made-up product list and an example 30-day policy. These are not real merchant records, and the customer's statements have not been independently verified.
 
-| | Demo fixtures | Clocked live |
-|---|---|---|
-| Processing | Local heuristics | Protect → Guard → Extract + Decide, then local policy |
-| Cost | Zero provider calls | May consume paid or promotional credits |
-| Data | Synthetic customer messages only | Authorized data only; PII masking is best effort |
-| Access | No credentials | Server API key and separate private access token |
+## How Clocked is used
 
-**The new narrated video is entirely synthetic.** It never invokes Clocked endpoints. An [older historical recording with actual Clocked calls](https://github.com/Cho3en/clocked-returns-refund-autopilot/releases/download/demo-v1/clocked-return-lab-live-demo.webm) shows an earlier implementation and does **not** validate the newest safety fixes.
+The live version connects to four Clocked services:
 
-## Run locally
+| Service | What it does |
+|---|---|
+| Protect | Masks personal information before the message goes to the next service. Masking may not catch everything. |
+| Guard | Checks for prompt injection and can stop an unsafe or uncertain request. |
+| Extract | Finds details such as order numbers, dates, and item condition, along with their positions in the original text. |
+| Decide | Assesses specific questions about the request, such as whether the customer is asking for a refund or reporting a defect. |
 
-Requires Node.js 22+ and npm. From a terminal:
+After those calls, our own policy checks determine which recommendation to show. Missing information, conflicting claims, and product or safety problems can send a case to a person for review.
 
-    git clone https://github.com/Cho3en/clocked-returns-refund-autopilot.git
-    cd clocked-returns-refund-autopilot
-    npm ci
-    npm run dev
+You can inspect the [Clocked integration](lib/pipeline.ts), [field handling](lib/evidence.ts), and [policy checks](lib/policy.ts).
 
-Open http://localhost:3000, select **Demo fixtures**, and try the built-in cases: Clear return, Defective item and Outside window. Expand source extraction, policy gates and typed assessments.
+## Try it on your computer
 
-For optional private live mode, copy .env.example to .env.local, set a server-side CLOCKED_API_KEY and an unrelated random RETURNLAB_ACCESS_TOKEN of at least 32 characters. Only the access token goes into the browser. Never commit either value. Live requests may incur charges.
+You'll need Node.js 22 or newer and npm.
 
-## Reliability evidence
+```bash
+git clone https://github.com/Cho3en/Clocked-Return-Lab.git
+cd Clocked-Return-Lab
+npm ci
+npm run dev
+```
 
-On the latest local branch, the following were independently run and passed:
+Open http://localhost:3000 and leave **Demo fixtures** selected. Try Clear return, Defective item, and Outside window.
 
-- **918/918** unit and synthetic regression tests, 11 files.
-- TypeScript, ESLint and production build.
-- Browser smoke plus UI checks at 320, 360, 390, 768, 1024 and 1440px.
-- **20/20** security checks; **32/32** UI adversarial cases.
-- **32 independent**, **76 mutation** and **42 held-out** HTTP adversarial cases.
-- Production dependency audit reported **zero vulnerabilities** on November 9, 2026.
+You don't need a Clocked account to run those examples. They use local rules and synthetic customer data.
 
-Scripts and exact commands are listed in [package.json](package.json). Browser checks require the app running locally and RETURNLAB_URL pointing at it. The GitHub workflow runs the standard build/test gates; it does not automatically run all HTTP/browser checks.
+If you want to test the live integration, copy `.env.example` to `.env.local`. Add your server-side `CLOCKED_API_KEY` and a separate `RETURNLAB_ACCESS_TOKEN` of at least 32 characters. Enter only the access token in the browser. Live requests can use paid credits, so check your account limits first.
 
-**Known limitations:** No merchant catalog, order database, shipping verification, legal determination, payment execution, email dispatch, persistent case history, or cloud-wide billing cap. The newest live SDK workflow has not been retested using paid Clocked calls after recent safety improvements. The product is mainly tested with English requests. Never use the synthetic demo for real customer PII.
+## What has been tested
 
-## Clocked Build Challenge
+The current release passed 918 unit and regression tests, the TypeScript check, linting, and a production build. Browser tests covered desktop and mobile layouts, keyboard access, navigation, the three demo outcomes, input changes, and evidence inspection.
 
-Built for the [Clocked Build Challenge](https://clocked.rezolve.ai/challenge), October 21–November 10, 2026. Announced entry deadline: November 10, 2026, 11:59 p.m. ET (November 11, 05:59 in Zagreb). **A public GitHub repo is not a submitted entry.**
+We also ran 20 security checks and several sets of synthetic adversarial cases. The production dependency audit reported no vulnerabilities on November 9, 2026. These checks help catch bugs, but they don't prove that every possible request will be handled correctly.
 
-[Judges' guide](JUDGES_START_HERE.md) · [Submission narrative](SUBMISSION.md) · [Entry form copy](ENTRY_FORM_COPY.md) · [Technical audit archive](docs/archive/)
+**We have not rerun paid Clocked calls against the latest version.** An [older live recording](https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v1) shows real calls from an earlier build, not a verification of this release.
+
+There is no connection to a store database, shipping provider, payment system, or live product catalog. There is also no persistent case history or shared spending cap. The app has mainly been tested with English requests and should not be used with real customer information in demo mode.
+
+## Challenge entry
+
+This project was made for the [Clocked Build Challenge](https://clocked.rezolve.ai/challenge). The announced deadline is November 10, 2026, at 11:59 p.m. Eastern (November 11 at 05:59 in Zagreb).
+
+The code and demo are public, but the entry must still be submitted through the official challenge form.
+
+[Judges' guide](JUDGES_START_HERE.md) | [Prepared entry answers](ENTRY_FORM_COPY.md) | [Test report](docs/FINAL_RELEASE_AUDIT.md) | [Earlier technical audits](docs/archive/)

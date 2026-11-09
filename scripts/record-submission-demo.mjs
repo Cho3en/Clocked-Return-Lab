@@ -47,7 +47,7 @@ async function caption(seg){
   heading.textContent=title;
   Object.assign(heading.style,{fontWeight:"800",fontSize:"23px",marginTop:"4px",lineHeight:"1.13",color:"#49271b"});
   const desc=document.createElement("div");
-  desc.textContent="SYNTHETIC DEMO  •  ADVISORY RECOMMENDATIONS  •  NO REFUNDS EXECUTED";
+  desc.textContent="MADE-UP CUSTOMER REQUESTS  •  NO REFUNDS ISSUED";
   Object.assign(desc.style,{fontSize:"10px",fontWeight:"700",letterSpacing:".55px",marginTop:"7px",color:"#806b63"});
   el.append(top,heading,desc); el.style.opacity="1";
  },seg);

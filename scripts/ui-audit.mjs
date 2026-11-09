@@ -82,8 +82,8 @@ try {
   await bad.getByRole("button",{name:"Defective item",exact:true}).click();
   await bad.getByRole("button",{name:"Run demo analysis"}).click();
   await bad.locator("#decision-panel").getByText("Escalate to a human",{exact:true}).waitFor();
-  assert(await bad.getByText("Next human action",{exact:true}).count()===1,"next human action explicit in review");
-  assert(await bad.getByText("Case linkage & intent",{exact:true}).count()===1,"case linkage drilldown available");
+  assert(await bad.getByText("What to check next",{exact:true}).count()===1,"next human action explicit in review");
+  assert(await bad.getByText("Order and request details",{exact:true}).count()===1,"case linkage drilldown available");
   await bad.close();
 
   // Post-redesign functional checks: anchor navigation, session-scoped metrics, and honest stage states.
