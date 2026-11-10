@@ -14,6 +14,8 @@ It is a prototype for reviewing cases, not a refund processing system. **It does
 
 ## Try the three example requests
 
+Open the app and press **Start the 3 case tour**. It runs the three sample requests in order, opens the evidence behind each result, and keeps a count of the cases you have reviewed. You can also pick a single case from the tour strip, or work the full panel yourself.
+
 Each example shows how the app handles a different type of return. You can run all three without an API key.
 
 | Example | Suggested result | Why |
@@ -91,6 +93,18 @@ The repository also passes from a fresh clone with no private configuration. Dem
 The screenshots in this README and the judges' guide were captured from the current build on November 10, 2026.
 
 There is no connection to a store database, shipping provider, payment system, or live product catalog. There is also no persistent case history, and rate limits live in memory. The spending cap that live mode asks about sits in the Clocked account; the app records the operator's confirmation but cannot verify it. The app has mainly been tested with English requests and should not be used with real customer information in demo mode.
+
+## Deploy the public demo on Vercel
+
+The app is a standard Next.js 16 project with no build customization, so Vercel detects it automatically on the free plan.
+
+1. Push this repository to GitHub.
+2. In Vercel, choose **Add New Project**, import the repository, and keep the detected settings.
+3. Add no environment variables. Demo mode needs none.
+
+Live Clocked analysis stays disabled on any deployment without credentials. With no `RETURNLAB_ACCESS_TOKEN`, the server answers every live request with HTTP 503 before a Clocked client is created, so a public demo cannot spend credits. The same applies to `/api/triage` calls made directly. To enable live analysis in a private environment, follow the four operator values above instead of leaving them unset.
+
+Short links are available for judges: `/tour` opens the judge tour and `/lab` opens the workspace.
 
 ## Challenge entry
 

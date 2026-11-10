@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowRight, BarChart3, CheckCircle2, ChevronDown, CircleAlert, CircleHelp,
-  FileSearch, FileText, Fingerprint, House, Inbox, Layers, LockKeyhole, Package,
-  PieChart, Plus, RotateCcw, ShieldAlert, ShieldCheck,
+  ExternalLink, FileSearch, FileText, Fingerprint, House, Inbox, Layers, LockKeyhole, Package,
+  PieChart, Play, Plus, RotateCcw, ShieldAlert, ShieldCheck,
   Sparkles, TrendingUp, Users, XCircle, Zap,
 } from "lucide-react";
-import { createSamples } from "../lib/samples";
+import { createSamples, type SampleId } from "../lib/samples";
 import type { EvidenceField, Lane, Mode, TriageResult } from "../lib/types";
+
+const SOURCE_URL = "https://github.com/Cho3en/Clocked-Return-Lab";
+const VIDEO_URL = "https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v7";
 
 const lanes: { id: Lane; title: string; subtitle: string }[] = [
   { id: "approve", title: "Approve", subtitle: "Suggestion only" },
@@ -79,6 +82,16 @@ const demoPipelineStages = [
   { id: "recommend", name: "Recommend", sub: "Advisory outcome" },
 ];
 
+// Plain-language takeaways shown after each tour case. Each one restates what the
+// demo engine actually returned for that sample.
+const tourNotes: Record<SampleId, string> = {
+  eligible: "Delivered 12 days ago, unused and unopened, refund requested. Every check passes, so the example 30 day window recommends Approve. No refund is issued.",
+  exception: "The item stopped working after two days and the delivery date is missing. A product problem plus missing details sends this to a person, so the app recommends Human Review.",
+  expired: "Delivered 58 days ago, which is outside the example 30 day window. The app recommends Decline and still asks the agent to check customer rights before replying.",
+};
+
+type TourState = { index: number; status: "running" | "done" };
+
 export default function Home() {
   const [mode, setMode] = useState<Mode>("demo");
   const [email, setEmail] = useState("");
@@ -94,10 +107,16 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState("overview");
   // Counts only successful evaluations from this browser tab; no messages or customer data are stored.
   const [sessionCounts, setSessionCounts] = useState<Record<Lane, number>>({ approve: 0, review: 0, reject: 0 });
+  const [tour, setTour] = useState<TourState | null>(null);
+  const [tourDone, setTourDone] = useState<number[]>([]);
   const sequence = useRef(0);
   const pending = useRef<AbortController | null>(null);
   const outputRef = useRef<HTMLElement | null>(null);
   const errorRef = useRef<HTMLParagraphElement | null>(null);
+  const evidenceRef = useRef<HTMLElement | null>(null);
+  // Set only by a successful tour run, so a manual run never opens panels by itself.
+  const openEvidenceOnResult = useRef(false);
+  const jumpToWorkspaceOnResult = useRef(false);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -130,6 +149,23 @@ export default function Home() {
     });
     return () => window.cancelAnimationFrame(frame);
   }, [error]);
+  useEffect(() => {
+    if (!result) return;
+    const frame = window.requestAnimationFrame(() => {
+      if (openEvidenceOnResult.current) {
+        openEvidenceOnResult.current = false;
+        const first = evidenceRef.current?.querySelector("details");
+        if (first instanceof HTMLDetailsElement) first.open = true;
+      }
+      if (jumpToWorkspaceOnResult.current) {
+        jumpToWorkspaceOnResult.current = false;
+        if (!window.matchMedia("(min-width: 1024px)").matches) return;
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        document.getElementById("case-workspace")?.scrollIntoView({ behavior: reduced ? "instant" : "smooth", block: "start" });
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [result]);
 
   function invalidate() {
     sequence.current++;
@@ -156,7 +192,9 @@ export default function Home() {
     return { label, description, nextAction };
   }, [result]);
 
-  async function analyze() {
+  async function analyze(messageOverride?: string, modeOverride?: Mode, options?: { openEvidence?: boolean; scrollToWorkspace?: boolean }) {
+    const outgoingMessage = messageOverride ?? email;
+    const runMode = modeOverride ?? mode;
     pending.current?.abort();
     const controller = new AbortController();
     const requestNumber = ++sequence.current;
@@ -167,10 +205,10 @@ export default function Home() {
     try {
       const response = await fetch("/api/triage", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...(mode === "live" ? { "x-returnlab-token": accessToken } : {}) },
+        headers: { "Content-Type": "application/json", ...(runMode === "live" ? { "x-returnlab-token": accessToken } : {}) },
         cache: "no-store",
         signal: controller.signal,
-        body: JSON.stringify({ message: email, mode, asOf }),
+        body: JSON.stringify({ message: outgoingMessage, mode: runMode, asOf }),
       });
       const data: unknown = await response.json();
       if (controller.signal.aborted || sequence.current !== requestNumber) return;
@@ -178,8 +216,10 @@ export default function Home() {
         const err = data as { error?: string };
         throw new Error(err.error ?? "Unable to analyze this request.");
       }
-      setResult(data as TriageResult);
       const completed = data as TriageResult;
+      openEvidenceOnResult.current = Boolean(options?.openEvidence);
+      jumpToWorkspaceOnResult.current = Boolean(options?.scrollToWorkspace);
+      setResult(completed);
       if (completed.lane === "approve" || completed.lane === "review" || completed.lane === "reject") {
         setSessionCounts((prev) => ({ ...prev, [completed.lane]: prev[completed.lane] + 1 }));
       }
@@ -197,9 +237,29 @@ export default function Home() {
 
   function chooseSample(id: string) {
     const sample = samples.find((s) => s.id === id);
-    if (sample) { invalidate(); setEmail(sample.message); setActiveSample(id); }
+    if (sample) { invalidate(); setTour(null); setEmail(sample.message); setActiveSample(id); }
   }
-  function reset() { invalidate(); setEmail(""); setActiveSample(null); }
+  function reset() { invalidate(); setTour(null); setTourDone([]); setEmail(""); setActiveSample(null); }
+
+  function runTourStep(index: number) {
+    const sample = samples[index];
+    if (!sample) return;
+    invalidate();
+    setMode("demo");
+    setActiveSample(sample.id);
+    setEmail(sample.message);
+    setActiveSection("cases");
+    setTour({ index, status: "running" });
+    void analyze(sample.message, "demo", { openEvidence: true, scrollToWorkspace: true }).then(() => {
+      setTour((current) => (current && current.index === index && current.status === "running" ? { index, status: "done" } : current));
+      setTourDone((current) => (current.includes(index) ? current : [...current, index].sort((a, b) => a - b)));
+    });
+  }
+
+  function startTour() {
+    setTourDone([]);
+    runTourStep(0);
+  }
 
   const pendingChecks = result?.checks.filter((c) => c.status !== "pass") ?? [];
   const visibleReason = result?.reasons.find((reason) => /review|missing|uncertain|multiple|conflict|issue|ambig|right|date|order|product|intent/i.test(reason))
@@ -222,6 +282,12 @@ export default function Home() {
   }
 
   const sessionTotal = sessionCounts.approve + sessionCounts.review + sessionCounts.reject;
+  const tourCase = tour ? samples[tour.index] : undefined;
+  const tourNote = !tour
+    ? "Start the tour to run all three cases. Each case uses the same demo engine as the workspace below."
+    : tour.status === "running"
+      ? "Running " + (tourCase?.label ?? "this case") + " through the demo engine."
+      : (tourCase ? tourNotes[tourCase.id] : "");
 
   const detailLane = result ? lanes.find((l) => l.id === result.lane) : null;
   const metrics = [
@@ -243,6 +309,7 @@ export default function Home() {
         </div>
         <nav className="side-nav">
           {[
+            { id: "tour", label: "Tour", icon: <Sparkles size={17} aria-hidden="true" />, href: "#judge-tour" },
             { id: "overview", label: "Overview", icon: <House size={17} aria-hidden="true" />, href: "#overview" },
             { id: "cases", label: "Cases", icon: <Layers size={17} aria-hidden="true" />, href: "#case-workspace" },
             { id: "new-case", label: "New Case", icon: <Plus size={17} aria-hidden="true" />, href: "#return-message" },
@@ -265,13 +332,17 @@ export default function Home() {
             <span>Protect · Guard · Extract · Decide</span>
           </div>
         </div>
+        <div className="side-tools">
+          <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer"><Play size={13} aria-hidden="true" /> Watch demo</a>
+          <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer"><ExternalLink size={13} aria-hidden="true" /> Source</a>
+        </div>
       </aside>
 
       <div className="main">
         <header className="topbar">
           <div>
-            <h1 className="topbar-title">Overview</h1>
-            <p className="topbar-sub">Review returns and see why each result was suggested</p>
+            <span className="topbar-title">Return review</span>
+            <p className="topbar-sub">Tour the three sample cases, then test your own message</p>
           </div>
           <div className="top-actions">
             <span className="status-chip"><span className="status-dot" aria-hidden="true" /> No refunds executed</span>
@@ -283,6 +354,157 @@ export default function Home() {
         </header>
 
         <main className="content" id="overview">
+          <section className="story-hero" id="story-hero" aria-labelledby="story-hero-title">
+            <div className="hero-art" aria-hidden="true">
+              <span className="hero-sun" />
+              <span className="hero-ridge" />
+            </div>
+            <div className="hero-grid">
+              <div className="hero-copy">
+                <span className="hero-eyebrow"><span className="hero-dot" aria-hidden="true" />Return review with evidence</span>
+                <h1 id="story-hero-title" className="hero-title">Return requests deserve a decision you can defend.</h1>
+                <p className="hero-lede">Clocked Return Lab reads the customer&apos;s message, tests it against the example return window and safety rules, and recommends Approve, Human Review, or Decline. Every result names the words behind it, and nothing is ever refunded.</p>
+                <div className="hero-actions">
+                  <button type="button" className="hero-cta" onClick={startTour} disabled={!inputReady || busy}>
+                    <span>{tour ? "Run the tour again" : "Try the demo"}</span>
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </button>
+                  <a className="hero-cta hero-cta-quiet" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink size={15} aria-hidden="true" /> View source
+                  </a>
+                  <a className="hero-link" href={VIDEO_URL} target="_blank" rel="noopener noreferrer">
+                    <Play size={13} aria-hidden="true" /> Watch the one minute walkthrough
+                  </a>
+                </div>
+                <div className="hero-proof">
+                  <span>A person makes the call</span>
+                  <span>No API key required</span>
+                  <span>Sample data only</span>
+                </div>
+              </div>
+              <figure className="hero-preview">
+                <figcaption className="preview-head">
+                  <span className="preview-tag">Example result</span>
+                  <span className="preview-case">Clear return</span>
+                </figcaption>
+                <div className="preview-stamp">
+                  <span className="preview-word">Approve</span>
+                  <span className="preview-note">Inside the example window</span>
+                </div>
+                <p className="preview-source">
+                  The item is <mark>unused and unopened</mark> in its original packaging. I would like to return it for a refund.
+                </p>
+                <ul className="preview-checks">
+                  <li><CheckCircle2 size={14} aria-hidden="true" />Delivery date inside the example window</li>
+                  <li><CheckCircle2 size={14} aria-hidden="true" />Item condition stated and uncontradicted</li>
+                  <li><CheckCircle2 size={14} aria-hidden="true" />Refund request current and explicit</li>
+                </ul>
+                <p className="preview-foot">Generated by the demo engine for the first tour case. No refund is issued.</p>
+              </figure>
+            </div>
+          </section>
+
+          <section className="judge-tour" id="judge-tour" aria-labelledby="judge-tour-title">
+            <div className="tour-head">
+              <div>
+                <div className="section-eyebrow">Judge tour</div>
+                <h2 id="judge-tour-title" className="section-title">Three cases, one click each</h2>
+                <p className="section-sub">Pick a case or run the whole tour. Each step loads a sample request, sends it to the same demo engine the workspace uses, and opens the evidence behind the result.</p>  {tourDone.length > 0 && (
+                  <p className="tour-progress">{tourDone.length === samples.length ? "All three cases reviewed" : tourDone.length + " of " + samples.length + " cases reviewed"}</p>
+                )}
+              </div>
+              <div className="tour-actions">
+                <button type="button" className="tour-run" onClick={startTour} disabled={!inputReady || busy}>
+                  <Sparkles size={15} aria-hidden="true" />
+                  <span>{tour ? "Run the tour again" : "Start the tour"}</span>
+                </button>
+                {tour && (
+                  <button type="button" className="tour-next" onClick={() => runTourStep((tour.index + 1) % Math.max(samples.length, 1))} disabled={busy}>
+                    Next case<ArrowRight size={15} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <ol className="tour-strip">
+              {samples.map((sample, index) => {
+                const state = tour?.index === index ? tour.status : null;
+                const reviewed = tourDone.includes(index);
+                return (
+                  <li key={sample.id} className={"tour-step" + (reviewed ? " done" : "") + (state === "running" ? " running" : "")}>
+                    <button type="button" onClick={() => runTourStep(index)} disabled={!inputReady || busy}>
+                      <span className="tour-step-num">{index + 1}</span>
+                      <span className="tour-step-body">
+                        <span className="tour-step-name">{sample.label}</span>
+                        <span className="tour-step-tag">{sample.tag.replace("Expected: ", "Example result: ")}</span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+            <div className="tour-explain" role="status" aria-live="polite">
+              <div className="tour-explain-head">
+                <span className="tour-explain-step">{tour ? "Case " + (tour.index + 1) + " of " + samples.length : "Ready when you are"}</span>
+                <span className="tour-explain-name">{tourCase ? tourCase.label : "One engine, three outcomes"}</span>
+              </div>
+              <p className="tour-explain-copy">{tourNote}</p>
+              {tour?.status === "done" && (
+                <div className="tour-explain-actions">
+                  <a className="tour-link" href="#evidence-details">Open the full result</a>
+                  <a className="tour-link" href="#return-message">Edit this message</a>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="how-it-works" id="how-it-works" aria-labelledby="how-it-works-title">
+            <div className="section-eyebrow">How it works</div>
+            <h2 id="how-it-works-title" className="section-title">Four Clocked services, then your own rules</h2>            <p className="section-sub">The live path masks personal data, screens the message, extracts details with their positions in the text, and asks targeted questions. The app decides last, and it only recommends.</p>
+            <div className="stage-grid">
+              <div className="stage-card">
+                <span className="stage-icon"><LockKeyhole size={17} aria-hidden="true" /></span>
+                <div className="stage-name">Protect</div>
+                <p className="stage-copy">Masks email addresses, phone numbers, and card numbers before anything else reads the request.</p>
+              </div>
+              <div className="stage-card">
+                <span className="stage-icon"><ShieldAlert size={17} aria-hidden="true" /></span>
+                <div className="stage-name">Guard</div>
+                <p className="stage-copy">Stops the run when a message looks like a prompt injection attempt, and abstains when it is unsure.</p>
+              </div>
+              <div className="stage-card">
+                <span className="stage-icon"><FileSearch size={17} aria-hidden="true" /></span>
+                <div className="stage-name">Extract</div>
+                <p className="stage-copy">Returns the order number, delivery date, condition, and request with the exact character positions behind each value.</p>
+              </div>
+              <div className="stage-card">
+                <span className="stage-icon"><Sparkles size={17} aria-hidden="true" /></span>
+                <div className="stage-name">Decide</div>
+                <p className="stage-copy">Answers focused questions about refund intent, unused condition, and reported defects or damage.</p>
+              </div>
+            </div>
+            <div className="truth-grid">
+              <div className="truth-col truth-here">
+                <span className="truth-flag">Runs on this page</span>
+                <div className="truth-title">The public demo</div>
+                <ul className="truth-list">
+                  <li>Local rule engine. The demo path makes no network calls to Clocked.</li>
+                  <li>Deterministic results. The same message always returns the same recommendation.</li>
+                  <li>Sample customers only, and messages are not stored.</li>
+                </ul>
+              </div>
+              <div className="truth-col">
+                <span className="truth-flag">Implemented for live use</span>
+                <div className="truth-title">The Clocked path</div>
+                <ul className="truth-list">
+                  <li>Protect masks personal data, Guard screens for injection, Extract returns positions, Decide answers focused questions.</li>
+                  <li>Needs a server token plus four operator attestations before it will spend credits.</li>
+                  <li>Disabled on this deployment. Live requests return HTTP 503 before any provider call.</li>
+                </ul>
+              </div>
+            </div>
+            <p className="how-note"><ShieldCheck size={15} aria-hidden="true" /><span>This public demo runs the local rule path. Clocked live stays disabled on this deployment, so the demo makes no paid calls.</span></p>
+          </section>
+
           <section className="metrics" aria-label="Session metrics">
             {metrics.map((m) => (
               <div key={m.label} className={"metric " + m.tint}>
@@ -401,7 +623,7 @@ export default function Home() {
                       className="date-input"
                       style={{ marginTop: 8, height: 42, padding: "0 11px", fontSize: 12 }} />
                   </div>
-                  <button type="button" onClick={analyze}
+                  <button type="button" onClick={() => analyze()}
                     disabled={!inputReady || busy || email.trim().length < 20 || email.length > 10000 || !asOf || (mode === "live" && accessToken.length < 32)}
                     className="primary-btn">
                     {busy ? <span className="busy-spinner" aria-hidden="true" /> : <Zap size={15} aria-hidden="true" />}
@@ -486,12 +708,12 @@ export default function Home() {
                 <div className="lane-strip" role="group" aria-label="Available recommendation routes">
                   {lanes.map((lane) => (
                     <div key={lane.id} className={"lane-cell " + (result?.lane === lane.id ? "sel-" + lane.id : "")}>
-                      <span className="lane-dot" aria-hidden="true" />
-                      <span>
+                      <span className="lane-head">
+                        <span className="lane-dot" aria-hidden="true" />
                         <span className="lane-title">{lane.title}</span>
-                        <span className="lane-sub">{lane.subtitle}</span>
+                        {result?.lane === lane.id && <CheckCircle2 size={14} style={{ marginLeft: "auto" }} aria-hidden="true" />}
                       </span>
-                      {result?.lane === lane.id && <CheckCircle2 size={15} style={{ marginLeft: "auto" }} aria-hidden="true" />}
+                      <span className="lane-sub">{lane.subtitle}</span>
                     </div>
                   ))}
                 </div>
@@ -586,7 +808,7 @@ export default function Home() {
             </section>
           )}
           {result && (
-            <section id="evidence-details" className="inspect" aria-label="Case evidence and decision details">
+            <section ref={evidenceRef} id="evidence-details" className="inspect" aria-label="Case evidence and decision details">
               <div className="inspect-head">
                 <div>
                   <div className="card-eyebrow">03 / Inspect</div>
@@ -673,7 +895,7 @@ export default function Home() {
 
           <footer className="footer">
             <span>Clocked Return Lab | Return request review</span>
-            <span>Example 30-day policy. No refunds issued. Sample data only.</span>
+            <span>Example 30 day policy. No refunds issued. Clocked live is disabled on this public demo.</span>
           </footer>
         </main>
       </div>
