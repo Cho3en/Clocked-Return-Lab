@@ -44,7 +44,7 @@ After you run a case, open the panels below the result. They show the original t
 
 ## What is ready, and what isn't
 
-The synthetic demo passed 970 unit tests, browser checks, 22 security checks, and several sets of adversarial cases.
+The synthetic demo passed 971 unit tests, browser checks, 22 security checks, and several sets of adversarial cases.
 
 The app cannot verify real store orders, confirm delivery, issue refunds, or make legal decisions. The current live integration has not been retested with paid Clocked requests since the latest changes, and live mode stays disabled unless the operator specifically enables it with a rotated key and a small hard spending cap.
 

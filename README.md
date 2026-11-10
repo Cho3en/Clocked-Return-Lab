@@ -80,7 +80,7 @@ Without all four, the server answers with a plain "not enabled" message and neve
 
 ## What has been tested
 
-The current release passed 970 unit and regression tests, the TypeScript check, linting, and a production build. Browser tests covered desktop and mobile layouts, keyboard access, navigation, the three demo outcomes, input changes, and evidence inspection.
+The current release passed 971 unit and regression tests, the TypeScript check, linting, and a production build. Browser tests covered desktop and mobile layouts, keyboard access, navigation, the three demo outcomes, input changes, and evidence inspection.
 
 We also ran 22 security checks and several sets of synthetic adversarial cases, including a fresh batch written after the latest fixes. The production dependency audit reported no vulnerabilities on November 9, 2026. These checks help catch bugs, but they don't prove that every possible request will be handled correctly.
 

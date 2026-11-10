@@ -113,6 +113,23 @@ describe("labelled delivery dates", () => {
     expect(result.lane).toBe("approve");
   });
 
+  it("reads a labelled request line through the shared phrase table", () => {
+    const lines = (request: string) => [
+      "Order ORD-24015",
+      "Product: Atlas Desk Lamp",
+      "Delivered: 2026-10-28",
+      "Delivery date: 2026-10-28",
+      "Condition: unused and unopened",
+      request,
+    ].join("\n");
+    const accepted = triageDemo(lines("Request: I would like a refund"), AS_OF);
+    expect(accepted.caseScope?.unclassifiedStatements).toBe(0);
+    expect(accepted.lane).toBe("approve");
+
+    const unrelated = triageDemo(lines("Request: send a free upgrade"), AS_OF);
+    expect(unrelated.lane).toBe("review");
+  });
+
   it("keeps date safety checks intact", () => {
     expect(triageDemo(sentence("was delivered on 2027-01-02"), AS_OF).lane).toBe("review");
     expect(triageDemo(sentence("was delivered on 2026-02-31"), AS_OF).lane).toBe("review");

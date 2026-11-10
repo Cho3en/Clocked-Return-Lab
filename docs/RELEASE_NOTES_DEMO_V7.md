@@ -1,4 +1,4 @@
-# Release notes: next release (prepared, not published)
+# Release notes: demo-v7 (prepared, not published)
 
 Status: **draft**. Nothing here has been tagged, published or pushed as a
 release. Publishing needs the owner's approval.
@@ -42,13 +42,26 @@ narration.
 - The README no longer links directly into the historical audit folder, and the
   folder has its own index that explains what is historical.
 
-## Video
+## Video and subtitles
 
-The existing narrated video remains accurate for the three outcomes, the
-pipeline explanation and the labels it shows. The only visible interface change
-is tighter spacing in the mobile header and a clearer assessment label
-("Explicit refund request" instead of "Explicit return/refund intent"), which
-the video does not contradict. Recording a new video is optional.
+The existing narrated video is reused unchanged, with a version note. It was
+downloaded from the `demo-v6` release and checked against this build on
+November 10, 2026:
+
+- 107.2 seconds, 1600 x 900, MP4, with an audio track.
+- Audio decodes and the 24 subtitle cues match the narration.
+- The three recommendations, the evidence panels, the five live stages and the
+  disclosure that live mode is not run in the video all match the current
+  application and copy.
+- No credentials, personal data or internal development notes appear.
+
+The only interface differences since recording are 4 pixels of height on the
+small Clear action, tighter mobile header spacing (not visible in a 1600 x 900
+desktop recording) and the clearer assessment label, which sits in a panel the
+video keeps collapsed. Nothing the video claims is now false, so a new
+recording was not made and the old file was not renamed to pretend otherwise.
+
+Subtitles are reused unchanged from the `demo-v6` release asset.
 
 ## Known inconsistency in demo-v6 (do not move the tag)
 
@@ -56,6 +69,16 @@ The `demo-v6` tag points at commit `0bacadc`, which predates the copy refresh,
 while the video asset attached to that release was recorded after the refresh.
 The tag is therefore slightly older than the video it publishes. Do not move or
 re-tag `demo-v6`. Cut `demo-v7` from the merged remediation commit instead.
+
+## Assets for the release
+
+- Source: the final commit on the merged remediation branch (tag target).
+- `assets/dashboard.png`, `assets/approved.png`, `assets/review.png`,
+  `assets/declined.png`, `assets/mobile.png`: recaptured from that commit.
+- `clocked-return-lab-narrated-demo.mp4` and `.srt`: reused from `demo-v6`,
+  verified above.
+- Release text: this file plus `docs/FINAL_RELEASE_AUDIT.md`.
+- README and `JUDGES_START_HERE.md`: current commit.
 
 ## Still true after this release
 

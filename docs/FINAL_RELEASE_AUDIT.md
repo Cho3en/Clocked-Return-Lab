@@ -81,9 +81,10 @@ the new one, open the evidence details, navigate the sections and use the page
 on narrow screens.
 
 The interface was tested at widths of 320, 360, 390, 768, 1024 and 1440 pixels.
-There was no horizontal overflow and no browser JavaScript exception. The mobile
-header now occupies about 69 pixels at 320 pixels instead of the earlier heavy
-multi-row block.
+There was no horizontal overflow and no browser JavaScript exception. The mobile header now occupies about 69 pixels at 320 pixels instead of the
+earlier heavy multi-row block. Every visible control, including the small Clear
+action inside the message card, measures at least 44 pixels. The UI audit now
+includes those controls in its touch-target check.
 
 The five public screenshots were recaptured from this build on November 10,
 2026, using `scripts/capture-release-assets.mjs`.
@@ -97,7 +98,7 @@ Developer checkout and clean clone produced the same results.
 | TypeScript | Passed |
 | ESLint | Passed |
 | Production build | Passed, Next.js 16.4.5 |
-| Unit and regression tests | 970 passed in 12 files |
+| Unit and regression tests | 971 passed in 12 files |
 | Browser smoke test | Passed, including the live-disabled path |
 | UI audit | No reported issues |
 | Security checks | 22 passed |
@@ -105,7 +106,8 @@ Developer checkout and clean clone produced the same results.
 | Independent HTTP adversarial cases | 32 passed |
 | Mutation cases | 76 passed |
 | Held-out HTTP cases | 42 passed |
-| Fresh adversarial batch written after the fixes | 28 cases, no unsafe result |
+| Fresh adversarial batch written after the fixes | 38 cases, no unsafe result |
+| Browser journey checks at 320, 390, 768, 1024 and 1440 | 40 checks passed |
 | Offline Clocked pipeline harness | 2 cases, both strict matches, 8 mocked stage calls, 0 USD |
 | Production dependency audit | No vulnerabilities reported |
 | Full dependency audit | 7 moderate advisories, development dependencies only |
@@ -113,13 +115,17 @@ Developer checkout and clean clone produced the same results.
 The fresh batch includes cracked-on-arrival claims, sparking and fume reports,
 refund-or-exchange ambiguity, two orders, contradictory dates, future dates,
 unknown products, opened items, missing delivery dates, quoted old requests,
-prompt injection, duplicate charges, a 10,000-character message and transport
-abuse cases. None produced an unsafe Approve or Decline.
+prompt injection, duplicate charges, negated requests, negated hazards and
+transport abuse cases. None produced an unsafe Approve or Decline.
+
+A labelled request line (`Request: I would like a refund`) now reads from the
+same phrase table as a bare sentence. Before that fix the same wording was
+accepted in the message body and rejected in the field layout.
 
 ## Clean clone
 
 A separate clone of the branch was created in a temporary folder with no
-`.env.local`, then installed with `npm ci`. TypeScript, ESLint, the 970 tests,
+`.env.local`, then installed with `npm ci`. TypeScript, ESLint, the 971 tests,
 the production build, the browser smoke test, the UI audit, the 22 security
 checks, all four adversarial suites, the fresh batch and the offline pipeline
 harness passed. Live mode answered 503 "not configured" without contacting
@@ -143,7 +149,7 @@ repository.
 
 The video was recorded after the copy refresh, but the `demo-v6` tag points at an
 earlier commit. The tag has not been moved. See
-[RELEASE_NOTES_NEXT.md](RELEASE_NOTES_NEXT.md) for the release proposal.
+[RELEASE_NOTES_DEMO_V7.md](RELEASE_NOTES_DEMO_V7.md) for the release proposal.
 
 ## GitHub cleanup
 

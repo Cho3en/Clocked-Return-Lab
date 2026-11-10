@@ -1,4 +1,4 @@
-import { refundStatementPatterns } from "./refund-intent";
+import { isRefundRequestStatement, refundStatementPatterns } from "./refund-intent";
 import { isRecognizedSyntheticProductName } from "./synthetic-product-catalog";
 
 /**
@@ -63,7 +63,17 @@ export function checkSafeStatementCoverage(text: string): CoverageAssessment {
     .replace(/\s+/g, " ").trim()).filter(Boolean);
   let unknownCount = 0;
   for (const statement of statements) {
-    if (hasEmbeddedComplaint(statement) || !SAFE.some(pattern => pattern.test(statement))) unknownCount++;
+    if (hasEmbeddedComplaint(statement) || !isSafeStatement(statement)) unknownCount++;
   }
   return { unknownCount, totalStatements: statements.length };
+}
+
+// A labelled request line ("Request: I would like a refund") is the same phrase
+// as the bare sentence. Read the value from the shared phrase table instead of
+// keeping a second, narrower list. Any other labelled value stays unclassified.
+const LABELLED_REQUEST = /^request\s*:\s*(.+)$/i;
+function isSafeStatement(statement: string): boolean {
+  if (SAFE.some(pattern => pattern.test(statement))) return true;
+  const labelled = statement.match(LABELLED_REQUEST);
+  return Boolean(labelled && isRefundRequestStatement(labelled[1].trim()));
 }
