@@ -62,6 +62,11 @@ Withdrawn and quoted requests, return-only requests, questions about policy,
 defects, hazards, billing problems, unknown products, missing dates and
 conflicting dates still go to Human Review or Decline.
 
+A bare "but" is no longer counted as a complaint by itself. Explicit complaint
+wording still is, and any clause the coverage grammar does not recognize still
+abstains, so linking two harmless sentences with "but" no longer adds a false
+alarm on top of that check.
+
 The grammar stays deliberately narrow. Wider paraphrases that it does not
 recognize, such as "Kindly reimburse me for this", still go to Human Review.
 That is a coverage decision, not a safety failure.
