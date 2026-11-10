@@ -29,7 +29,7 @@ The live integration is in [lib/pipeline.ts](lib/pipeline.ts). It calls Clocked 
 
 The app then applies its own checks to decide whether it has enough information to suggest a result. If the facts are unclear, the case is sent for Human Review.
 
-The narrated video uses the local demo, not paid Clocked calls. There is an [older recording of live Clocked usage](https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v1), but it predates the latest safety changes.
+The narrated video uses the local demo, not paid Clocked calls. The current live integration has not been tested against the provider since the latest changes.
 
 ## Run the three examples yourself
 
@@ -48,4 +48,4 @@ The synthetic demo passed 971 unit tests, browser checks, 22 security checks, an
 
 The app cannot verify real store orders, confirm delivery, issue refunds, or make legal decisions. The current live integration has not been retested with paid Clocked requests since the latest changes, and live mode stays disabled unless the operator specifically enables it with a rotated key and a small hard spending cap.
 
-[README](README.md) | [Submission text](SUBMISSION.md) | [Test report](docs/FINAL_RELEASE_AUDIT.md) | [Challenge rules](https://clocked.rezolve.ai/build-challenge/rules)
+[README](README.md) | [Submission text](SUBMISSION.md) | [Technical verification](docs/VERIFICATION.md) | [Challenge rules](https://clocked.rezolve.ai/build-challenge/rules)

@@ -80,13 +80,13 @@ Without all four, the server answers with a plain "not enabled" message and neve
 
 ## What has been tested
 
-The current release passed 971 unit and regression tests, the TypeScript check, linting, and a production build. Browser tests covered desktop and mobile layouts, keyboard access, navigation, the three demo outcomes, input changes, and evidence inspection.
+The current build passed 971 unit and regression tests, the TypeScript check, linting, and a production build. Browser tests covered desktop and mobile layouts, keyboard access, navigation, the three demo outcomes, input changes, and evidence inspection.
 
 We also ran 22 security checks and several sets of synthetic adversarial cases, including a fresh batch written after the latest fixes. The production dependency audit reported no vulnerabilities on November 10, 2026. These checks help catch bugs, but they don't prove that every possible request will be handled correctly.
 
 The repository also passes from a fresh clone with no private configuration. Demo mode needs no key, and live mode reports that it is not configured instead of failing a security check.
 
-**We have not rerun paid Clocked calls against the latest version.** An [older live recording](https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v1) shows real calls from an earlier build, not a verification of this release.
+**The current Clocked integration has not been validated with paid calls.** Live mode is disabled until the required operator checks are completed.
 
 The screenshots in this README and the judges' guide were captured from the current build on November 10, 2026.
 
@@ -98,4 +98,4 @@ This project was made for the [Clocked Build Challenge](https://clocked.rezolve.
 
 The code and demo are public, but the entry must still be submitted through the official challenge form.
 
-[Judges' guide](JUDGES_START_HERE.md) | [Prepared entry answers](ENTRY_FORM_COPY.md) | [Test report](docs/FINAL_RELEASE_AUDIT.md)
+[Judges' guide](JUDGES_START_HERE.md) | [Technical verification](docs/VERIFICATION.md)

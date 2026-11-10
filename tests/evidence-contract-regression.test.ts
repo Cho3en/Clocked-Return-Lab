@@ -5,7 +5,7 @@ import { isRecognizedSyntheticProductName } from "../lib/synthetic-product-catal
 const AS_OF = "2026-11-09";
 const base = (p: string, d = "2026-11-01") => "Order ORD-90017 for the " + p + " was delivered on " + d + ". It is unused and unopened. I want a refund.";
 const field = (p: string, d = "2026-11-01") => "Order ORD-90017\nProduct: " + p + "\nDelivered: " + d + "\nIt is unused and unopened.\nI want a refund.";
-describe("Independent DeepSeek holdout ? promoted regression evidence", () => {
+describe("Independent Independent held-out regression cases", () => {
   it("identity attacks", () => {
     const cases: Array<[string, string, string]> = [
       ["fixture+unknown", base("Aurora Desk Lamp toxic"), "review"],

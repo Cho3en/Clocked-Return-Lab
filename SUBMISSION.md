@@ -25,9 +25,8 @@ Small online stores and customer support teams that want to spend less time sort
 - [Narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4)
 - [GitHub repository](https://github.com/Cho3en/Clocked-Return-Lab)
 - [Guide for judges](https://github.com/Cho3en/Clocked-Return-Lab/blob/main/JUDGES_START_HERE.md)
-- [Earlier live Clocked recording](https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v1)
 
-The narrated video shows three synthetic requests handled by local demo rules. It does not call Clocked. The repository contains the real SDK integration; the older live video shows an earlier build.
+The narrated video shows three synthetic requests handled by local demo rules. It does not call Clocked. The SDK integration is available in the source code, but current live-provider behavior has not been validated.
 
 ## Testing and limits
 

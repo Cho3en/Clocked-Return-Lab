@@ -1,5 +1,5 @@
 {
-  "name": "clocked-returns-refund-autopilot",
+  "name": "clocked-return-lab",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,9 +9,8 @@
     "lint": "node ./node_modules/eslint/bin/eslint.js .",
     "test": "node ./node_modules/vitest/vitest.mjs run",
     "typecheck": "node ./node_modules/typescript/bin/tsc --noEmit",
-    "capture:qa": "node ./scripts/capture-tuscan-qa.mjs",
+    "capture:qa": "node ./scripts/capture-release-assets.mjs",
     "smoke": "node ./scripts/regression-browser.mjs",
-    "record:submission": "node ./scripts/record-submission-demo.mjs",
     "redteam": "node ./scripts/redteam-p0.mjs",
     "redteam:mutation": "node ./scripts/redteam-metamorphic.mjs",
     "ui:audit": "node ./scripts/ui-audit.mjs",

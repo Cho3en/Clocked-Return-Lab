@@ -1,5 +1,5 @@
 /**
- * VIBE INDEPENDENT RED-TEAM AUDIT
+ * INDEPENDENT DECISION SAFETY REGRESSIONS
  * Senior software engineer, security auditor, and adversarial reviewer
  *
  * This file contains NOVEL adversarial tests created independently.
@@ -29,7 +29,7 @@ const asOf = "2026-11-08";
 // SECTION 1: BUSINESS LOGIC AUDIT - Novel Adversarial Customer Messages
 // ============================================================================
 
-describe("VIBE AUDIT: Business Logic - Novel Adversarial Tests", () => {
+describe("Independent tests: Business Logic - Novel Adversarial Tests", () => {
   describe("1.1: Contradictory Facts", () => {
     it("CRITICAL: should REVIEW when customer provides two different order IDs", () => {
       const msg = "I want to return order ORD-12345 and also order ORD-67890. Both are unused. Please refund me.";
@@ -182,7 +182,7 @@ describe("VIBE AUDIT: Business Logic - Novel Adversarial Tests", () => {
 // SECTION 2: CLOCKED SDK INTEGRATION AUDIT
 // ============================================================================
 
-describe("VIBE AUDIT: Clocked SDK Integration", () => {
+describe("Independent tests: Clocked SDK Integration", () => {
   const baseMsg = "Order ORD-12345 for the Widget was delivered on 2026-10-27. It is unused and unopened. I want a refund. Email: test@example.com";
 
   function createMockClocked(options: {
@@ -342,7 +342,7 @@ describe("VIBE AUDIT: Clocked SDK Integration", () => {
 // SECTION 3: API AUTHENTICATION AND SECURITY AUDIT
 // ============================================================================
 
-describe("VIBE AUDIT: API Authentication and Security", () => {
+describe("Independent tests: API Authentication and Security", () => {
   describe("3.1: Authentication", () => {
     beforeEach(() => resetRateLimitsForTests());
 
@@ -512,7 +512,7 @@ describe("VIBE AUDIT: API Authentication and Security", () => {
 // SECTION 4: NOVEL ADVERSARIAL TESTS - Beyond Previous Audits
 // ============================================================================
 
-describe("VIBE AUDIT: Novel Adversarial Tests", () => {
+describe("Independent tests: Novel Adversarial Tests", () => {
   describe("4.1: Multi-Language and Encoding Attacks", () => {
     it("MEDIUM: should handle Unicode lookalike characters", () => {
       const msg = "Order ORD-12345 was delivered on 2026-10-27. It is unused. I want a refund.\u202e";
@@ -657,7 +657,7 @@ describe("VIBE AUDIT: Novel Adversarial Tests", () => {
 // SECTION 5: BUSINESS VALUE EVALUATION
 // ============================================================================
 
-describe("VIBE AUDIT: Business Value Evaluation", () => {
+describe("Independent tests: Business Value Evaluation", () => {
   describe("5.1: Useful Merchant Problem Solving", () => {
     it("should correctly identify eligible returns", () => {
       const msg = "Order ORD-12345 for the Widget was delivered on 2026-10-27. It is unused and unopened. I want a refund.";
