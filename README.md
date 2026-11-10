@@ -82,7 +82,7 @@ Without all four, the server answers with a plain "not enabled" message and neve
 
 The current release passed 971 unit and regression tests, the TypeScript check, linting, and a production build. Browser tests covered desktop and mobile layouts, keyboard access, navigation, the three demo outcomes, input changes, and evidence inspection.
 
-We also ran 22 security checks and several sets of synthetic adversarial cases, including a fresh batch written after the latest fixes. The production dependency audit reported no vulnerabilities on November 9, 2026. These checks help catch bugs, but they don't prove that every possible request will be handled correctly.
+We also ran 22 security checks and several sets of synthetic adversarial cases, including a fresh batch written after the latest fixes. The production dependency audit reported no vulnerabilities on November 10, 2026. These checks help catch bugs, but they don't prove that every possible request will be handled correctly.
 
 The repository also passes from a fresh clone with no private configuration. Demo mode needs no key, and live mode reports that it is not configured instead of failing a security check.
 
@@ -90,7 +90,7 @@ The repository also passes from a fresh clone with no private configuration. Dem
 
 The screenshots in this README and the judges' guide were captured from the current build on November 10, 2026.
 
-There is no connection to a store database, shipping provider, payment system, or live product catalog. There is also no persistent case history or shared spending cap. The app has mainly been tested with English requests and should not be used with real customer information in demo mode.
+There is no connection to a store database, shipping provider, payment system, or live product catalog. There is also no persistent case history, and rate limits live in memory. The spending cap that live mode asks about sits in the Clocked account; the app records the operator's confirmation but cannot verify it. The app has mainly been tested with English requests and should not be used with real customer information in demo mode.
 
 ## Challenge entry
 
