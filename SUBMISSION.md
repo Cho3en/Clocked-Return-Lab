@@ -22,7 +22,7 @@ Small online stores and customer support teams that want to spend less time sort
 
 ## Demo and source code
 
-- [Narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4)
+- [Narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/latest/download/clocked-return-lab-narrated-demo.mp4)
 - [GitHub repository](https://github.com/Cho3en/Clocked-Return-Lab)
 - [Guide for judges](https://github.com/Cho3en/Clocked-Return-Lab/blob/main/JUDGES_START_HERE.md)
 

@@ -8,7 +8,7 @@ Clocked Return Lab helps a support agent sort through those details. It reads th
 
 It is a prototype for reviewing cases, not a refund processing system. **It does not confirm orders, send messages, charge customers, or issue refunds.**
 
-[Watch the narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4) | [Start here if you're judging](JUDGES_START_HERE.md) | [Submission details](SUBMISSION.md)
+[Watch the narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/latest/download/clocked-return-lab-narrated-demo.mp4) | [Start here if you're judging](JUDGES_START_HERE.md) | [Submission details](SUBMISSION.md)
 
 ![Clocked Return Lab dashboard](assets/dashboard.png)
 

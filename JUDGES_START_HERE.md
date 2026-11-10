@@ -4,7 +4,7 @@ Clocked Return Lab helps a support agent work through a customer return request 
 
 ## Watch the demo
 
-[Watch the narrated walkthrough](https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4)
+[Watch the narrated walkthrough](https://github.com/Cho3en/Clocked-Return-Lab/releases/latest/download/clocked-return-lab-narrated-demo.mp4)
 
 The video shows three made-up requests in the real app:
 
