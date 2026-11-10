@@ -57,7 +57,9 @@ try {
   await mobile.getByRole("button", { name: "Run demo analysis" }).click();
   await mobile.locator(".reco-word").getByText("APPROVE", { exact: true }).waitFor({ timeout: 15000 });
   await mobile.waitForTimeout(400);
-  await mobile.evaluate(() => window.scrollTo(0, 0));
+  await mobile.locator(".reco-word").scrollIntoViewIfNeeded();
+  await mobile.evaluate(() => window.scrollBy(0, -170));
+  await mobile.waitForTimeout(150);
   await mobile.screenshot({ path: resolve(target, "mobile.png") });
   if (mobileErrors.length) throw new Error("Mobile JavaScript errors: " + JSON.stringify(mobileErrors));
   console.log("CAPTURED mobile.png");

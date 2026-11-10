@@ -72,7 +72,7 @@ Live mode stays switched off until you also set four operator values in `.env.lo
 | Variable | Purpose |
 |---|---|
 | `RETURNLAB_LIVE_ENABLED=YES` | Turns paid live analysis on. Anything else keeps it off. |
-| `CLOCKED_ROTATED_KEY_CONFIRMED=YES` | Confirms the key was rotated after the earlier exposure. The app cannot check this itself. |
+| `CLOCKED_ROTATED_KEY_CONFIRMED=YES` | Confirms the configured API key has been rotated and is approved for live use. The app cannot verify this itself. |
 | `CLOCKED_PROVIDER_HARD_CAP_CONFIRMED=YES` | Confirms a hard spending limit exists in the Clocked account. |
 | `CLOCKED_PROVIDER_HARD_CAP_USD` | The attested limit. It must be 0.05 or lower. |
 
