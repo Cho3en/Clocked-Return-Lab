@@ -80,6 +80,29 @@ re-tag `demo-v6`. Cut `demo-v7` from the merged remediation commit instead.
 - Release text: this file plus `docs/FINAL_RELEASE_AUDIT.md`.
 - README and `JUDGES_START_HERE.md`: current commit.
 
+## Owner steps after approval
+
+Do not create the tag or release until the owner approves. When approved:
+
+1. Merge PR #13. The merge commit on `main` becomes the release source.
+2. Confirm the merged commit still passes CI.
+3. Create the tag on that commit and attach the two existing demo-v6 media
+   files unchanged:
+   - `clocked-return-lab-narrated-demo.mp4`
+   - `clocked-return-lab-narrated-demo.srt`
+4. Use this file as the release description, with one added line: "The video
+   was recorded for demo-v6 and still matches this build; it was not
+   re-recorded for demo-v7."
+5. Do not move the `demo-v6` tag.
+
+Suggested commands (run only after approval):
+
+```bash
+gh pr merge 13 --merge
+gh release create demo-v7 --target main --title "Clocked Return Lab: demo-v7" --notes-file docs/RELEASE_NOTES_DEMO_V7.md
+gh release upload demo-v7 clocked-return-lab-narrated-demo.mp4 clocked-return-lab-narrated-demo.srt
+```
+
 ## Still true after this release
 
 - No paid Clocked calls have been rerun against the current build.

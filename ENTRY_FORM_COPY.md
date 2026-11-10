@@ -22,6 +22,25 @@ The app does not process refunds, contact customers, or confirm that an order ac
 
 The video uses three made-up customer requests and local demo rules, so it does not spend Clocked credits. The actual Clocked integration is in the public source code. An earlier recording shows live Clocked calls, but it was made before the latest changes.
 
+## Safety limits
+
+The app is advisory. It does not issue refunds, send messages, change orders or verify that an order exists. When the message is missing a delivery date, names more than one order, contains contradictory facts, mentions a defect or safety problem, uses a product unknown to the sample catalog, or asks for something other than a refund, the result is Human Review rather than an automatic approval or decline. The policy window and product list are examples, and customer statements are never treated as verified facts.
+
+Live mode is disabled by default. It requires a server-side API key, a private access token, an explicit enable flag, a record that the key was rotated, and a confirmed upstream spending cap of 0.05 USD or less. Without all of these, the server refuses the request before any Clocked call is made. The narrated demo uses local rules and makes no paid Clocked calls, so it costs nothing to reproduce.
+
+## How a judge can test it
+
+The three examples run without an account or API key:
+
+```bash
+git clone https://github.com/Cho3en/Clocked-Return-Lab.git
+cd Clocked-Return-Lab
+npm ci
+npm run dev
+```
+
+Open http://localhost:3000 with Demo fixtures selected, then run Clear return, Defective item and Outside window. The narrated video shows the same three outcomes. The test commands and their results are in docs/FINAL_RELEASE_AUDIT.md.
+
 ## Who is this for?
 
 Small online stores and support teams that deal with return emails and want a quicker way to spot missing details and cases that need attention.
