@@ -1,3 +1,5 @@
+> Historical record. This report describes an earlier build. See [docs/archive/README.md](README.md) for current status.
+
 # VIBE remediation  -  independent handoff and release-candidate verification
 
 **Date:** November 9, 2026

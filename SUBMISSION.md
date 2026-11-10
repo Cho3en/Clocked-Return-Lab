@@ -31,9 +31,9 @@ The narrated video shows three synthetic requests handled by local demo rules. I
 
 ## Testing and limits
 
-The latest version passed 918 unit tests, a production build, browser and mobile checks, 20 security checks, and several synthetic adversarial suites.
+The latest version passed 970 unit tests, a production build, browser and mobile checks, 22 security checks, and several synthetic adversarial suites, including a fresh batch written after the last fixes. The repository also verifies from a clean clone with no private configuration.
 
-It hasn't been connected to a real store, and paid Clocked calls haven't been rerun since the recent changes. The demo's 30-day return policy and product list are examples. No refunds, messages, or payments are sent.
+It hasn't been connected to a real store, and paid Clocked calls haven't been rerun since the recent changes. Live mode refuses to run unless the operator enables it, attests that the API key was rotated, and attests to a hard spending limit of 0.05 USD or less. The demo's 30-day return policy and product list are examples. No refunds, messages, or payments are sent.
 
 ## Challenge submission
 

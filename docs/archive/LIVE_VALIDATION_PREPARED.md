@@ -1,3 +1,5 @@
+> Historical record. This report describes an earlier build. See [docs/archive/README.md](README.md) for current status.
+
 # Clocked live validation  -  safe preflight and reproducible run
 
 Date: November 9, 2026

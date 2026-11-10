@@ -396,9 +396,7 @@ button, input, textarea { font: inherit; }
   .analytics { grid-template-columns: 1fr; }
   .workspace { grid-template-columns: 1fr; }
   .details-grid { grid-template-columns: 1fr; }
-  .search-input { width: 100%; }
-  .search-box { flex: 1 1 100%; }
-  .top-actions { width: 100%; }
+  .top-actions { width: auto; }
 }
 @media (max-width: 560px) {
   .metrics { grid-template-columns: 1fr; }
@@ -406,7 +404,17 @@ button, input, textarea { font: inherit; }
   .case-summary { grid-template-columns: 1fr; }
   .case-cell + .case-cell { border-left: 0; border-top: 1px solid var(--border); }
   .pp-sub { display: none; }
+  .topbar { padding: 8px 12px; gap: 8px; }
   .topbar-title { font-size: 19px; }
+  .topbar-sub { display: none; }
+  .status-chip { height: 34px; padding: 0 10px; }
+  .mode-btn { min-height: 40px; padding: 5px 10px; }
+}
+/* Small phones: keep brand, mode switch and the main action in one row. */
+@media (max-width: 420px) {
+  .status-chip { display: none; }
+  .topbar-title { font-size: 18px; }
+  .top-actions { width: auto; }
 }
 
 /* Release remediation: truthful pipeline, working anchors and session-only visualization */

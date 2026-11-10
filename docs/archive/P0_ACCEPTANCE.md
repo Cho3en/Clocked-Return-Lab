@@ -1,3 +1,5 @@
+> Historical record. This report describes an earlier build. See [docs/archive/README.md](README.md) for current status.
+
 # P0 Engineering Milestone  -  Case Integrity and Safe Abstention
 
 Date: November 8, 2026

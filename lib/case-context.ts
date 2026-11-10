@@ -1,4 +1,5 @@
 import type { EvidenceField } from "./types";
+import { hasCurrentRefundRequest } from "./refund-intent";
 import { checkSafeStatementCoverage, isProductAmbiguous } from "./statement-coverage";
 
 /**
@@ -46,16 +47,9 @@ export function classifyCurrentIntent(text: string): CurrentIntent {
   const conditional = /\b(?:if\s+it\s+(?:arrives|is|becomes)|if\s+the\s+(?:product|item)|might\s+(?:want|need|request)|would\s+(?:consider|possibly)|in\s+the\s+future|hypothetically|what\s+if\s+i)\b/i.test(outsideQuotes);
   if (conditional) return "speculative";
 
-  const refundRequest = [
-    /\b(?:i|we)\s+(?:would\s+like\s+to|want\s+to|need\s+to|wish\s+to|intend\s+to)\s+(?:return|send\s+back)\b[^.!?\n]{0,100}\b(?:for|and\s+receive)\s+(?:a\s+)?refund\b/i,
-    /\b(?:i|we)\s+(?:would\s+like\s+to|want\s+to|need\s+to|wish\s+to)\s+(?:get|obtain|request|receive)\s+(?:a\s+)?refund\b/i,
-    /\b(?:i|we)\s+(?:want|need|request|am\s+requesting|are\s+requesting|demand)\s+(?:a\s+)?refund\b/i,
-    /\b(?:can|could|may)\s+(?:i|we)\s+(?:please\s+)?(?:get|have|request|receive)\s+(?:a\s+)?refund\b/i,
-    /\bplease\s+(?:issue|send|process|provide|give\s+me)\s+(?:a\s+)?refund\b/i,
-    /\bplease\s+refund\b/i,
-    /\bplease\s+reimburse\s+me\b/i,
-    /\bi\s+(?:definitely\s+)?want\s+(?:a\s+)?refund\b/i,
-  ].some((pattern) => pattern.test(outsideQuotes));
+  // Shared phrase table. A question such as "how do I request a refund" does
+  // not start a clause, so it is not treated as a current request.
+  const refundRequest = hasCurrentRefundRequest(outsideQuotes);
   if (denialOfRefund) {
     return returnWord.test(outsideQuotes) ? "return-only" : exchangeWord.test(outsideQuotes) ? "exchange" : "support";
   }

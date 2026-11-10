@@ -6,6 +6,6 @@ It shows three made-up customer requests. The first receives an Approve recommen
 
 The recording uses local demo rules. It doesn't send live Clocked requests, contact customers, or issue refunds.
 
-The English narration was generated using a synthetic voice. The audio, working recording, and review screenshots are saved on the development PC at `C:\VELES\QA\Clocked-Return-Lab\submission-2026-11-09`, rather than stored in Git.
+The English narration was generated using a synthetic voice. The source audio and working files stay on the development machine and are not part of the repository.
 
 The browser recording script is [scripts/record-submission-demo.mjs](../scripts/record-submission-demo.mjs). An [older recording of live calls](https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v1) belongs to an earlier version and doesn't confirm that the latest live integration works.

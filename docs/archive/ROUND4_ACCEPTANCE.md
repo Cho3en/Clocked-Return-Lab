@@ -1,3 +1,5 @@
+> Historical record. This report describes an earlier build. See [docs/archive/README.md](README.md) for current status.
+
 # Round 4: release acceptance  -  fail-closed refund triage and modern UI
 
 Date: November 8, 2026

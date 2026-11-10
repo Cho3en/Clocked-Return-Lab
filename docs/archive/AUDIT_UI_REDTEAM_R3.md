@@ -1,3 +1,5 @@
+> Historical record. This report describes an earlier build. See [docs/archive/README.md](README.md) for current status.
+
 # Round 3  -  Modern UI, Independent Logic Red Team, Code & Security Audit
 
 **Historical findings from the pre-repair candidate.** The decision-safety and security-header release blockers described here were repaired and independently retested in [ROUND4_ACCEPTANCE.md](ROUND4_ACCEPTANCE.md). This file is preserved for audit history.

@@ -1,3 +1,5 @@
+> Historical record. This report describes an earlier build. See [docs/archive/README.md](README.md) for current status.
+
 # VIBE remediation matrix  -  original 11 failing tests
 
 **Baseline:** original 77-test independent audit from commit dbb00f4 against app commit e2e4e2d.

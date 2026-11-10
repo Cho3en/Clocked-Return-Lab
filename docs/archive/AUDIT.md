@@ -1,3 +1,5 @@
+> Historical record. This report describes an earlier build. See [docs/archive/README.md](README.md) for current status.
+
 # Security and correctness audit  -  November 8, 2026
 
 This document summarizes the audit and repair work for the Clocked Build Challenge prototype.

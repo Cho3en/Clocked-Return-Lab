@@ -1,3 +1,5 @@
+> Historical record. This report describes an earlier build. See [docs/archive/README.md](README.md) for current status.
+
 # Clocked Return Lab  -  Second Adversarial Audit and Improvement Plan
 
 *Historical pre-P0 findings from commit 725491f. See [P0_ACCEPTANCE.md](P0_ACCEPTANCE.md) for repaired status, new tests and remaining limitations.*
