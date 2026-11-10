@@ -9,7 +9,8 @@ const chrome = [
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
 ].find(p => p && existsSync(p));
 if (!chrome) throw new Error("Chrome or Edge missing");
-const base = process.env.RETURNLAB_URL || "http://127.0.0.1:3146";
+const site = process.env.RETURNLAB_URL || "http://127.0.0.1:3146";
+const base = site + "/lab";
 const browser = await chromium.launch({ executablePath: chrome, headless: true });
 let problems = 0;
 const assert = (pass, description, details = null) => {
@@ -163,7 +164,7 @@ try {
   const guardPage = await browser.newPage({ viewport: { width: 1320, height: 900 } });
   await guardPage.route("**/api/triage", async (route) => {
     const original = await route.request().postDataJSON();
-    const response = await fetch(base + "/api/triage", {
+    const response = await fetch(site + "/api/triage", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...original, mode: "demo" }),
     });

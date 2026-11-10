@@ -3,6 +3,13 @@ import type { NextConfig } from "next";
 // Nonce-backed CSP requires per-request dynamic rendering: do not enable
 // cacheComponents/PPR for this small, sensitive advisory application.
 const nextConfig: NextConfig = {
+  async redirects() {
+    // Short, memorable entry points for judges and demo links.
+    return [
+      { source: "/demo", destination: "/tour", permanent: false },
+      { source: "/console", destination: "/lab", permanent: false },
+    ];
+  },
   async headers() {
     return [{
       source: "/(.*)",

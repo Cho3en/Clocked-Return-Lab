@@ -6,7 +6,7 @@
 
 Support teams spend time picking through emails that are missing dates, mix up order numbers, or mention problems that don't fit a standard return policy. A quick automated answer is useful only if the agent can see what it was based on.
 
-Clocked Return Lab reads a return request, identifies the important details, and recommends Approve, Human Review, or Decline. It explains the result and lets the agent inspect the words in the original message.
+Clocked Return Lab reads a return request, identifies the important details, and recommends Approve, Human Review, or Decline. It explains the result and lets the agent inspect the words in the original message. A one-click tour runs the three sample requests in order and opens the evidence behind each recommendation.
 
 ## How I used Clocked
 

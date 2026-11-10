@@ -33,12 +33,16 @@ The narrated video uses the local demo, not paid Clocked calls. The current live
 
 ## Run the three examples yourself
 
+Press **Start the 3 case tour** at the top of the page. It runs all three requests in order, opens the evidence behind each result, and shows a short explanation of what the engine checked.
+
+To try a single case, use the tour strip or the example buttons in the request card. To try your own message, paste it into the request card and press **Run demo analysis**.
+
 ```bash
 npm ci
 npm run dev
 ```
 
-Open http://localhost:3000, choose **Demo fixtures**, then try each example.
+Open http://localhost:3000 and leave **Demo fixtures** selected.
 
 After you run a case, open the panels below the result. They show the original text, order details, request checks, and policy findings. The highlighted words tell you where information came from, not whether the customer is telling the truth.
 
