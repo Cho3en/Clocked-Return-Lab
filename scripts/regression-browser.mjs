@@ -6,7 +6,8 @@ const executablePath = [
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
 ].find((value) => existsSync(value));
 if (!executablePath) throw new Error("Chrome or Edge was not found.");
-const baseURL = process.env.RETURNLAB_URL || "http://127.0.0.1:3141";
+const site = process.env.RETURNLAB_URL || "http://127.0.0.1:3141";
+const baseURL = site + "/lab";
 const browser = await chromium.launch({ executablePath, headless: true });
 const failures = [];
 async function assert(condition, message) {

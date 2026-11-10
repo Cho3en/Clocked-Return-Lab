@@ -16,7 +16,8 @@
     "ui:audit": "node ./scripts/ui-audit.mjs",
     "security:audit": "node ./scripts/security-audit-ui-release.mjs",
     "redteam:ui": "node ./scripts/redteam-ui-release.mjs",
-    "redteam:heldout": "node ./scripts/redteam-heldout-round4.mjs"
+    "redteam:heldout": "node ./scripts/redteam-heldout-round4.mjs",
+    "site:audit": "node ./scripts/site-audit.mjs"
   },
   "dependencies": {
     "clocked-sdk": "0.7.0",

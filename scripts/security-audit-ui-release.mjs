@@ -2,14 +2,15 @@ import http from "node:http";
 import { chromium } from "playwright-core";
 import { existsSync } from "node:fs";
 
-const base = process.env.RETURNLAB_URL || "http://127.0.0.1:3146";
+const site = process.env.RETURNLAB_URL || "http://127.0.0.1:3146";
+const base = site + "/lab";
 const results = [];
 const assert = (label, pass, detail = "") => {
   results.push({label,pass,detail});
   console.log((pass ? "PASS " : "FAIL ") + label + (detail ? " " + detail : ""));
 };
 const requestJson = async (payload, opts = {}) => {
-  const r = await fetch(base + "/api/triage", {
+  const r = await fetch(site + "/api/triage", {
     method:"POST",
     headers:{"content-type":"application/json",...(opts.headers ?? {})},
     body:typeof payload === "string" ? payload : JSON.stringify(payload),
@@ -21,9 +22,9 @@ const synthetic = {
  mode:"demo",asOf:"2026-11-08",
  message:"Order ORD-84219 for the Aurora Table Lamp was delivered on 2026-10-28. It is unused and unopened. I want a refund.",
 };
-const main = await fetch(base);
+const main = await fetch(site);
 assert("home accessible",main.status===200,"HTTP "+main.status);
-const secondPage = await fetch(base);
+const secondPage = await fetch(site);
 const firstPolicy = main.headers.get("content-security-policy") ?? "";
 const secondPolicy = secondPage.headers.get("content-security-policy") ?? "";
 assert("consecutive responses have distinct CSP nonces",Boolean(firstPolicy.match(/nonce-[A-Za-z0-9+/=]+/)) && firstPolicy!==secondPolicy);
@@ -59,7 +60,7 @@ const missing = await requestJson({message:synthetic.message,asOf:synthetic.asOf
 assert("missing schema fields blocked",missing.status===400,"HTTP "+missing.status);
 const tooLong = await requestJson({...synthetic,message:"X".repeat(20000)});
 assert("oversized payload blocked",tooLong.status===413,"HTTP "+tooLong.status);
-const wrongType = await fetch(base + "/api/triage",{method:"POST",headers:{"content-type":"text/plain"},body:"hi"});
+const wrongType = await fetch(site + "/api/triage",{method:"POST",headers:{"content-type":"text/plain"},body:"hi"});
 assert("unsupported content type blocked",wrongType.status===415,"HTTP "+wrongType.status);
 
 const rootURL = new URL(base);

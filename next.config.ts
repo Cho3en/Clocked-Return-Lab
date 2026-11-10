@@ -6,10 +6,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     // Short, memorable entry points for judges and demo links.
     return [
-      { source: "/tour", destination: "/#judge-tour", permanent: false },
-      { source: "/demo", destination: "/#judge-tour", permanent: false },
-      { source: "/lab", destination: "/#case-workspace", permanent: false },
-      { source: "/console", destination: "/#case-workspace", permanent: false },
+      { source: "/demo", destination: "/tour", permanent: false },
+      { source: "/console", destination: "/lab", permanent: false },
     ];
   },
   async headers() {
