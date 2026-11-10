@@ -1,3 +1,4 @@
+import { isRefundRequestStatement, refundStatementPatterns } from "./refund-intent";
 import { isRecognizedSyntheticProductName } from "./synthetic-product-catalog";
 
 /**
@@ -23,18 +24,14 @@ const SAFE: RegExp[] = [
   /^i\s+changed\s+my\s+mind\s+earlier,\s+but\s+now\s+i\s+(?:definitely\s+)?want\s+(?:a\s+)?refund$/i,
   /^(?:i\s+have\s+not|i\s+haven't|i\s+never)\s+used\s+it$/i,
   /^condition:\s*(?:unused|unopened)(?:\s+and\s+(?:unused|unopened))?$/i,
-  /^(?:i|we)\s+(?:want|need|request|would\s+like)\s+(?:a\s+)?refund(?:\s+for\s+(?:order\s+)?(?:ORD-[A-Z0-9-]{4,35}|#\d{3,18}))?$/i,
-  /^(?:i|we)\s+(?:would\s+like\s+to|want\s+to|need\s+to)\s+(?:get|receive|request|obtain)\s+(?:a\s+)?refund$/i,
-  /^(?:i|we)\s+(?:would\s+like\s+to|want\s+to|need\s+to)\s+(?:return|send\s+(?:it\s+)?back)\s+(?:it\s+)?for\s+(?:a\s+)?refund(?:\s+for\s+(?:order\s+)?(?:ORD-[A-Z0-9-]{4,35}|#\d{3,18}))?$/i,
-  /^(?:can|could|may)\s+(?:i|we)\s+(?:please\s+)?(?:get|have|request)\s+(?:a\s+)?refund$/i,
-  /^please\s+(?:issue|process|provide|send|give\s+me)\s+(?:a\s+)?refund$/i,
-  /^please\s+(?:refund|reimburse)\s+me$/i,
-  /^please\s+refund$/i,
+  // Current refund-request statements come from the shared phrase table so
+  // intent classification, extraction and coverage cannot drift apart.
+  ...refundStatementPatterns(),
   /^request:\s*please\s+(?:refund|reimburse)\s+me$/i,
   /^(?:hi|hello|dear\s+support|good\s+morning|good\s+afternoon)$/i,
   /^(?:[Hh]i|[Hh]ello),\s*(?:[Ii]\s+am|[Ii]'m)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3}(?:\s*\(\s*\[EMAIL\]\s*\))?$/,
   /^(?:[Ii]\s+am|[Ii]'m)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3}(?:\s*\(\s*\[EMAIL\]\s*\))?$/,
-  /^(?:thank\s+you|thanks|best\s+regards|kind\s+regards|regards)$/i,
+  /^(?:thank\s+you|thanks|best\s+regards|kind\s+regards|regards)(?:\s+(?:for\s+(?:your|the)\s+help|again|so\s+much|in\s+advance|very\s+much))?$/i,
   /^(?:my\s+email\s+is|email:|please\s+contact)\s*\[EMAIL\]$/i,
 ];
 
@@ -66,7 +63,17 @@ export function checkSafeStatementCoverage(text: string): CoverageAssessment {
     .replace(/\s+/g, " ").trim()).filter(Boolean);
   let unknownCount = 0;
   for (const statement of statements) {
-    if (hasEmbeddedComplaint(statement) || !SAFE.some(pattern => pattern.test(statement))) unknownCount++;
+    if (hasEmbeddedComplaint(statement) || !isSafeStatement(statement)) unknownCount++;
   }
   return { unknownCount, totalStatements: statements.length };
+}
+
+// A labelled request line ("Request: I would like a refund") is the same phrase
+// as the bare sentence. Read the value from the shared phrase table instead of
+// keeping a second, narrower list. Any other labelled value stays unclassified.
+const LABELLED_REQUEST = /^request\s*:\s*(.+)$/i;
+function isSafeStatement(statement: string): boolean {
+  if (SAFE.some(pattern => pattern.test(statement))) return true;
+  const labelled = statement.match(LABELLED_REQUEST);
+  return Boolean(labelled && isRefundRequestStatement(labelled[1].trim()));
 }

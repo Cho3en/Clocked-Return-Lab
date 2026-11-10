@@ -164,7 +164,7 @@ describe("Independent held-out refund red-team corpus", () => {
 });
 
 
-describe("Post-Mistral adversarial product-name boundary (independent verification)", () => {
+describe("Product-name boundary: independent regression cases", () => {
   const riskyProducts = [
     "Aurora Lamp shorting out",
     "Aurora Lamp with exposed wires",

@@ -1,5 +1,6 @@
 import { evaluatePolicy, hasRightsOrIssue, isAffirmativeReturnRequest, isUnusedClaim } from "./policy";
 import { FIELD_LABELS, QUESTION_LABELS } from "./evidence";
+import { findRefundRequestSpan } from "./refund-intent";
 import type { Assessment, EvidenceField, TriageResult } from "./types";
 
 function maskForDemo(text: string) {
@@ -14,16 +15,22 @@ function find(text: string, id: string, expression: RegExp): EvidenceField | nul
   const start = m.index + m[0].indexOf(value);
   return { id, label: FIELD_LABELS[id], value, start, end: start + value.length, confidence: null };
 }
+function refundRequestField(text: string): EvidenceField | null {
+  const span = findRefundRequestSpan(text);
+  return span
+    ? { id: "request", label: FIELD_LABELS.request, value: span.value, start: span.start, end: span.end, confidence: null }
+    : null;
+}
 export function triageDemo(message: string, asOf: string): TriageResult {
   const text = maskForDemo(message);
   const candidates = [
     find(text, "order_id", /(?:\b(ORD-[A-Z0-9-]{4,35})\b|(?:^|[^\w])(#\d{3,18})\b)/i),
     find(text, "product", /\b(?:for the|for a|for my)\s+((?:[^\r\n.!?]|\d\.\d){3,100}?)(?=\s+(?:was delivered|was purchased|stopped working|is damaged|arrived|on \d{4}-)|(?:\.(?!\d)|,))/iu)
       ?? find(text, "product", /\bproduct:\s*((?:[^\r\n.!?]|\d\.\d){3,100})(?=\n|(?:[.!?](?!\d))|$)/iu),
-    find(text, "delivery_date", /\b(?:delivered on|received on|delivery date(?: was| is)?|delivered:)\s*(\d{4}-\d{2}-\d{2})/i),
+    find(text, "delivery_date", /\b(?:delivered on|received on|delivered)\s*:?\s*(\d{4}-\d{2}-\d{2})/i)
+      ?? find(text, "delivery_date", /\bdelivery\s*date\s*(?:(?:was|is)\s*)?:?\s*(\d{4}-\d{2}-\d{2})/i),
     find(text, "condition", /\b((?:unused|unopened|factory sealed|still sealed)[^.!\n]{0,90})/i),
-    find(text, "request", /\b((?:I would like|I want|I need|We want|Can I get|Could I get|Please issue|Please process|Please refund|Please reimburse|I am requesting)[^.!\n]{0,140}(?:refund|return|reimburse(?:ment|d)?)[^.!\n]{0,50})/i)
-      ?? find(text, "request", /\b(please\s+(?:reimburse\s+me|refund\s+me|issue\s+a\s+refund)|i\s+definitely\s+want\s+a\s+refund)\b/i),
+    refundRequestField(text),
     find(text, "issue", /\b((?:stopped working|broken|damaged|defective|faulty)[^.!\n]{0,70})/i),
   ];
   const evidence = candidates.filter((v): v is EvidenceField => v !== null);

@@ -55,8 +55,14 @@ try {
   await assert(await page.getByRole("button", { name: "Run Clocked analysis" }).isEnabled(), "token unlocks private analysis control");
   await assert(await page.locator("#policy-date").isDisabled(), "browser cannot change server live date");
   await page.getByRole("button", { name: "Run Clocked analysis" }).click();
-  await page.getByRole("alert").getByText("Private live access token is missing or invalid.").waitFor({timeout:15000});
-  await assert(true, "server rejects incorrect live token without making a Clocked request");
+  // A clean clone has no private token, and even a configured server may keep
+  // live spend disabled. Both are legitimate blocks and must be reported
+  // truthfully rather than as a successful analysis.
+  const liveBlockAlert = page.locator(".error-box[role=\"alert\"]");
+  await liveBlockAlert.waitFor({ timeout: 15000 });
+  const liveBlockText = (await liveBlockAlert.textContent()) ?? "";
+  await assert(/not configured|not enabled|missing or invalid/i.test(liveBlockText), "server reports the real live-mode block: " + liveBlockText.slice(0, 90));
+  await assert(!/Eligible under demo rules|Escalate to a human/i.test(liveBlockText), "blocked live analysis shows no decision");
   await page.close();
 
   const mobile = await browser.newPage({ viewport: {width: 390,height: 844}, deviceScaleFactor: 1 });

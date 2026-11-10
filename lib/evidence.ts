@@ -26,7 +26,7 @@ export const QUESTIONS = {
   },
 };
 export const QUESTION_LABELS: Record<string, string> = {
-  refund_requested: "Explicit return/refund intent",
+  refund_requested: "Explicit refund request",
   item_explicitly_unused: "Explicit unused condition",
   damaged_or_defective: "Damage / exception concern",
 };

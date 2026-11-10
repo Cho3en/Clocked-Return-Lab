@@ -8,7 +8,7 @@ Clocked Return Lab helps a support agent sort through those details. It reads th
 
 It is a prototype for reviewing cases, not a refund processing system. **It does not confirm orders, send messages, charge customers, or issue refunds.**
 
-[Watch the narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4) | [Start here if you're judging](JUDGES_START_HERE.md) | [Submission details](SUBMISSION.md)
+[Watch the narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/latest/download/clocked-return-lab-narrated-demo.mp4) | [Start here if you're judging](JUDGES_START_HERE.md) | [Submission details](SUBMISSION.md)
 
 ![Clocked Return Lab dashboard](assets/dashboard.png)
 
@@ -65,17 +65,32 @@ Open http://localhost:3000 and leave **Demo fixtures** selected. Try Clear retur
 
 You don't need a Clocked account to run those examples. They use local rules and synthetic customer data.
 
-If you want to test the live integration, copy `.env.example` to `.env.local`. Add your server-side `CLOCKED_API_KEY` and a separate `RETURNLAB_ACCESS_TOKEN` of at least 32 characters. Enter only the access token in the browser. Live requests can use paid credits, so check your account limits first.
+If you want to test the live integration, copy `.env.example` to `.env.local`. Add your server-side `CLOCKED_API_KEY` and a separate `RETURNLAB_ACCESS_TOKEN` of at least 32 characters. Enter only the access token in the browser.
+
+Live mode stays switched off until you also set four operator values in `.env.local`:
+
+| Variable | Purpose |
+|---|---|
+| `RETURNLAB_LIVE_ENABLED=YES` | Turns paid live analysis on. Anything else keeps it off. |
+| `CLOCKED_ROTATED_KEY_CONFIRMED=YES` | Confirms the key was rotated after the earlier exposure. The app cannot check this itself. |
+| `CLOCKED_PROVIDER_HARD_CAP_CONFIRMED=YES` | Confirms a hard spending limit exists in the Clocked account. |
+| `CLOCKED_PROVIDER_HARD_CAP_USD` | The attested limit. It must be 0.05 or lower. |
+
+Without all four, the server answers with a plain "not enabled" message and never calls Clocked. Live requests can use paid credits, so check your account limits first.
 
 ## What has been tested
 
-The current release passed 918 unit and regression tests, the TypeScript check, linting, and a production build. Browser tests covered desktop and mobile layouts, keyboard access, navigation, the three demo outcomes, input changes, and evidence inspection.
+The current build passed 971 unit and regression tests, the TypeScript check, linting, and a production build. Browser tests covered desktop and mobile layouts, keyboard access, navigation, the three demo outcomes, input changes, and evidence inspection.
 
-We also ran 20 security checks and several sets of synthetic adversarial cases. The production dependency audit reported no vulnerabilities on November 9, 2026. These checks help catch bugs, but they don't prove that every possible request will be handled correctly.
+We also ran 22 security checks and several sets of synthetic adversarial cases, including a fresh batch written after the latest fixes. The production dependency audit reported no vulnerabilities on November 10, 2026. These checks help catch bugs, but they don't prove that every possible request will be handled correctly.
 
-**We have not rerun paid Clocked calls against the latest version.** An [older live recording](https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v1) shows real calls from an earlier build, not a verification of this release.
+The repository also passes from a fresh clone with no private configuration. Demo mode needs no key, and live mode reports that it is not configured instead of failing a security check.
 
-There is no connection to a store database, shipping provider, payment system, or live product catalog. There is also no persistent case history or shared spending cap. The app has mainly been tested with English requests and should not be used with real customer information in demo mode.
+**The current Clocked integration has not been validated with paid calls.** Live mode is disabled until the required operator checks are completed.
+
+The screenshots in this README and the judges' guide were captured from the current build on November 10, 2026.
+
+There is no connection to a store database, shipping provider, payment system, or live product catalog. There is also no persistent case history, and rate limits live in memory. The spending cap that live mode asks about sits in the Clocked account; the app records the operator's confirmation but cannot verify it. The app has mainly been tested with English requests and should not be used with real customer information in demo mode.
 
 ## Challenge entry
 
@@ -83,4 +98,4 @@ This project was made for the [Clocked Build Challenge](https://clocked.rezolve.
 
 The code and demo are public, but the entry must still be submitted through the official challenge form.
 
-[Judges' guide](JUDGES_START_HERE.md) | [Prepared entry answers](ENTRY_FORM_COPY.md) | [Test report](docs/FINAL_RELEASE_AUDIT.md) | [Earlier technical audits](docs/archive/)
+[Judges' guide](JUDGES_START_HERE.md) | [Technical verification](docs/VERIFICATION.md)

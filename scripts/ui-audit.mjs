@@ -38,7 +38,7 @@ try {
       const inner=window.innerWidth;
       const doc=document.documentElement.scrollWidth;
       const input=document.getElementById("return-message")?.getBoundingClientRect();
-      const ctas=[...document.querySelectorAll(".mode-btn,.sample-btn,.primary-btn")].map(e=>{
+      const ctas=[...document.querySelectorAll(".mode-btn,.sample-btn,.primary-btn,.ghost-btn,.subtle-action")].map(e=>{
         const r=e.getBoundingClientRect();return {text:e.textContent.trim(),height:Math.round(r.height),width:Math.round(r.width)};
       });
       return {pageHeight,windowHeight:innerHeight,docWidth:doc,viewportWidth:inner,scrollY,outputTop:d?.top,outputHeight:d?.height,inputTop:input?.top,ctaTargets:ctas};

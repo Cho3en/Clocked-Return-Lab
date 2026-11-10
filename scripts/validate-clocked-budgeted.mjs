@@ -14,7 +14,7 @@
  * This script never sends actual customer information, repeats, or more than
  * two synthetic test cases. It never prints credentials or message content.
  */
-import {readFileSync, statSync, mkdtempSync, writeFileSync, rmSync} from "node:fs";
+import {readdirSync, readFileSync, statSync, mkdtempSync, writeFileSync, rmSync} from "node:fs";
 import {join, resolve} from "node:path";
 import {tmpdir} from "node:os";
 import {pathToFileURL} from "node:url";
@@ -63,8 +63,11 @@ function livePreflight() {
 function emit(name,data) {console.log(name+" "+JSON.stringify(data));}
 function compilePolicyRuntime() {
   const temp=mkdtempSync(join(tmpdir(),"clocked-synthetic-validation-"));
-  for(const moduleName of ["pipeline","evidence","policy","privacy","case-context","statement-coverage"]) {
-    const input=readFileSync(resolve("lib",moduleName+".ts"),"utf8");
+  // Compile every policy module so adding a new one cannot silently break
+  // this harness. Only the pipeline entry point is imported.
+  for(const file of readdirSync(resolve("lib")).filter(name=>name.endsWith(".ts"))) {
+    const moduleName=file.slice(0,-3);
+    const input=readFileSync(resolve("lib",file),"utf8");
     const js=ts.transpileModule(input,{
       compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext},
       fileName:moduleName+".ts",

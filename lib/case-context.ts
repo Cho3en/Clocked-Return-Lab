@@ -1,4 +1,5 @@
 import type { EvidenceField } from "./types";
+import { hasCurrentRefundRequest } from "./refund-intent";
 import { checkSafeStatementCoverage, isProductAmbiguous } from "./statement-coverage";
 
 /**
@@ -46,16 +47,9 @@ export function classifyCurrentIntent(text: string): CurrentIntent {
   const conditional = /\b(?:if\s+it\s+(?:arrives|is|becomes)|if\s+the\s+(?:product|item)|might\s+(?:want|need|request)|would\s+(?:consider|possibly)|in\s+the\s+future|hypothetically|what\s+if\s+i)\b/i.test(outsideQuotes);
   if (conditional) return "speculative";
 
-  const refundRequest = [
-    /\b(?:i|we)\s+(?:would\s+like\s+to|want\s+to|need\s+to|wish\s+to|intend\s+to)\s+(?:return|send\s+back)\b[^.!?\n]{0,100}\b(?:for|and\s+receive)\s+(?:a\s+)?refund\b/i,
-    /\b(?:i|we)\s+(?:would\s+like\s+to|want\s+to|need\s+to|wish\s+to)\s+(?:get|obtain|request|receive)\s+(?:a\s+)?refund\b/i,
-    /\b(?:i|we)\s+(?:want|need|request|am\s+requesting|are\s+requesting|demand)\s+(?:a\s+)?refund\b/i,
-    /\b(?:can|could|may)\s+(?:i|we)\s+(?:please\s+)?(?:get|have|request|receive)\s+(?:a\s+)?refund\b/i,
-    /\bplease\s+(?:issue|send|process|provide|give\s+me)\s+(?:a\s+)?refund\b/i,
-    /\bplease\s+refund\b/i,
-    /\bplease\s+reimburse\s+me\b/i,
-    /\bi\s+(?:definitely\s+)?want\s+(?:a\s+)?refund\b/i,
-  ].some((pattern) => pattern.test(outsideQuotes));
+  // Shared phrase table. A question such as "how do I request a refund" does
+  // not start a clause, so it is not treated as a current request.
+  const refundRequest = hasCurrentRefundRequest(outsideQuotes);
   if (denialOfRefund) {
     return returnWord.test(outsideQuotes) ? "return-only" : exchangeWord.test(outsideQuotes) ? "exchange" : "support";
   }
@@ -82,7 +76,9 @@ export function detectIssueSignals(text: string): string[] {
     ["wrong item or description", /\b(?:wrong\s+(?:item|product|size|colo[u]?r|shade|variant|model)|incorrect\s+(?:item|product|size|colo[u]?r|model)|different\s+(?:item|product|size|colo[u]?r|variant|model)|colou?r\s+is\s+(?:completely\s+)?wrong|not\s+(?:as\s+)?described|not\s+what\s+i\s+ordered|does\s+not\s+match\s+(?:the\s+)?(?:description|order))\b/i],
     ["missing or undelivered", /\b(?:missing\s+(?:parts?|items?|accessories|parcel|package)|(?:parts?|items?|accessories)\s+(?:are\s+)?missing|never\s+arrived|not\s+delivered|item\s+not\s+received|parcel\s+(?:lost|missing)|lost\s+in\s+transit|(?:package|parcel|item|shipment)\s+(?:has\s+not|hasn[\u0027’]t)\s+arrived)\b/i],
     ["consumer rights or dispute", /\b(?:consumer\s+rights|statutory\s+rights|warranty|guarantee\s+claim|chargeback|counterfeit|not\s+fit\s+for\s+purpose|misleading|unsafe|already\s+(?:returned|shipped\s+(?:it\s+)?back|sent\s+(?:it\s+)?back))\b/i],
-    ["unresolved complaint or contrast", /\b(?:but|however|unfortunately|problem|complaint|the\s+issue\s+is)\b/i],
+    // Explicit complaint wording only. A bare "but" is not a complaint; an
+    // unrecognized clause is already rejected by statement coverage.
+    ["unresolved complaint or contrast", /\b(?:however|unfortunately|problem|complaint|the\s+issue\s+is)\b/i],
     ["missing or loose hardware", /\b(?:missing\s+(?:screws?|bolts?|components?|cables?|charger)|(?:screws?|bolts?|parts?|components?)\s+(?:are\s+)?missing|(?:screws?|bolts?|parts?)\s+(?:came|are|became)\s+loose|loose\s+(?:screws?|bolts?|parts?))\b/i],
     ["unexpected product behavior", /\b(?:crackl(?:e|es|ing)|rattl(?:e|es|ing)|smells?\s+odd|(?:will\s+not|won['’]t|does\s+not|doesn['’]t)\s+(?:turn|switch)\s+on|does\s+not\s+(?:respond|power\s+on)|won['’]t\s+start)\b/i],
     ["prior replacement or shipment", /\b(?:already\s+(?:received|got)\s+(?:a\s+)?replacement|(?:seller|shop|store)\s+promised\s+(?:to\s+)?replace|promised\s+(?:a\s+)?replacement|replacement\s+already\s+(?:received|shipped))\b/i],

@@ -42,7 +42,17 @@ assert("demo is marked simulated",legitimate.body?.mode==="demo");
 assert("API has nosniff",legitimate.headers.get("x-content-type-options")==="nosniff");
 assert("API disables caching",legitimate.headers.get("cache-control")?.includes("no-store")??false);
 const auth = await requestJson({...synthetic,mode:"live"});
-assert("unauthenticated live request blocked",auth.status===401,"HTTP "+auth.status);
+const authMessage = String(auth.body?.error ?? "");
+// Three safe states are possible: live is not configured (503), the server has
+// live disabled behind an operator gate (503), or the caller is not authorized
+// (401/403). A success or an unrelated 5xx is a failure.
+const liveDisabled = auth.status===503 && /not configured|not enabled/i.test(authMessage);
+const liveUnauthorized = (auth.status===401 || auth.status===403) && /token/i.test(authMessage);
+assert("unauthenticated live request blocked",liveDisabled || liveUnauthorized,
+  "HTTP "+auth.status+" state="+(liveDisabled?"disabled":liveUnauthorized?"unauthorized":"unclassified"));
+assert("blocked live request returns no decision",!auth.body?.lane,"error="+authMessage.slice(0,80));
+assert("live block is a documented state, not an internal error",
+  (liveDisabled || liveUnauthorized) && !/could not be evaluated|Clocked failed/i.test(authMessage));
 const malformed = await requestJson("{bogus");
 assert("malformed JSON blocked",malformed.status===400,"HTTP "+malformed.status);
 const missing = await requestJson({message:synthetic.message,asOf:synthetic.asOf});

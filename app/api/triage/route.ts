@@ -3,6 +3,7 @@ import { z } from "zod";
 import { triageDemo } from "../../../lib/demo";
 import { triageLive } from "../../../lib/clocked";
 import { businessDate } from "../../../lib/policy";
+import { assessLiveGate, LIVE_DISABLED_MESSAGE } from "../../../lib/live-gate";
 import { acquireLivePermit, BodyLimitError, isAuthorized, readJsonWithLimit } from "../../../lib/security";
 
 const schema = z.object({
@@ -42,6 +43,12 @@ export async function POST(request: Request) {
   }
   if (!isAuthorized(request.headers.get("x-returnlab-token"), configuredToken)) {
     return json({ error: "Private live access token is missing or invalid." }, 401);
+  }
+  // Authenticated callers still need the operator to enable live spend. A
+  // generic message avoids disclosing which attestation is missing, and the
+  // check runs before any Clocked client is created.
+  if (!assessLiveGate().ok) {
+    return json({ error: LIVE_DISABLED_MESSAGE }, 503);
   }
   const permit = acquireLivePermit();
   if (!permit.allowed) {

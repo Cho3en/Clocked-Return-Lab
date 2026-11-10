@@ -97,6 +97,7 @@ export default function Home() {
   const sequence = useRef(0);
   const pending = useRef<AbortController | null>(null);
   const outputRef = useRef<HTMLElement | null>(null);
+  const errorRef = useRef<HTMLParagraphElement | null>(null);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -119,6 +120,16 @@ export default function Home() {
     });
     return () => window.cancelAnimationFrame(frame);
   }, [requestEpoch, result]);
+  // Bring a failure into view on desktop too, so a blocked live request or a
+  // server error cannot be missed below the fold.
+  useEffect(() => {
+    if (!error || !errorRef.current) return;
+    const frame = window.requestAnimationFrame(() => {
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      errorRef.current?.scrollIntoView({ behavior: reduced ? "instant" : "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [error]);
 
   function invalidate() {
     sequence.current++;
@@ -401,7 +412,7 @@ export default function Home() {
                 <div aria-live="polite" aria-atomic="true" role="status" className="run-note">
                   {busy ? "Checking this message. No refund will be issued." : result ? "Analysis complete. The recommendation is " + (detailLane?.title ?? "") + "." : ""}
                 </div>
-                {error && <p role="alert" className="error-box">{error}</p>}
+                {error && <p ref={errorRef} role="alert" className="error-box">{error}</p>}
                 <p className="caveat"><ShieldAlert size={15} style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
                   {mode === "live"
                     ? "Live requests may cost Clocked credits. Dates come from the server, and personal-data masking is not perfect. Use only data you have permission to send."

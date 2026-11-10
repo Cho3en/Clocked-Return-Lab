@@ -22,18 +22,17 @@ Small online stores and customer support teams that want to spend less time sort
 
 ## Demo and source code
 
-- [Narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/download/demo-v6/clocked-return-lab-narrated-demo.mp4)
+- [Narrated demo](https://github.com/Cho3en/Clocked-Return-Lab/releases/latest/download/clocked-return-lab-narrated-demo.mp4)
 - [GitHub repository](https://github.com/Cho3en/Clocked-Return-Lab)
 - [Guide for judges](https://github.com/Cho3en/Clocked-Return-Lab/blob/main/JUDGES_START_HERE.md)
-- [Earlier live Clocked recording](https://github.com/Cho3en/Clocked-Return-Lab/releases/tag/demo-v1)
 
-The narrated video shows three synthetic requests handled by local demo rules. It does not call Clocked. The repository contains the real SDK integration; the older live video shows an earlier build.
+The narrated video shows three synthetic requests handled by local demo rules. It does not call Clocked. The SDK integration is available in the source code, but current live-provider behavior has not been validated.
 
 ## Testing and limits
 
-The latest version passed 918 unit tests, a production build, browser and mobile checks, 20 security checks, and several synthetic adversarial suites.
+The latest version passed 971 unit tests, a production build, browser and mobile checks, 22 security checks, and several synthetic adversarial suites, including a fresh batch written after the last fixes. The repository also verifies from a clean clone with no private configuration.
 
-It hasn't been connected to a real store, and paid Clocked calls haven't been rerun since the recent changes. The demo's 30-day return policy and product list are examples. No refunds, messages, or payments are sent.
+It hasn't been connected to a real store, and paid Clocked calls haven't been rerun since the recent changes. Live mode refuses to run unless the operator enables it, attests that the API key was rotated, and attests to a hard spending limit of 0.05 USD or less. The demo's 30-day return policy and product list are examples. No refunds, messages, or payments are sent.
 
 ## Challenge submission
 
